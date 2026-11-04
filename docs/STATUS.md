@@ -18,10 +18,11 @@
   [0002 own lossless OOXML codec, built incrementally](decisions/0002-docx-library.md).
 - Editor uses an explicit TextKit 2 `NSTextView` and logs a fault if anything forces a TextKit 1 fallback.
   `Tests/TextKit2CompatibilityTests.swift` pins the known gaps.
-- CI workflow (`.github/workflows/ci.yml`). Not run on GitHub yet, because there's no remote. Every step passed locally.
+- Repo on GitHub: [escalant3/cartilla](https://github.com/escalant3/cartilla) (private). CI is green on the `macos-26`
+  runner (Xcode 26.6, arm64); a full run takes about 1.5 minutes.
 
 **Decided with the human:** minimum macOS 26; sandboxed; generated corpus with real-app slots left as TODOs;
-local git only for now; TextKit 2 with tracked gaps (fix them late in the project); no SwiftDocX, build our own
+private GitHub repo; TextKit 2 with tracked gaps (fix them late in the project); no SwiftDocX, build our own
 DOCX layer gradually.
 
 ## Waiting on the human
@@ -33,7 +34,6 @@ DOCX layer gradually.
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
 - [ ] Placeholder bundle id `app.cartilla.Cartilla`; confirm, or choose one tied to the domain.
 - [ ] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"); confirm the name.
-- [ ] Create the GitHub remote when ready. CI targets the `macos-26` runner image.
 
 ## Next: Milestone 1 (skeleton)
 
