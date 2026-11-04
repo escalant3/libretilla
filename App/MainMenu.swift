@@ -140,6 +140,8 @@ enum MainMenu {
                 String(localized: "Hide Format Bar"), #selector(DocumentWindowController.toggleFormatBar(_:)), "b",
                 [.command, .option]))
         menu.addItem(item(String(localized: "Show Ruler"), #selector(NSText.toggleRuler(_:)), "r"))
+        menu.addItem(
+            item(String(localized: "Show Page Edges"), #selector(DocumentWindowController.togglePageEdges(_:))))
         menu.addItem(.separator())
         menu.addItem(
             item(

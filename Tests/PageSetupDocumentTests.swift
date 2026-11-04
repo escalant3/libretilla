@@ -80,6 +80,28 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertEqual(normal.size, 12)
     }
 
+    func testPaperFillsTheWindowUnlessPageEdgesAreShown() throws {
+        let editor = EditorViewController()
+        editor.loadView()
+        let scroll = try XCTUnwrap(editor.view as? NSScrollView)
+        let canvas = try XCTUnwrap(scroll.documentView as? PageCanvasView)
+        XCTAssertFalse(editor.showsPageEdges)
+        XCTAssertEqual(scroll.backgroundColor, .textBackgroundColor)
+
+        scroll.frame = NSRect(x: 0, y: 0, width: 1200, height: 800)
+        canvas.layoutSubtreeIfNeeded()
+        // The text column stays at the document's text width, centred, and starts at the top.
+        XCTAssertEqual(editor.textView.frame.width, PageSetup.a4.textWidth, accuracy: 0.5)
+        XCTAssertEqual(editor.textView.frame.midX, canvas.bounds.midX, accuracy: 1)
+        XCTAssertEqual(editor.textView.frame.minY, 0)
+
+        editor.showsPageEdges = true
+        canvas.layoutSubtreeIfNeeded()
+        XCTAssertEqual(scroll.backgroundColor, .underPageBackgroundColor)
+        XCTAssertEqual(editor.textView.frame.minY, 32)
+        XCTAssertEqual(canvas.pageRect.width, PageSetup.a4.pageSize.width, accuracy: 0.5)
+    }
+
     func testPageSetupChangeIsUndoableAndSaved() throws {
         let doc = try open("01-plain.docx")
         var setup = doc.pageSetup

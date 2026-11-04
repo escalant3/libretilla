@@ -10,6 +10,17 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
 
     private(set) var textView: CartillaTextView!
     private var canvas: PageCanvasView!
+    private var scrollView: NSScrollView!
+
+    /// Off (the default): the paper fills the window, with the text column centred at the document's text
+    /// width. On: a page with its edges on a gray canvas (View ▸ Show Page Edges).
+    var showsPageEdges = false {
+        didSet {
+            loadViewIfNeeded()
+            canvas.showsPageEdges = showsPageEdges
+            scrollView.backgroundColor = showsPageEdges ? .underPageBackgroundColor : .textBackgroundColor
+        }
+    }
     /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
     weak var document: CartillaDocument?
     /// Called (coalesced) when the selection or its formatting changes, for the format bar.
@@ -32,7 +43,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .underPageBackgroundColor
+        scrollView.backgroundColor = .textBackgroundColor
         scrollView.automaticallyAdjustsContentInsets = true
 
         let canvas = PageCanvasView()
@@ -65,6 +76,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         canvas.page = textView
         self.textView = textView
         self.canvas = canvas
+        self.scrollView = scrollView
         fallbackObserver = NotificationCenter.default.addObserver(
             forName: NSTextView.willSwitchToNSLayoutManagerNotification, object: textView, queue: .main
         ) { _ in
@@ -240,12 +252,20 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     }
 }
 
-/// Document view that keeps the page horizontally centred and grows with it.
+/// Document view that keeps the page horizontally centred and grows with it. Without page edges the whole
+/// view is paper; with them, a page sits on the gray canvas with some space above and around it.
 final class PageCanvasView: NSView {
+    var showsPageEdges = false {
+        didSet {
+            needsLayout = true
+            needsDisplay = true
+        }
+    }
     var pageWidth: CGFloat = 612
     /// The left page margin: the page view (the text column) starts this far inside the page.
     var leftMargin: CGFloat = 72
-    private let verticalPadding: CGFloat = 32
+    /// Space around the page when its edges show.
+    private var padding: CGFloat { showsPageEdges ? 32 : 0 }
 
     /// The white page behind the text column.
     var pageRect: NSRect {
@@ -255,13 +275,13 @@ final class PageCanvasView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         NSColor.textBackgroundColor.setFill()
-        pageRect.intersection(dirtyRect).fill()
+        (showsPageEdges ? pageRect.intersection(dirtyRect) : dirtyRect).fill()
     }
 
     /// Clicks in the page's side margins go to the text.
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        if let page, pageRect.contains(point) {
+        if let page, !showsPageEdges || pageRect.contains(point) {
             window?.makeFirstResponder(page)
             page.mouseDown(with: event)
         } else {
@@ -293,14 +313,14 @@ final class PageCanvasView: NSView {
     override func layout() {
         super.layout()
         guard let page, let clip = superview else { return }
-        let width = max(clip.bounds.width, pageWidth + 2 * verticalPadding)
-        let height = max(clip.bounds.height, page.frame.height + 2 * verticalPadding)
+        let width = max(clip.bounds.width, pageWidth + 2 * padding)
+        let height = max(clip.bounds.height, page.frame.height + 2 * padding)
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }
         let x = ((width - pageWidth) / 2).rounded() + leftMargin
-        if page.frame.origin != NSPoint(x: x, y: verticalPadding) {
-            page.setFrameOrigin(NSPoint(x: x, y: verticalPadding))
+        if page.frame.origin != NSPoint(x: x, y: padding) {
+            page.setFrameOrigin(NSPoint(x: x, y: padding))
             needsDisplay = true
         }
         (page as? CartillaTextView)?.alignRulerOrigin()

@@ -5,6 +5,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     private let status = SaveStatusViewController()
     private let formatBar = FormatBarViewController()
     static let formatBarHiddenKey = "CartillaFormatBarHidden"
+    static let showsPageEdgesKey = "CartillaShowsPageEdges"
 
     init(document: CartillaDocument) {
         let window = DocumentWindow(
@@ -44,6 +45,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             guard let self else { return }
             self.formatBar.update(format, bridge: bridge, editable: self.editor.textView.isEditable)
         }
+        editor.showsPageEdges = UserDefaults.standard.bool(forKey: Self.showsPageEdgesKey)
         editor.apply(document.pageSetup)
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)
@@ -79,7 +81,17 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         UserDefaults.standard.set(formatBar.isHidden, forKey: Self.formatBarHiddenKey)
     }
 
+    /// View ▸ Show/Hide Page Edges; remembered for every window.
+    @objc func togglePageEdges(_ sender: Any?) {
+        editor.showsPageEdges.toggle()
+        UserDefaults.standard.set(editor.showsPageEdges, forKey: Self.showsPageEdgesKey)
+    }
+
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(togglePageEdges(_:)) {
+            item.title =
+                editor.showsPageEdges ? String(localized: "Hide Page Edges") : String(localized: "Show Page Edges")
+        }
         if item.action == #selector(toggleFormatBar(_:)) {
             item.title =
                 formatBar.isHidden ? String(localized: "Show Format Bar") : String(localized: "Hide Format Bar")

@@ -532,6 +532,16 @@
         }
       }
     },
+    "Hide Page Edges": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar bordes de página"
+          }
+        }
+      }
+    },
     "Hide Ruler": {
       "localizations": {
         "es": {
@@ -1008,6 +1018,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrar barra de formato"
+          }
+        }
+      }
+    },
+    "Show Page Edges": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar bordes de página"
           }
         }
       }

@@ -155,6 +155,9 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   Word's A4 margins (2.5 cm top/bottom, 3 cm sides). Charter is a book serif close to Century Schoolbook and
   Kindle's Bookerly, and ships with every Mac; the font table marks it as a serif so Word on Windows, which
   lacks it, substitutes one. Files that don't state a page size are also taken as A4.
+- **The paper fills the window** (owner's request, 2026-11-04): no gray canvas by default. The text column
+  stays at the document's text width, centred, so line breaks match print and PDF. View ▸ Show Page Edges
+  brings back the page on a gray canvas; the choice is remembered.
 - **Tests:** 11 new package tests (`PageSetupTests`), 6 app tests (`PageSetupDocumentTests`: editor geometry,
   undo and save, the Page Setup sheet, PDF paper size, a 50+ page PDF that keeps its last line, landscape).
 
