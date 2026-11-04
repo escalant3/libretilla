@@ -158,21 +158,34 @@ public struct AttributedStringBridge: Sendable {
             let isFirst = origin.map { firstIndex[ObjectIdentifier($0)] == i } ?? false
             let isLast = origin.map { lastIndex[ObjectIdentifier($0)] == i } ?? true
 
-            // Opaque block paragraphs (tables, content controls).
-            if content.length > 0,
-                let box = text.attribute(.cartillaBlock, at: content.location, effectiveRange: nil) as? OpaqueBlockBox
-            {
-                if emittedBlocks.insert(ObjectIdentifier(box)).inserted {
-                    blocks += box.leadingBlocks.map(Block.opaque)
-                    blocks.append(.opaque(box.block))
+            // Paragraphs holding opaque blocks (tables, content controls): emit each block once, and any
+            // text around them as plain paragraphs, so a block is never lost to surrounding edits.
+            var blockChars: [(Int, OpaqueBlockBox)] = []
+            text.enumerateAttribute(.cartillaBlock, in: content) { v, r, _ in
+                if let box = v as? OpaqueBlockBox { blockChars.append((r.location, box)) }
+            }
+            if !blockChars.isEmpty {
+                var cursor = content.location
+                for (at, box) in blockChars {
+                    if at > cursor {
+                        blocks.append(
+                            .paragraph(
+                                editedParagraph(
+                                    text, NSRange(location: cursor, length: at - cursor), origin: nil,
+                                    keepSectionBreak: true, emitted: &emittedOpaque, notices: &notices)))
+                    }
+                    if emittedBlocks.insert(ObjectIdentifier(box)).inserted {
+                        blocks += box.leadingBlocks.map(Block.opaque)
+                        blocks.append(.opaque(box.block))
+                    }
+                    cursor = at + 1
                 }
-                let rest = NSRange(location: content.location + 1, length: content.length - 1)
-                if rest.length > 0 {
+                if cursor < NSMaxRange(content) {
                     blocks.append(
                         .paragraph(
                             editedParagraph(
-                                text, rest, origin: nil, keepSectionBreak: true,
-                                emitted: &emittedOpaque, notices: &notices)))
+                                text, NSRange(location: cursor, length: NSMaxRange(content) - cursor), origin: nil,
+                                keepSectionBreak: true, emitted: &emittedOpaque, notices: &notices)))
                 }
                 continue
             }
@@ -202,7 +215,10 @@ public struct AttributedStringBridge: Sendable {
             guard case .opaque(let o) = block, Self.isHidden(o) else { break }
             tail.insert(block, at: 0)
         }
-        // Body ends with sectPr: keep anything a paragraph needs before it.
+        // Word expects at least one paragraph in the body.
+        if !blocks.contains(where: { if case .paragraph = $0 { true } else { false } }) {
+            blocks.append(.paragraph(Paragraph()))
+        }
         var body = base
         body.blocks = blocks + tail
         return Result(body: body, notices: notices)

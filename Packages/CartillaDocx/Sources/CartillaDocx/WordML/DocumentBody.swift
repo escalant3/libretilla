@@ -65,12 +65,12 @@ public struct DocumentBody: Sendable {
         return out
     }
 
-    /// Concatenated visible text, one line per paragraph (tests, word count).
+    /// Concatenated visible text, one line per paragraph or table/content control (tests, word count).
     public var plainText: String {
-        blocks.map {
+        blocks.compactMap {
             switch $0 {
             case .paragraph(let p): p.text
-            case .opaque(let o): o.visibleText
+            case .opaque(let o): o.visibleText.isEmpty ? nil : o.visibleText
             }
         }.joined(separator: "\n")
     }

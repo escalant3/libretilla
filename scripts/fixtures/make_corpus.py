@@ -267,12 +267,12 @@ def numbering_xml() -> str:
             "</w:numbering>")
 
 
-def core_xml(title: str) -> str:
+def core_xml(title: str, creator: str = "Cartilla fixture generator") -> str:
     return (XML_DECL + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
             'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" '
             'xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-            f"<dc:title>{escape(title)}</dc:title><dc:creator>Cartilla fixture generator</dc:creator>"
-            "<cp:lastModifiedBy>Cartilla fixture generator</cp:lastModifiedBy><cp:revision>1</cp:revision>"
+            f"<dc:title>{escape(title)}</dc:title><dc:creator>{escape(creator)}</dc:creator>"
+            f"<cp:lastModifiedBy>{escape(creator)}</cp:lastModifiedBy><cp:revision>1</cp:revision>"
             '<dcterms:created xsi:type="dcterms:W3CDTF">2026-01-01T00:00:00Z</dcterms:created>'
             '<dcterms:modified xsi:type="dcterms:W3CDTF">2026-01-01T00:00:00Z</dcterms:modified>'
             "</cp:coreProperties>")
@@ -280,7 +280,7 @@ def core_xml(title: str) -> str:
 
 APP_XML = (XML_DECL + '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" '
            'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
-           "<Template>Normal.dotm</Template><TotalTime>0</TotalTime><Application>Microsoft Office Word</Application>"
+           "<Template>Normal.dotm</Template><TotalTime>0</TotalTime><Application>APPLICATION</Application>"
            "<DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><Company></Company><LinksUpToDate>false</LinksUpToDate>"
            "<SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>16.0000</AppVersion></Properties>")
 
@@ -291,8 +291,10 @@ APP_XML = (XML_DECL + '<Properties xmlns="http://schemas.openxmlformats.org/offi
 class Package:
     CT_MAIN = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
 
-    def __init__(self, title: str):
+    def __init__(self, title: str, application: str = "Microsoft Office Word", creator: str = "Cartilla fixture generator"):
         self.title = title
+        self.application = application
+        self.creator = creator
         self.parts: dict[str, bytes] = {}
         self.overrides: dict[str, str] = {}
         self.defaults = {"rels": "application/vnd.openxmlformats-package.relationships+xml", "xml": "application/xml"}
@@ -333,8 +335,9 @@ class Package:
         self.rel("theme", "theme/theme1.xml")
         self.add("word/theme/theme1.xml", THEME, "application/vnd.openxmlformats-officedocument.theme+xml")
         self.add("word/document.xml", document_xml, self.CT_MAIN)
-        self.add("docProps/core.xml", core_xml(self.title), "application/vnd.openxmlformats-package.core-properties+xml")
-        self.add("docProps/app.xml", APP_XML, "application/vnd.openxmlformats-officedocument.extended-properties+xml")
+        self.add("docProps/core.xml", core_xml(self.title, self.creator),
+                 "application/vnd.openxmlformats-package.core-properties+xml")
+        self.add("docProps/app.xml", APP_XML.replace("APPLICATION", escape(self.application)), "application/vnd.openxmlformats-officedocument.extended-properties+xml")
 
         rels = "".join(
             f'<Relationship Id="{i}" Type="{ty}" Target="{escape(tg, {chr(34): "&quot;"})}"'
@@ -654,12 +657,19 @@ FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hype
             f08_spanish, f09_large, f10_word_features]
 
 
+def blank(out: Path):
+    """The template every new Cartilla document starts from (Resources/Blank.docx)."""
+    pkg = Package("", application="Cartilla", creator="")
+    pkg.write(out, document(p()))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--out", type=Path, default=ROOT / "Fixtures" / "generated")
     args = ap.parse_args()
     for fn in FIXTURES:
         fn(args.out)
+    blank(ROOT / "Resources" / "Blank.docx")
     for f in sorted(args.out.glob("*.docx")):
         print(f"{f.relative_to(ROOT) if f.is_relative_to(ROOT) else f}  {f.stat().st_size:>8} bytes")
 

@@ -119,6 +119,16 @@ import Testing
         #expect(tables.count == 1)
     }
 
+    @Test func textTypedBeforeATablePlaceholderKeepsTheTable() throws {
+        let (doc, bridge, text) = try load("04-tables.docx")
+        let attachment = try location(of: "\u{FFFC}", in: text)
+        text.insert(NSAttributedString(string: "Intro "), at: attachment)
+        let (back, _) = try save(doc, bridge, text)
+        let tables = back.body.blocks.filter { if case .opaque(let o) = $0 { o.kind == "w:tbl" } else { false } }
+        #expect(tables.count == 2)
+        #expect(back.body.plainText.contains("Intro "))
+    }
+
     @Test func wordFeaturesSurviveAnEditElsewhere() throws {
         let (doc, bridge, text) = try load("10-word-features.docx")
         type(" More.", at: try location(of: "Word-only features", in: text) + 18, in: text)
@@ -141,6 +151,14 @@ import Testing
         guard case .paragraph(let p) = back.body.blocks.dropLast().last else { Issue.record("no paragraph"); return }
         #expect(p.text == "Pasted bold")
         if case .run(let r) = p.inlines.first { #expect(r.properties.bold == true) }
+    }
+
+    @Test func clearingEverythingStillWritesOneParagraph() throws {
+        let (doc, bridge, _) = try load("01-plain.docx")
+        let (back, _) = try save(doc, bridge, NSAttributedString())
+        let paragraphs = back.body.blocks.filter { if case .paragraph = $0 { true } else { false } }
+        #expect(paragraphs.count == 1)
+        #expect(back.body.blocks.contains { if case .opaque(let o) = $0 { o.isSectionProperties } else { false } })
     }
 
     @Test func headingsDisplayLargerAndBold() throws {
