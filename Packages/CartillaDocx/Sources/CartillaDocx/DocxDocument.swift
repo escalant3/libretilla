@@ -1,105 +1,42 @@
 import Foundation
 
-// Placeholder document model (M0). Shapes follow bootstrap §5.2; the concrete
-// fields are fleshed out in M1 together with the codec chosen in ADR 0002.
-// Named `DocxDocument` (not `CartillaDocument`) to avoid clashing with the app's
-// NSDocument subclass.
+/// An open `.docx`: the lossless package plus the parsed main document body and styles.
+public struct DocxDocument: Sendable {
+    public var package: OPCPackage
+    public let mainPartName: String
+    public var body: DocumentBody
+    public let styles: StyleSheet
 
-/// An ordered list of blocks plus the document-level tables Word keeps.
-public struct DocxDocument: Sendable, Equatable {
-    public var blocks: [Block]
-    public var styles: [Style]
-    public var numbering: [NumberingDefinition]
-    public var sections: [SectionProperties]
-    public var media: [String: Data]
-    /// Every zip part we don't model, kept byte-for-byte for copy-through on save.
-    public var preservedParts: [String: Data]
+    /// Why the document must open read-only, if it must.
+    public var readOnlyReason: String? { body.readOnlyReason }
+}
 
-    public init(
-        blocks: [Block] = [], styles: [Style] = [], numbering: [NumberingDefinition] = [],
-        sections: [SectionProperties] = [], media: [String: Data] = [:],
-        preservedParts: [String: Data] = [:]
-    ) {
-        self.blocks = blocks
-        self.styles = styles
-        self.numbering = numbering
-        self.sections = sections
-        self.media = media
-        self.preservedParts = preservedParts
+/// Cartilla's own OOXML codec (ADR 0002): reads and writes only what it understands and
+/// copies everything else through byte for byte.
+public struct OOXMLCodec: DocxCodec {
+    static let stylesType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
+    static let themeType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"
+
+    public init() {}
+
+    public func read(_ data: Data) throws -> DocxDocument {
+        let package = try OPCPackage(data: data)
+        let main = try package.mainDocumentPartName()
+        guard let documentXML = package[main] else { throw DocxCodecError.missingPart(main) }
+        let body = try DocumentBody(data: documentXML, part: main)
+        let rels = (try? package.relationships(of: main)) ?? []
+        func part(_ type: String) -> Data? {
+            rels.first { $0.type == type }?.resolvedPartName.flatMap { package[$0] }
+        }
+        // Styles only affect display; a damaged styles part shouldn't prevent opening.
+        let styles = (try? StyleSheet(styles: part(Self.stylesType), theme: part(Self.themeType))) ?? StyleSheet()
+        return DocxDocument(package: package, mainPartName: main, body: body, styles: styles)
     }
 
-    /// Concatenated plain text, one line per paragraph (useful for tests).
-    public var plainText: String {
-        blocks.compactMap { block -> String? in
-            if case .paragraph(let p) = block { return p.text }
-            return nil
-        }.joined(separator: "\n")
-    }
-}
-
-public enum Block: Sendable, Equatable {
-    case paragraph(Paragraph)
-    case table(Table)
-    case pageBreak
-    /// OOXML we don't understand (e.g. `w:sdt`), re-emitted verbatim.
-    case opaque(OpaqueXML)
-}
-
-public struct Paragraph: Sendable, Equatable {
-    public var styleId: String?
-    public var runs: [Run]
-    public init(styleId: String? = nil, runs: [Run] = []) {
-        self.styleId = styleId
-        self.runs = runs
-    }
-    public var text: String { runs.map(\.text).joined() }
-}
-
-public struct Run: Sendable, Equatable {
-    public var text: String
-    public var bold = false
-    public var italic = false
-    public init(text: String, bold: Bool = false, italic: Bool = false) {
-        self.text = text
-        self.bold = bold
-        self.italic = italic
-    }
-}
-
-public struct Table: Sendable, Equatable {
-    public var rows: [[[Block]]]
-    public init(rows: [[[Block]]] = []) { self.rows = rows }
-}
-
-public struct Style: Sendable, Equatable {
-    public var id: String
-    public var name: String
-    public init(id: String, name: String) {
-        self.id = id
-        self.name = name
-    }
-}
-
-public struct NumberingDefinition: Sendable, Equatable {
-    public var numId: Int
-    public init(numId: Int) { self.numId = numId }
-}
-
-public struct SectionProperties: Sendable, Equatable {
-    public var pageWidthTwips: Int
-    public var pageHeightTwips: Int
-    public init(pageWidthTwips: Int = 12240, pageHeightTwips: Int = 15840) {
-        self.pageWidthTwips = pageWidthTwips
-        self.pageHeightTwips = pageHeightTwips
-    }
-}
-
-/// A verbatim XML fragment plus the part it came from.
-public struct OpaqueXML: Sendable, Equatable {
-    public var part: String
-    public var xml: Data
-    public init(part: String, xml: Data) {
-        self.part = part
-        self.xml = xml
+    public func write(_ document: DocxDocument) throws -> Data {
+        if let reason = document.readOnlyReason { throw DocxCodecError.unsupported(reason) }
+        var package = document.package
+        package.setPart(document.mainPartName, data: document.body.serialized())
+        return try package.serialized()
     }
 }
