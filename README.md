@@ -4,9 +4,10 @@
 is `.docx`**: you open a Word document, write, and it's saved back to that same file automatically, with no Save
 dialogs. You can export to PDF. There's no ribbon, no AI and no cloud.
 
-> **Status: Milestone 1.** Opens `.docx`, shows the text with its formatting, and autosaves edits back to the
-> same file, losslessly: untouched content is copied through byte for byte. Formatting tools arrive in
-> Milestone 2. See [`docs/STATUS.md`](docs/STATUS.md).
+> **Status: Milestone 2.** Opens `.docx`, autosaves edits back to the same file losslessly, and has the
+> everyday formatting tools: a format bar, Word styles and headings, bulleted and numbered lists, alignment,
+> spacing, a ruler, and Find and Replace. Tables, images and links arrive in Milestone 3. See
+> [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Requirements
 
@@ -42,7 +43,7 @@ Lint: `find App Document Editor UI Tests UITests Packages/CartillaDocx -name '*.
 | `App/` | Entry point, app delegate, main menu, Info.plist, entitlements (sandboxed) |
 | `Document/` | `NSDocument` subclass (autosave in place) and window controller |
 | `Editor/` | Text view and page canvas (TextKit 2: [ADR 0001](docs/decisions/0001-textkit.md), [known gaps](docs/TEXTKIT2_GAPS.md)) |
-| `UI/` | Toolbar, format bar, inspectors (from M1) |
+| `UI/` | Toolbar, format bar, save status |
 | `Packages/CartillaDocx/` | `DocxCodec`, document model, attributed-string bridge ([ADR 0002](docs/decisions/0002-docx-library.md)) |
 | `Resources/` | Assets, `Localizable.xcstrings` (English, Spanish) |
 | `Fixtures/` | `.docx` test corpus ([README](Fixtures/README.md)) |

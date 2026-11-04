@@ -72,7 +72,69 @@ machine. Please open a few edited files in Word and report any repair prompt.
 - Tables show as a placeholder line. TextKit 2 can't lay them out (gap G1), and table editing is M3.
 - New documents are US Letter.
 
-## Next: Milestone 2 (formatting)
+## Milestone 2: Formatting ✅ (2026-11-04)
 
-Format bar and menus, styles and headings (`w:pStyle` mapping, style popup), lists (`numbering.xml`),
-alignment, spacing, ruler, find/replace, undo.
+**Done** (design: [ADR 0005](decisions/0005-formatting-model.md))
+
+- **Format bar** under the toolbar, built from standard controls: style popup, font popup, size combo,
+  B I U S, text colour well, highlight, alignment, bulleted/numbered lists, indent −/+, and line and
+  paragraph spacing. It follows the selection. View ▸ Hide Format Bar (⌥⌘B) toggles it, and the choice is
+  remembered.
+- **Format menu.**
+  - Font: Show Fonts ⌘T, Bold ⌘B, Italic ⌘I, Underline ⌘U, Strikethrough ⌘⇧X, Bigger/Smaller, Superscript/Subscript,
+    colours, highlight.
+  - Text: alignment ⌘{ ⌘| ⌘}, spacing, indent ⌘] ⌘[.
+  - Style: Normal ⌥⌘0, Heading 1–6 ⌥⌘1…6, Title, Subtitle, Quote, Code, and Update Style to Match Selection.
+  - List: ⌘⇧8 bullets, ⌘⇧7 numbers.
+  - Clear Formatting `⌘\`.
+- **Styles** map to real Word styles (`w:pStyle`), found by Word's canonical names, so localized Word files work.
+  A standard style the document lacks is copied from `Blank.docx` on first use. Return after a heading continues
+  in its `w:next` style.
+- **Lists** come from `numbering.xml`, with Word's counting: shared counters per definition, restarts, and
+  a./i. levels. TextKit 2 draws the markers. New lists are appended (and the part created if needed), and
+  continue the list just above. Return on an empty item ends the list; Tab / Shift-Tab at an item's start
+  change its level.
+- **Ruler** (View ▸ Show Ruler ⌘R) with indent and tab markers, measured from the page margin. Dragging
+  markers is saved as `w:ind` / `w:tabs`.
+- **AppKit's own tools are saved correctly.** The Font panel, ruler drags and rich paste change the display,
+  and `reconcile` turns that into Word properties.
+- **Find and Replace** (⌥⌘F), Use Selection for Find (⌘E), Jump to Selection (⌘J).
+- **Undo** covers every formatting command (one step each), including Update Style.
+- **Lossless:** only the `w:rPr`/`w:pPr` children for changed fields are rewritten, in schema order. A value
+  equal to the inherited one removes the element. Unchanged paragraphs keep their bytes. On every corpus file,
+  opening and redrawing changes nothing.
+- **Page geometry:** the text view is now the text column (no horizontal inset; `lineFragmentPadding` 0), so text
+  starts at the margin and wraps at Word's text width. The canvas draws the page. See [gap G5](TEXTKIT2_GAPS.md).
+- Spanish strings for everything new. Style names follow Word's Spanish (Título 1, Cita…).
+- **Tests:**
+  - 47 package tests: `FormattingTests` and `ElementPatchTests`, including "reconcile + renumber is a no-op on
+    every fresh corpus file".
+  - 31 app unit tests: `FormattingCommandTests` (commands through the real editor and save path, dead keys)
+    and `RulerTests`.
+  - 11 UI tests: `FormattingUITests` (⌘B → autosave → ⌘Z/⌘⇧Z, heading and list shortcuts, format bar click
+    and hide, ruler, Find and Replace All).
+- Bridge cost on the 100-page fixture: about 0.1 ms per keystroke (reconcile), 2 ms to renumber every list, and
+  8 ms for the format state of a Select All.
+
+**Not yet verified:**
+
+- **Microsoft Word.** Formatted files from Cartilla, in particular new lists (`numbering.xml` created from
+  scratch) and copied styles, still need opening in Word to check for repair prompts.
+- **Manual pass in the running app:** the colour well popover, the highlight menu, and the font popup with
+  fonts that aren't installed. The automated checks cover the logic, not the look.
+
+**Known M2 limitations**
+
+- TextKit 2 positions list items by nesting depth, so lists with unusual indents look approximate. They're
+  saved exactly (gap G4).
+- Text inside links, fields and content controls can't be reformatted yet; formatting commands skip it (M3).
+- Copy and paste inside Cartilla goes through RTF, so pasted runs get formats derived from their look. Links
+  and other objects paste as plain text.
+- Superscript and subscript display at full size (TextKit 2 default), not reduced as in Word.
+- Text colours are written as chosen; a black run stays black on the dark page in Dark Mode (M4 dark-mode pass).
+- No Paragraph… dialog yet for exact spacing and indent values; use the ruler, the spacing menu or the indent
+  buttons.
+
+## Next: Milestone 3 (insert & page)
+
+Tables, images, links, page break, page setup, PDF export, print.
