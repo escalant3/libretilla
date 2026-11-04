@@ -171,6 +171,14 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   image relationship, a content-type default if needed, and Word's standard inline drawing with a unique
   `wp:docPr` id; identical images share a part. PNG, JPEG and GIF are stored as they are (detected from their
   bytes); anything else (HEIC, TIFF, PDF…) as PNG.
+- **Tables** ([ADR 0006](decisions/0006-tables.md)). Each table is drawn from its XML, one attachment line per row:
+  column grid (scaled to the text width if wider), horizontal spans, vertical merges, shading, borders from the
+  table, its style (`basedOn` chain) or the cell, cell margins, the table style's paragraph spacing, and cell
+  text through the bridge. Print and PDF break between rows. Double-click a table (or Format ▸ Edit Table…) for
+  the cell editor sheet: edit text (⌥↩ for a new line), add/remove rows, and add/remove columns in simple grids.
+  Only changed cells are rewritten (formatted like the cell's first paragraph and run); cells with links,
+  images or nested tables are shown but not editable there. Insert ▸ Table… adds a "Table Grid" table across
+  the text width. Tables stay one block: they're deleted or replaced whole, never partly.
 - **The paper fills the window** (owner's request, 2026-11-04): no gray canvas by default. The text column
   stays at the document's text width, centred, so line breaks match print and PDF. View ▸ Show Page Edges
   brings back the page on a gray canvas; the choice is remembered.
@@ -185,6 +193,10 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
 - Pictures can't be resized in the editor yet; copying a picture within Cartilla saves the copy as a new image.
+- Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
+  text; table-style conditional formatting (banded rows, first-row shading from `w:tblStylePr`) isn't drawn;
+  nested tables show as one line of text per row; a vertically merged cell's text sits in its first row; tables
+  drawn at open keep their width if the page setup changes until the document is reopened.
 
-**Still to do:** tables, waiting on the owner's choice in [ADR 0006](decisions/0006-tables.md) (proposed). Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
+**Milestone 3 features are all in.** Still open: `w:pageBreakBefore` doesn't break pages in print yet. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
 print yet.

@@ -176,6 +176,9 @@ final class CartillaDocument: NSDocument {
     /// The id of the character style with this built-in name ("Hyperlink"), copied in like paragraph styles.
     func characterStyleId(named name: String) -> String? { styleId(named: name, type: "character") }
 
+    /// The id of the table style with this built-in name ("Table Grid"), copied in like paragraph styles.
+    func tableStyleId(named name: String) -> String? { styleId(named: name, type: "table") }
+
     private func styleId(named name: String, type: String) -> String? {
         guard var doc = base else { return nil }
         if let id = doc.styles.styleId(named: name, type: type) { return id }

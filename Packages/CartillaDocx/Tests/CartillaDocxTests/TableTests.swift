@@ -1,0 +1,148 @@
+import AppKit
+import Foundation
+import Testing
+
+@testable import CartillaDocx
+
+@MainActor
+@Suite struct TableTests {
+    let codec = OOXMLCodec()
+
+    func firstTable(_ name: String = "04-tables.docx") throws -> (DocxDocument, Int, OpaqueBlock) {
+        let doc = try codec.read(try Corpus.data(name))
+        let i = try #require(
+            doc.body.blocks.firstIndex { if case .opaque(let o) = $0 { o.kind == "w:tbl" } else { false } })
+        guard case .opaque(let o) = doc.body.blocks[i] else { throw CocoaError(.featureUnsupported) }
+        return (doc, i, o)
+    }
+
+    func model(_ xml: Data) throws -> TableModel { try #require(TableModel(xml: xml)) }
+
+    /// The document with block `i` replaced by `xml`, written and read back.
+    func replacing(_ doc: DocxDocument, block i: Int, with xml: Data) throws -> DocxDocument {
+        var out = doc
+        guard case .opaque(let old) = doc.body.blocks[i] else { throw CocoaError(.featureUnsupported) }
+        out.body.blocks[i] = .opaque(try #require(OpaqueBlock(xml: xml, leadingTrivia: old.leadingTrivia)))
+        let data = try codec.write(out)
+        #expect(try PackageChecker.problems(data).isEmpty)
+        return try codec.read(data)
+    }
+
+    @Test func readsTheGridSpansMergesAndShading() throws {
+        let (_, _, o) = try firstTable()
+        let t = try model(o.xml)
+        #expect(t.columns == [156, 156, 156])
+        #expect(t.rows.count == 7)
+        #expect(t.rows[0].isHeader)
+        #expect(t.rows[0].cells.map(\.text) == ["Name", "Quantity", "Notes"])
+        #expect(t.rows[0].cells[0].fill == "D9E2F3")
+        #expect(t.rows[4].cells[0].span == 2 && t.rows[4].cells[1].gridStart == 2)
+        #expect(t.rows[5].cells[0].verticalMerge == .restart && t.rows[6].cells[0].verticalMerge == .continue)
+        #expect(t.properties.styleId == "TableGrid")
+        #expect(!t.isSimpleGrid)
+        #expect(t.rows.allSatisfy { $0.cells.allSatisfy(\.isEditable) })
+    }
+
+    @Test func tableStyleGivesBordersAndCellSpacing() throws {
+        let (doc, _, _) = try firstTable()
+        let props = doc.styles.tableProperties("TableGrid")
+        #expect(props.borders.insideH?.isVisible == true && props.borders.top?.width == 0.5)
+        #expect(props.cellMarginLeft == 5.4)  // from TableNormal, through basedOn
+        #expect(doc.styles.tableParagraphProperties("TableGrid").spaceAfter == 0)
+    }
+
+    @Test func eachRowIsOneLineOfTheTablesBlock() throws {
+        let (doc, _, _) = try firstTable()
+        let text = AttributedStringBridge(doc).attributedString(for: doc.body)
+        var rows: [Int] = []
+        text.enumerateAttribute(.cartillaTableRow, in: NSRange(location: 0, length: text.length)) { v, _, _ in
+            if let i = v as? Int { rows.append(i) }
+        }
+        #expect(rows == Array(0..<7) + [0])  // the first table's 7 rows, then the nested-table one's single row
+        // Rows are separate lines; the whole table (but not the line after it) is one block range.
+        let first = (text.string as NSString).range(of: "\u{FFFC}").location
+        var whole = NSRange()
+        let box = text.attribute(
+            .cartillaBlock, at: first, longestEffectiveRange: &whole, in: NSRange(location: 0, length: text.length))
+        #expect(box != nil)
+        #expect(
+            (text.string as NSString).substring(with: whole) == String(repeating: "\u{FFFC}\n", count: 7).dropLast())
+        // Row heights follow their content: the header and a one-line row are the same height.
+        let a = text.attribute(.attachment, at: first, effectiveRange: nil) as? NSTextAttachment
+        #expect(a?.bounds.width == 468)
+        #expect((a?.bounds.height ?? 0) > 10 && (a?.bounds.height ?? 0) < 20)
+    }
+
+    @Test func editingACellRewritesOnlyThatCell() throws {
+        let (doc, i, o) = try firstTable()
+        let t = try model(o.xml)
+        let xml = t.replacingTexts([
+            .init(row: 1, cell: 2): "Very green\nand crisp",
+            .init(row: 1, cell: 0): "Apples",  // unchanged
+        ])
+        let before = String(decoding: o.xml, as: UTF8.self)
+        let after = String(decoding: xml, as: UTF8.self)
+        #expect(after.contains("<w:t>Very green</w:t>") && after.contains("<w:t>and crisp</w:t>"))
+        #expect(
+            after.replacingOccurrences(
+                of: "<w:t>Very green</w:t></w:r></w:p><w:p><w:r><w:t>and crisp", with: "<w:t>Green") == before)
+        let back = try replacing(doc, block: i, with: xml)
+        guard case .opaque(let saved) = back.body.blocks[i] else { Issue.record("not a table"); return }
+        #expect(try model(saved.xml).rows[1].cells[2].text == "Very green\nand crisp")
+    }
+
+    @Test func rowsCanBeAddedAndRemoved() throws {
+        let (doc, i, o) = try firstTable()
+        let t = try model(o.xml)
+        let added = try model(t.addingRow(after: 0))
+        #expect(added.rows.count == 8)
+        #expect(!added.rows[1].isHeader && added.rows[1].cells.map(\.text) == ["", "", ""])
+        #expect(added.rows[1].cells[0].fill == "D9E2F3", "the copy keeps cell shading")
+
+        // Removing the row where a vertical merge starts restarts it in the next row.
+        let removed = try model(t.removingRow(5))
+        #expect(removed.rows.count == 6)
+        #expect(removed.rows[5].cells[0].verticalMerge == .restart)
+        _ = try replacing(doc, block: i, with: t.removingRow(5))
+        #expect(try model(t.removingRow(0)).rows[0].cells[0].text == "Apples")
+    }
+
+    @Test func columnsCanBeAddedAndRemovedInASimpleGrid() throws {
+        let xml = TableModel.newTable(rows: 2, columns: 2, width: 400, styleId: "TableGrid")
+        let t = try model(xml)
+        #expect(t.isSimpleGrid && t.columns == [200, 200])
+        let wider = try model(t.addingColumn(after: 0))
+        #expect(wider.columns.count == 3 && abs(wider.columns.reduce(0, +) - 400) < 0.1)
+        #expect(wider.rows.allSatisfy { $0.cells.count == 3 })
+        let narrower = try model(wider.removingColumn(2))
+        #expect(narrower.rows.allSatisfy { $0.cells.count == 2 } && narrower.columns.count == 2)
+        // Not on a table with spans.
+        let (_, _, o) = try firstTable()
+        #expect(try model(o.xml).addingColumn(after: 0) == o.xml)
+    }
+
+    @Test func newTablesOpenAsTables() throws {
+        var doc = try codec.read(try Corpus.data("01-plain.docx"))
+        let xml = TableModel.newTable(rows: 3, columns: 4, width: 468, styleId: "TableGrid")
+        doc.body.blocks.insert(.opaque(try #require(OpaqueBlock(xml: xml))), at: 1)
+        let data = try codec.write(doc)
+        #expect(try PackageChecker.problems(data).isEmpty)
+        let back = try codec.read(data)
+        let text = AttributedStringBridge(back).attributedString(for: back.body)
+        var rows = 0
+        text.enumerateAttribute(.cartillaTableRow, in: NSRange(location: 0, length: text.length)) { v, _, _ in
+            if v != nil { rows += 1 }
+        }
+        #expect(rows == 3)
+        // Without a style, the table carries its own borders.
+        let plain = String(decoding: TableModel.newTable(rows: 1, columns: 1, width: 100, styleId: nil), as: UTF8.self)
+        #expect(plain.contains("<w:tblBorders>"))
+    }
+
+    @Test func unreadableTablesStillShowAsAPlaceholder() throws {
+        let xml = Data(
+            #"<w:tbl><w:tblPr/><w:sdt><w:sdtContent><w:tr><w:tc><w:p/></w:tc></w:tr></w:sdtContent></w:sdt></w:tbl>"#
+                .utf8)
+        #expect(TableModel(xml: xml) == nil)
+    }
+}

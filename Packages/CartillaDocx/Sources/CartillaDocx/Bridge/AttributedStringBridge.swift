@@ -14,21 +14,24 @@ public struct AttributedStringBridge: Sendable {
     public let hyperlinkTargets: [String: String]
     /// Embedded image bytes by relationship id, for showing pictures.
     public let images: [String: Data]
+    /// The text column width in points (tables wider than this are drawn scaled to fit).
+    public let textWidth: CGFloat
 
     public init(
         styles: StyleSheet, numbering: Numbering = Numbering(), hyperlinkTargets: [String: String] = [:],
-        images: [String: Data] = [:]
+        images: [String: Data] = [:], textWidth: CGFloat = PageSetup.fallback.textWidth
     ) {
         self.styles = styles
         self.numbering = numbering
         self.hyperlinkTargets = hyperlinkTargets
         self.images = images
+        self.textWidth = textWidth
     }
 
     public init(_ document: DocxDocument) {
         self.init(
             styles: document.styles, numbering: document.numbering, hyperlinkTargets: document.hyperlinkTargets,
-            images: document.images)
+            images: document.images, textWidth: document.body.pageSetup.textWidth)
     }
 
     /// Where `link` points: its new target, its relationship's URL, or nil (bookmark links).
@@ -146,6 +149,7 @@ public struct AttributedStringBridge: Sendable {
     }
 
     func blockText(_ o: OpaqueBlock, leadingBlocks: [OpaqueBlock]) -> NSAttributedString {
+        if let table = tableText(o, leadingBlocks: leadingBlocks) { return table }
         var label = o.summary
         let preview = o.visibleText.replacingOccurrences(of: "\n", with: " · ").trimmingCharacters(in: .whitespaces)
         if !preview.isEmpty { label += ": " + String(preview.prefix(80)) + (preview.count > 80 ? "…" : "") }

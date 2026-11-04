@@ -2,6 +2,16 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+    "(merged)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(combinada)"
+          }
+        }
+      }
+    },
     "About Cartilla": {
       "localizations": {
         "es": {
@@ -12,12 +22,32 @@
         }
       }
     },
+    "Add Column": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir columna"
+          }
+        }
+      }
+    },
     "Add Link": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Añadir enlace"
+          }
+        }
+      }
+    },
+    "Add Row": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir fila"
           }
         }
       }
@@ -212,6 +242,16 @@
         }
       }
     },
+    "Columns": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Columnas"
+          }
+        }
+      }
+    },
     "Copy": {
       "localizations": {
         "es": {
@@ -262,6 +302,16 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar"
+          }
+        }
+      }
+    },
     "Draft": {
       "localizations": {
         "es": {
@@ -298,6 +348,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar enlace"
+          }
+        }
+      }
+    },
+    "Edit Table": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar tabla"
+          }
+        }
+      }
+    },
+    "Edit Table…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar tabla…"
           }
         }
       }
@@ -642,6 +712,16 @@
         }
       }
     },
+    "Insert Table": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertar tabla"
+          }
+        }
+      }
+    },
     "Italic": {
       "localizations": {
         "es": {
@@ -902,6 +982,16 @@
         }
       }
     },
+    "Press Option-Return for a new line in a cell.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa Opción-Retorno para una nueva línea dentro de una celda."
+          }
+        }
+      }
+    },
     "Print": {
       "localizations": {
         "es": {
@@ -972,12 +1062,32 @@
         }
       }
     },
+    "Remove Column": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar columna"
+          }
+        }
+      }
+    },
     "Remove Link": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Quitar enlace"
+          }
+        }
+      }
+    },
+    "Remove Row": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar fila"
           }
         }
       }
@@ -1028,6 +1138,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volver a la versión guardada"
+          }
+        }
+      }
+    },
+    "Rows": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filas"
           }
         }
       }
@@ -1212,6 +1332,16 @@
         }
       }
     },
+    "Table…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabla…"
+          }
+        }
+      }
+    },
     "Text": {
       "localizations": {
         "es": {
@@ -1248,6 +1378,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Texto que se muestra"
+          }
+        }
+      }
+    },
+    "This cell has content the editor can't change.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta celda tiene contenido que el editor no puede cambiar."
           }
         }
       }

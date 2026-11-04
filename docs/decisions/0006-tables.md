@@ -1,8 +1,8 @@
 # 0006. Tables: drawn row attachments with a cell editor sheet (TextKit 2 can't lay out tables)
 
-- **Status:** Proposed
+- **Status:** Accepted (owner chose option 1, 2026-11-04)
 - **Date:** 2026-11-04
-- **Deciders:** owner (pending), Claude
+- **Deciders:** owner, Claude
 
 ## Context
 
@@ -41,7 +41,7 @@ across pages between rows.
    - Cost: two text engines. Everything built for TextKit 2 (lists, G4, the ruler, page geometry) would need
      testing on both; it reverses ADR 0001 for exactly the documents most likely to come from Word.
 
-## Decision (proposed)
+## Decision
 
 Option 1 now, for Milestone 3: tables display and print correctly, and their text is editable through the sheet,
 losslessly. Revisit option 2 for v1.1 if typing straight into cells turns out to matter in real use.

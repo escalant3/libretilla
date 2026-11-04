@@ -428,6 +428,12 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
         textView.typingAttributes = attrs
     }
 
+    func textView(_ textView: CartillaTextView, doubleClickedAt index: Int) -> Bool {
+        guard let found = table(at: index) else { return false }
+        openTableEditor(found)
+        return true
+    }
+
     func textView(_ textView: CartillaTextView, changeListLevelBy delta: Int) -> Bool {
         guard textView.isEditable, currentFormat.isListItem, let storage = textView.textStorage else { return false }
         let sel = textView.selectedRange()
@@ -442,6 +448,7 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
 
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         guard let action = item.action else { return true }
+        if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
         let format = currentFormat
         switch action {
         case #selector(toggleBold(_:)): item.state = format.bold ? .on : .off

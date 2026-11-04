@@ -11,6 +11,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     private(set) var textView: CartillaTextView!
     private var canvas: PageCanvasView!
     private var scrollView: NSScrollView!
+    /// The cell editor sheet while it's open.
+    var tableEditor: TableEditorController?
 
     /// Off (the default): the paper fills the window, with the text column centred at the document's text
     /// width. On: a page with its edges on a gray canvas (View ▸ Show Page Edges).

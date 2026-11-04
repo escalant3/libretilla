@@ -117,9 +117,13 @@ import Testing
         #expect(saved.components(separatedBy: "<w:tbl>").count == original.components(separatedBy: "<w:tbl>").count)
         #expect(back.body.plainText.contains("After the tables. Edited."))
 
-        // Delete the first table's placeholder paragraph.
+        // Delete the first table: all its row lines, and the line break after the last one.
         let attachment = try location(of: "\u{FFFC}", in: text)
-        text.deleteCharacters(in: NSRange(location: attachment, length: 2))
+        var whole = NSRange()
+        _ = text.attribute(
+            .cartillaBlock, at: attachment, longestEffectiveRange: &whole, in: NSRange(location: 0, length: text.length)
+        )
+        text.deleteCharacters(in: NSRange(location: whole.location, length: whole.length + 1))
         let (fewer, _) = try save(doc, bridge, text)
         let tables = fewer.body.blocks.filter { if case .opaque(let o) = $0 { o.kind == "w:tbl" } else { false } }
         #expect(tables.count == 1)

@@ -11,10 +11,20 @@ protocol CartillaTextViewDelegate: AnyObject {
     func textViewDidInsertNewline(_ textView: CartillaTextView)
     /// Tab (`by` 1) or Shift-Tab (`by` -1); true if handled.
     func textView(_ textView: CartillaTextView, changeListLevelBy delta: Int) -> Bool
+    /// A double-click at character `index`; true if handled (a table opened in the cell editor).
+    func textView(_ textView: CartillaTextView, doubleClickedAt index: Int) -> Bool
 }
 
 final class CartillaTextView: NSTextView {
     weak var structureDelegate: CartillaTextViewDelegate?
+
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            let index = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
+            if structureDelegate?.textView(self, doubleClickedAt: index) == true { return }
+        }
+        super.mouseDown(with: event)
+    }
 
     override func insertNewline(_ sender: Any?) {
         if structureDelegate?.textViewHandleNewline(self) == true { return }
