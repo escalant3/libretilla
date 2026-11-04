@@ -113,7 +113,7 @@ Cartilla/
 2. **Read-only / locked files, read-only volumes, files without write permission:** open as read-only with an obvious banner and offer "Duplicate to edit"; never show a failing "Saving…" loop.
 3. **Volumes without Versions** (FAT/exFAT/some network shares): autosave still works but history is unavailable; tell the user once.
 4. **Disk full / permission lost mid-session:** keep the in-memory document, show `Couldn't save`, retry on next change and on regaining space, and prompt Save As… on window close if the last save failed.
-5. **Safety of overwriting Word-authored originals:** because we autosave over the user's real file, the lossless round-trip policy is a prerequisite for enabling autosave on files we didn't create. Until the corpus tests pass, autosave must be gated by a "first edit of an existing file" step that makes a **one-time sibling backup** (`name (original).docx`, or rely on the Versions snapshot if available) — decide in ADR 0004 (open) and remove the sibling backup when the round-trip suite is green.
+5. **Safety of overwriting Word-authored originals:** because we autosave over the user's real file, the lossless round-trip policy is a prerequisite for enabling autosave on files we didn't create. Until the corpus tests pass, autosave must be gated by a "first edit of an existing file" step that makes a **one-time sibling backup** (`name (original).docx`, or rely on the Versions snapshot if available) — decided in ADR 0004: before the first save, copy the untouched original into the app's sandbox container (kept 30 days, File ▸ Restore Original…), and rely on Versions where the volume supports it. No sibling file is written.
 6. **Crash recovery:** drafts and unsaved changes recovered through the standard NSDocument autosave-information mechanism; test by `kill -9` during typing.
 7. **Large documents / slow disks (iCloud, network):** autosave is debounced and coalesced; never queue more than one write in flight.
 8. **Undo after reopen:** undo history is not persisted; Versions covers the "go back" need. Say so in docs.
@@ -179,8 +179,8 @@ Prerequisite for the human: an **Apple Developer Program** membership (needed fo
 - When a native control can't do something, write down the trade-off in an ADR instead of silently building a custom control.
 - Never silently drop unsupported DOCX content (see round-trip policy); add a fixture for every fidelity bug fixed.
 - Keep the app launchable and the main branch green.
-- Open questions to resolve with the human early: whether to keep a one-time backup of Word-authored originals (ADR 0004), Sparkle yes/no, header/footer in 1.0 or 1.1, domain/website host.
-- Resolved (2026-11-04): unnamed documents are system drafts until named (ADR 0003); minimum macOS version is **macOS 26**; the app is **sandboxed**.
+- Open questions to resolve with the human early: Sparkle yes/no, header/footer in 1.0 or 1.1, domain/website host.
+- Resolved (2026-11-04): unnamed documents are system drafts until named (ADR 0003); Word-authored originals get a private backup copy plus Versions (ADR 0004); minimum macOS version is **macOS 26**; the app is **sandboxed**.
 
 ## 12. First prompt to give Claude Code
 

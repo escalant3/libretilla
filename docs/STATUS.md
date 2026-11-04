@@ -23,13 +23,12 @@
 
 **Decided with the human:** minimum macOS 26; sandboxed; generated corpus with real-app slots left as TODOs;
 private GitHub repo; TextKit 2 with tracked gaps (fix them late in the project); no SwiftDocX, build our own
-DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003).
+DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003); private backup copy of originals plus Versions (ADR 0004).
 
 ## Waiting on the human
 
 - [ ] Header/footer in 1.0 or 1.1. Recommendation in ADR 0002: preserve plus print/PDF and a simple editing sheet in
       1.0; inline editing in 1.1.
-- [ ] ADR 0004: the one-time backup of Word-authored originals before the first autosave.
 - [ ] Sparkle yes/no; domain and website host.
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
 - [ ] Placeholder bundle id `app.cartilla.Cartilla`; confirm, or choose one tied to the domain.
