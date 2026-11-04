@@ -9,6 +9,9 @@ extension NSAttributedString.Key {
     public static let cartillaParagraph = NSAttributedString.Key("cartilla.paragraph")
     /// `RunFormat` on the text of a run.
     public static let cartillaRun = NSAttributedString.Key("cartilla.run")
+    /// `ParagraphFormat` on every character of a paragraph: what its `w:pPr` says. Replaced (never
+    /// mutated) when the paragraph's formatting changes.
+    public static let cartillaParagraphFormat = NSAttributedString.Key("cartilla.paragraphFormat")
     /// `OpaqueInlineBox` on the visible characters of an opaque inline (hyperlink text, object character, …).
     public static let cartillaOpaque = NSAttributedString.Key("cartilla.opaque")
     /// `MarkerBox` on the first character after invisible opaque inlines (bookmarks, comment ranges, …).
@@ -30,27 +33,65 @@ public final class ParagraphOrigin: NSObject, @unchecked Sendable {
     public let leadingBlocks: [OpaqueBlock]
     /// Invisible inlines after the paragraph's last visible character.
     public let trailingMarkers: [OpaqueInline]
+    /// The format the paragraph was shown with; any other `ParagraphFormat` means it was reformatted.
+    public let format: ParagraphFormat
     let text: String
     let signature: [Span]
 
     init(
-        paragraph: Paragraph, leadingBlocks: [OpaqueBlock], trailingMarkers: [OpaqueInline], text: String,
-        signature: [Span]
+        paragraph: Paragraph, leadingBlocks: [OpaqueBlock], trailingMarkers: [OpaqueInline], format: ParagraphFormat,
+        text: String, signature: [Span]
     ) {
         self.paragraph = paragraph
         self.leadingBlocks = leadingBlocks
         self.trailingMarkers = trailingMarkers
+        self.format = format
         self.text = text
         self.signature = signature
     }
 }
 
+/// A run's direct formatting: parsed properties plus the exact `w:rPr` bytes they came from.
 public final class RunFormat: NSObject, @unchecked Sendable {
     public let properties: RunProperties
     public let xml: Data?
-    init(properties: RunProperties, xml: Data?) {
+    public init(properties: RunProperties, xml: Data?) {
         self.properties = properties
         self.xml = xml
+    }
+
+    /// A copy whose `fields` say what `new` says, rewriting only those children of the XML.
+    public func setting(_ fields: Set<RunProperties.Field>, from new: RunProperties) -> RunFormat {
+        var p = properties
+        p.take(fields, from: new)
+        guard p != properties else { return self }
+        return RunFormat(properties: p, xml: p.patching(xml, fields: fields))
+    }
+}
+
+/// A paragraph's direct formatting: parsed properties plus the exact `w:pPr` bytes (which may hold
+/// a section break and things Cartilla doesn't model).
+public final class ParagraphFormat: NSObject, @unchecked Sendable {
+    public let properties: ParagraphProperties
+    public let xml: Data?
+    public init(properties: ParagraphProperties, xml: Data?) {
+        self.properties = properties
+        self.xml = xml
+    }
+
+    /// A copy whose `fields` say what `new` says, rewriting only those children of the XML.
+    public func setting(_ fields: Set<ParagraphProperties.Field>, from new: ParagraphProperties) -> ParagraphFormat {
+        var p = properties
+        p.take(fields, from: new)
+        guard p != properties else { return self }
+        return ParagraphFormat(properties: p, xml: p.patching(xml, fields: fields))
+    }
+
+    /// The `w:pPr` without its section break (for the first pieces of a split paragraph).
+    var xmlWithoutSectionBreak: Data? {
+        guard properties.hasSectionBreak else { return xml }
+        return ElementPatch.apply(
+            [.remove("w:sectPr")], to: xml, wrapper: "w:pPr", order: ElementPatch.paragraphPropertiesOrder)
     }
 }
 

@@ -84,8 +84,15 @@ public struct ParagraphProperties: Sendable, Equatable {
     public var indentRight: Double?
     /// Positive for a first-line indent, negative for a hanging indent.
     public var firstLine: Double?
-    public var hasNumbering = false
+    /// `w:numPr`: the list (`numId`, 0 means "no list") and level. Either may come from the style.
+    public var numId: Int?
+    public var ilvl: Int?
+    /// Custom tab stops (`w:tabs`), in points; nil means inherit.
+    public var tabs: [TabStop]?
     public var hasSectionBreak = false
+
+    /// The paragraph is a list item.
+    public var hasNumbering: Bool { (numId ?? 0) != 0 }
 
     public init() {}
 
@@ -111,14 +118,18 @@ public struct ParagraphProperties: Sendable, Equatable {
                 } else if let f = pt(e.attribute("w:firstLine")) {
                     firstLine = f
                 }
-            case "w:numPr": hasNumbering = true
+            case "w:numPr":
+                numId = e.firstChild(named: "w:numId")?.attribute("w:val").flatMap { Int($0) }
+                ilvl = e.firstChild(named: "w:ilvl")?.attribute("w:val").flatMap { Int($0) }
+            case "w:tabs":
+                tabs = e.childElements(named: "w:tab").compactMap(TabStop.init)
             case "w:sectPr": hasSectionBreak = true
             default: break
             }
         }
     }
 
-    /// `self` wins; unset values come from `base`. Style id and section/numbering flags stay `self`'s.
+    /// `self` wins; unset values come from `base`. Style id and the section flag stay `self`'s.
     public func over(_ base: ParagraphProperties) -> ParagraphProperties {
         var p = self
         p.alignment = alignment ?? base.alignment
@@ -131,7 +142,35 @@ public struct ParagraphProperties: Sendable, Equatable {
         p.indentLeft = indentLeft ?? base.indentLeft
         p.indentRight = indentRight ?? base.indentRight
         p.firstLine = firstLine ?? base.firstLine
-        p.hasNumbering = hasNumbering || base.hasNumbering
+        p.numId = numId ?? base.numId
+        p.ilvl = ilvl ?? base.ilvl
+        p.tabs = tabs ?? base.tabs
         return p
+    }
+}
+
+/// A custom tab stop. `alignment` is `left`, `center`, `right` or `decimal` (`start`/`end` map to left/right).
+public struct TabStop: Sendable, Equatable {
+    public var position: Double
+    public var alignment: String
+    public var leader: String?
+
+    public init(position: Double, alignment: String = "left", leader: String? = nil) {
+        self.position = position
+        self.alignment = alignment
+        self.leader = leader
+    }
+
+    init?(_ e: RawXML.Element) {
+        guard let val = e.attribute("w:val"), val != "clear", val != "bar",
+            let pos = e.attribute("w:pos").flatMap(Double.init)
+        else { return nil }
+        position = pos / 20
+        switch val {
+        case "start": alignment = "left"
+        case "end": alignment = "right"
+        default: alignment = val
+        }
+        leader = e.attribute("w:leader").flatMap { $0 == "none" ? nil : $0 }
     }
 }

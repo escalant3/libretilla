@@ -1,11 +1,14 @@
 import Foundation
 
-/// An open `.docx`: the lossless package plus the parsed main document body and styles.
+/// An open `.docx`: the lossless package plus the parsed main document body, styles and lists.
 public struct DocxDocument: Sendable {
     public var package: OPCPackage
     public let mainPartName: String
     public var body: DocumentBody
-    public let styles: StyleSheet
+    /// Edited through `StyleSheet`'s splicing methods; written back only if its bytes changed.
+    public var styles: StyleSheet
+    /// Edited through `Numbering.addList`; written back only if its bytes changed.
+    public var numbering: Numbering
 
     /// Why the document must open read-only, if it must.
     public var readOnlyReason: String? { body.readOnlyReason }
@@ -16,6 +19,10 @@ public struct DocxDocument: Sendable {
 public struct OOXMLCodec: DocxCodec {
     static let stylesType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
     static let themeType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"
+    static let numberingType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering"
+    static let stylesContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+    static let numberingContentType =
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
 
     public init() {}
 
@@ -28,15 +35,27 @@ public struct OOXMLCodec: DocxCodec {
         func part(_ type: String) -> Data? {
             rels.first { $0.type == type }?.resolvedPartName.flatMap { package[$0] }
         }
-        // Styles only affect display; a damaged styles part shouldn't prevent opening.
+        // Styles and lists only affect display; a damaged part shouldn't prevent opening. A part
+        // that can't be parsed is never rewritten either (its sheet has no source bytes).
         let styles = (try? StyleSheet(styles: part(Self.stylesType), theme: part(Self.themeType))) ?? StyleSheet()
-        return DocxDocument(package: package, mainPartName: main, body: body, styles: styles)
+        let numbering = (try? Numbering(xml: part(Self.numberingType))) ?? Numbering()
+        return DocxDocument(package: package, mainPartName: main, body: body, styles: styles, numbering: numbering)
     }
 
     public func write(_ document: DocxDocument) throws -> Data {
         if let reason = document.readOnlyReason { throw DocxCodecError.unsupported(reason) }
         var package = document.package
         package.setPart(document.mainPartName, data: document.body.serialized())
+        if let xml = document.styles.stylesXML {
+            try package.setRelatedPart(
+                of: document.mainPartName, type: Self.stylesType, contentType: Self.stylesContentType,
+                defaultName: "styles.xml", data: xml)
+        }
+        if let xml = document.numbering.xml {
+            try package.setRelatedPart(
+                of: document.mainPartName, type: Self.numberingType, contentType: Self.numberingContentType,
+                defaultName: "numbering.xml", data: xml)
+        }
         return try package.serialized()
     }
 }

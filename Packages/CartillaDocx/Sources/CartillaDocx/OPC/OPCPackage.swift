@@ -110,6 +110,72 @@ public struct OPCPackage: Sendable, Equatable {
         return name
     }
 
+    /// Writes the part that `owner` relates to with `type`. If there's none yet, creates it next to
+    /// `owner` as `defaultName`, with a relationship and a content-type override (spliced in, so
+    /// the existing relationships and types keep their bytes).
+    public mutating func setRelatedPart(
+        of owner: String, type: String, contentType: String, defaultName: String, data: Data
+    ) throws {
+        if let existing = try relationships(of: owner).first(where: { $0.type == type })?.resolvedPartName,
+            self[existing] != nil
+        {
+            setPart(existing, data: data)
+            return
+        }
+        let folder = owner.split(separator: "/").dropLast().joined(separator: "/")
+        var name = folder.isEmpty ? defaultName : folder + "/" + defaultName
+        var n = 1
+        while self[name] != nil {
+            n += 1
+            let stem = (defaultName as NSString).deletingPathExtension
+            let ext = (defaultName as NSString).pathExtension
+            name = (folder.isEmpty ? "" : folder + "/") + "\(stem)\(n).\(ext)"
+        }
+        let target = String(name.dropFirst(folder.isEmpty ? 0 : folder.count + 1))
+
+        // Relationship.
+        let relsName = Self.relsPartName(for: owner)
+        let existingIds = Set(try relationships(of: owner).map(\.id))
+        var k = existingIds.count + 1
+        while existingIds.contains("rId\(k)") { k += 1 }
+        let rel =
+            "<Relationship Id=\"rId\(k)\" Type=\"\(RawXML.escapeAttribute(type))\" "
+            + "Target=\"\(RawXML.escapeAttribute(target))\"/>"
+        let rels =
+            self[relsName]
+            ?? Data(
+                ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n"
+                    + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                    + "</Relationships>").utf8)
+        setPart(relsName, data: try Self.appending(rel, toRootOf: rels, part: relsName))
+
+        // Content type.
+        let typesName = "[Content_Types].xml"
+        guard let types = self[typesName] else { throw DocxCodecError.missingPart(typesName) }
+        let override =
+            "<Override PartName=\"/\(RawXML.escapeAttribute(name))\" ContentType=\"\(RawXML.escapeAttribute(contentType))\"/>"
+        setPart(typesName, data: try Self.appending(override, toRootOf: types, part: typesName))
+
+        setPart(name, data: data)
+    }
+
+    /// Inserts `element` just before the root's end tag.
+    static func appending(_ element: String, toRootOf xml: Data, part: String) throws -> Data {
+        var bytes = Data([UInt8](xml))
+        let root = try RawXML.Document(data: bytes, part: part).root
+        if root.endTagRange.isEmpty {
+            // Self-closing root: `<Types …/>` → `<Types …>element</Types>`.
+            var open = Data([UInt8](bytes[root.startTagRange]))
+            while let last = open.last, last == UInt8(ascii: ">") || last == UInt8(ascii: "/") || last == 0x20 {
+                open.removeLast()
+            }
+            bytes.replaceSubrange(root.range, with: open + Data(">\(element)</\(root.name)>".utf8))
+            return bytes
+        }
+        bytes.insert(contentsOf: Data(element.utf8), at: root.endTagRange.lowerBound)
+        return bytes
+    }
+
     static func relsPartName(for part: String) -> String {
         guard !part.isEmpty else { return "_rels/.rels" }
         var components = part.split(separator: "/").map(String.init)

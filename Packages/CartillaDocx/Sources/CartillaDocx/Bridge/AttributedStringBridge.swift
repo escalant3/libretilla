@@ -9,9 +9,15 @@ import AppKit
 ///   bytes. Only edited paragraphs are re-serialized.
 public struct AttributedStringBridge: Sendable {
     public let styles: StyleSheet
+    public let numbering: Numbering
 
-    public init(styles: StyleSheet) {
+    public init(styles: StyleSheet, numbering: Numbering = Numbering()) {
         self.styles = styles
+        self.numbering = numbering
+    }
+
+    public init(_ document: DocxDocument) {
+        self.init(styles: document.styles, numbering: document.numbering)
     }
 
     // MARK: - Model → text
@@ -19,10 +25,11 @@ public struct AttributedStringBridge: Sendable {
     public func attributedString(for body: DocumentBody) -> NSAttributedString {
         let out = NSMutableAttributedString()
         var pendingHidden: [OpaqueBlock] = []
+        var counter = Numbering.Counter(numbering)
         for block in body.blocks {
             switch block {
             case .paragraph(let p):
-                out.append(paragraphText(p, leadingBlocks: pendingHidden))
+                out.append(paragraphText(p, leadingBlocks: pendingHidden, counter: &counter))
                 pendingHidden = []
             case .opaque(let o) where Self.isHidden(o):
                 pendingHidden.append(o)
@@ -39,10 +46,13 @@ public struct AttributedStringBridge: Sendable {
         block.isSectionProperties || (block.visibleText.isEmpty && block.kind != "w:tbl" && block.kind != "w:sdt")
     }
 
-    func paragraphText(_ p: Paragraph, leadingBlocks: [OpaqueBlock]) -> NSAttributedString {
-        let (paragraphProps, _) = styles.resolveParagraphStyle(p.properties.styleId)
-        let effective = p.properties.over(paragraphProps)
-        let paragraphStyle = Self.paragraphStyle(effective)
+    func paragraphText(_ p: Paragraph, leadingBlocks: [OpaqueBlock], counter: inout Numbering.Counter)
+        -> NSAttributedString
+    {
+        let effective = effectiveParagraph(p.properties)
+        let marker = effective.hasNumbering ? counter.next(numId: effective.numId!, ilvl: effective.ilvl ?? 0) : nil
+        let paragraphStyle = Self.paragraphStyle(effective, marker: marker)
+        let format = ParagraphFormat(properties: p.properties, xml: p.propertiesXML)
         let text = NSMutableAttributedString()
         var pendingMarkers: [OpaqueInline] = []
 
@@ -94,10 +104,12 @@ public struct AttributedStringBridge: Sendable {
         terminator[.paragraphStyle] = paragraphStyle
         let contentLength = text.length
         let origin = ParagraphOrigin(
-            paragraph: p, leadingBlocks: leadingBlocks, trailingMarkers: pendingMarkers, text: text.string,
-            signature: Span.signature(of: text, in: NSRange(location: 0, length: contentLength)))
+            paragraph: p, leadingBlocks: leadingBlocks, trailingMarkers: pendingMarkers, format: format,
+            text: text.string, signature: Span.signature(of: text, in: NSRange(location: 0, length: contentLength)))
         text.append(NSAttributedString(string: "\n", attributes: terminator))
-        text.addAttribute(.cartillaParagraph, value: origin, range: NSRange(location: 0, length: text.length))
+        let all = NSRange(location: 0, length: text.length)
+        text.addAttribute(.cartillaParagraph, value: origin, range: all)
+        text.addAttribute(.cartillaParagraphFormat, value: format, range: all)
         return text
     }
 
@@ -171,7 +183,7 @@ public struct AttributedStringBridge: Sendable {
                         blocks.append(
                             .paragraph(
                                 editedParagraph(
-                                    text, NSRange(location: cursor, length: at - cursor), origin: nil,
+                                    text, NSRange(location: cursor, length: at - cursor), origin: nil, format: nil,
                                     keepSectionBreak: true, emitted: &emittedOpaque, notices: &notices)))
                     }
                     if emittedBlocks.insert(ObjectIdentifier(box)).inserted {
@@ -185,14 +197,15 @@ public struct AttributedStringBridge: Sendable {
                         .paragraph(
                             editedParagraph(
                                 text, NSRange(location: cursor, length: NSMaxRange(content) - cursor), origin: nil,
-                                keepSectionBreak: true, emitted: &emittedOpaque, notices: &notices)))
+                                format: nil, keepSectionBreak: true, emitted: &emittedOpaque, notices: &notices)))
                 }
                 continue
             }
 
             if let origin, isFirst { blocks += origin.leadingBlocks.map(Block.opaque) }
 
-            if let origin, isFirst, isLast, text.attributedSubstring(from: content).string == origin.text,
+            if let origin, isFirst, isLast, Self.paragraphFormat(text, full) === origin.format,
+                text.attributedSubstring(from: content).string == origin.text,
                 Span.signature(of: text, in: content) == origin.signature
             {
                 blocks.append(.paragraph(origin.paragraph))
@@ -201,7 +214,7 @@ public struct AttributedStringBridge: Sendable {
             }
 
             var p = editedParagraph(
-                text, content, origin: origin, keepSectionBreak: isLast,
+                text, content, origin: origin, format: Self.paragraphFormat(text, full), keepSectionBreak: isLast,
                 emitted: &emittedOpaque, notices: &notices)
             if let origin, isLast {
                 p.inlines += origin.trailingMarkers.map(Inline.opaque)
@@ -243,20 +256,28 @@ public struct AttributedStringBridge: Sendable {
         }
     }
 
+    /// The paragraph's format: its first character's, else its terminator's (pasted text may lack one).
+    static func paragraphFormat(_ text: NSAttributedString, _ paragraph: NSRange) -> ParagraphFormat? {
+        guard paragraph.length > 0 else { return nil }
+        return text.attribute(.cartillaParagraphFormat, at: paragraph.location, effectiveRange: nil) as? ParagraphFormat
+            ?? text.attribute(.cartillaParagraphFormat, at: NSMaxRange(paragraph) - 1, effectiveRange: nil)
+            as? ParagraphFormat
+    }
+
     func editedParagraph(
-        _ text: NSAttributedString, _ range: NSRange, origin: ParagraphOrigin?, keepSectionBreak: Bool,
-        emitted: inout Set<ObjectIdentifier>, notices: inout [String]
+        _ text: NSAttributedString, _ range: NSRange, origin: ParagraphOrigin?, format: ParagraphFormat?,
+        keepSectionBreak: Bool, emitted: inout Set<ObjectIdentifier>, notices: inout [String]
     ) -> Paragraph {
-        var p: Paragraph
-        if let origin {
-            p = origin.paragraph.edited()
-            if !keepSectionBreak, let without = p.propertiesXMLWithoutSectionBreak {
-                p.propertiesXML = without
-                p.propertiesXMLWithoutSectionBreak = nil
-                p.properties.hasSectionBreak = false
-            }
-        } else {
-            p = Paragraph()
+        var p = origin?.paragraph.edited() ?? Paragraph()
+        p.propertiesXMLWithoutSectionBreak = nil
+        if let format {
+            p.properties = format.properties
+            p.propertiesXML = keepSectionBreak ? format.xml : format.xmlWithoutSectionBreak
+            if !keepSectionBreak { p.properties.hasSectionBreak = false }
+        } else if origin != nil {
+            // Reached only for text around an opaque block: plain paragraph.
+            p.properties = ParagraphProperties()
+            p.propertiesXML = nil
         }
         var inlines: [Inline] = []
         let ns = text.string as NSString
@@ -394,8 +415,40 @@ extension AttributedStringBridge {
         "black": .black.withAlphaComponent(0.6),
     ]
 
-    static func paragraphStyle(_ p: ParagraphProperties) -> NSParagraphStyle {
+    /// Paragraph properties as displayed: direct formatting over the list level over the style chain.
+    public func effectiveParagraph(_ direct: ParagraphProperties) -> ParagraphProperties {
+        let (styleProps, _) = styles.resolveParagraphStyle(direct.styleId)
+        var base = styleProps
+        let merged = direct.over(base)
+        if merged.hasNumbering, let level = numbering.level(numId: merged.numId!, ilvl: merged.ilvl ?? 0) {
+            if let left = level.indentLeft { base.indentLeft = left }
+            if let first = level.firstLine { base.firstLine = first }
+            return direct.over(base)
+        }
+        return merged
+    }
+
+    /// Default tab stops every half inch, as in Word's `w:defaultTabStop` default.
+    static let defaultTabInterval: CGFloat = 36
+
+    static func paragraphStyle(_ p: ParagraphProperties, marker: String? = nil) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
+        style.tabStops = (p.tabs ?? []).map { tab in
+            let alignment: NSTextAlignment =
+                switch tab.alignment {
+                case "center": .center
+                case "right": .right
+                case "decimal": .right
+                default: .left
+                }
+            var options: [NSTextTab.OptionKey: Any] = [:]
+            if tab.alignment == "decimal" { options[.columnTerminators] = NSTextTab.columnTerminators(for: .current) }
+            return NSTextTab(textAlignment: alignment, location: CGFloat(tab.position), options: options)
+        }
+        style.defaultTabInterval = defaultTabInterval
+        if let marker {
+            style.textLists = [NSTextList(markerFormat: NSTextList.MarkerFormat(marker), options: 0)]
+        }
         switch p.alignment {
         case "center": style.alignment = .center
         case "right", "end": style.alignment = .right
