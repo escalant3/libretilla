@@ -34,8 +34,45 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - [ ] Placeholder bundle id `app.cartilla.Cartilla`; confirm, or choose one tied to the domain.
 - [ ] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"); confirm the name.
 
-## Next: Milestone 1 (skeleton)
+## Milestone 1: Skeleton ✅ (2026-11-04)
 
-`OPCPackage` copy-through reader/writer; `document.xml` byte-range-preserving
-parser for paragraphs and runs; `AttributedStringBridge`; autosave in place with async writes; Saved/Saving
-status; round-trip suite over the corpus.
+**Done**
+
+- `CartillaDocx` codec (ADR 0002):
+  - `OPCPackage` copies every part through untouched.
+  - `RawXML` is a byte-range-preserving XML reader.
+  - Paragraphs and runs are modelled; everything else is kept verbatim as opaque blocks or inlines.
+  - An unedited document writes back its exact original bytes.
+- `AttributedStringBridge` (TextKit 2) shows styles, theme fonts, run formatting, alignment, indents and
+  spacing.
+  - Links and fields show as text.
+  - Images, footnotes, text boxes and equations show as placeholder chips; tables as a placeholder line.
+  - Only edited paragraphs are re-serialized.
+- Persistence (§5.4, ADRs 0003/0004):
+  - Autosave in place 3 s after typing, written asynchronously from a main-thread snapshot.
+  - No edited dot; a Saved/Edited/Saving…/Couldn't save/Read-only status sits beside the title.
+  - Unnamed documents are system drafts.
+  - A private copy of each opened original is kept for 30 days (File ▸ Restore Original…).
+- Toolbar stub (New, Open, Print, Undo, Redo); printing through a TextKit 2 view.
+- Tests:
+  - 24 codec/bridge tests over the 12-file corpus: byte-identical round trip, full re-serialization,
+    edits touch only the edited paragraph, Word-only features survive.
+  - 17 app unit tests.
+  - 6 UI tests: autosave to the real file; an untouched file is unchanged (bytes and mtime); quit with no
+    prompt; `kill -9` loses only the last seconds; the unnamed-draft sheet.
+- Manual check: every fixture, edited by the codec, opens in Pages 14.5 and pandoc.
+
+**Not yet verified:** opening Cartilla-written files in **Microsoft Word**. It isn't installed on the dev
+machine. Please open a few edited files in Word and report any repair prompt.
+
+**Known M1 limitations (planned)**
+
+- No formatting UI yet (M2). Typed text takes the formatting of the run it's typed into.
+- Links, fields, content controls and objects can be deleted whole but not edited inside (M3).
+- Tables show as a placeholder line. TextKit 2 can't lay them out (gap G1), and table editing is M3.
+- New documents are US Letter.
+
+## Next: Milestone 2 (formatting)
+
+Format bar and menus, styles and headings (`w:pStyle` mapping, style popup), lists (`numbering.xml`),
+alignment, spacing, ruler, find/replace, undo.

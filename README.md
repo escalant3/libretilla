@@ -4,8 +4,9 @@
 is `.docx`**: you open a Word document, write, and it's saved back to that same file automatically, with no Save
 dialogs. You can export to PDF. There's no ribbon, no AI and no cloud.
 
-> **Status: Milestone 0 (spike).** The app launches with an empty editor; it doesn't open or save `.docx` yet.
-> See [`docs/STATUS.md`](docs/STATUS.md).
+> **Status: Milestone 1.** Opens `.docx`, shows the text with its formatting, and autosaves edits back to the
+> same file, losslessly: untouched content is copied through byte for byte. Formatting tools arrive in
+> Milestone 2. See [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Requirements
 
