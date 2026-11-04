@@ -159,6 +159,28 @@ public struct OPCPackage: Sendable, Equatable {
         setPart(name, data: data)
     }
 
+    /// Adds a relationship from `owner` (spliced into its `.rels`, so existing ones keep their bytes) and
+    /// returns its new id.
+    public mutating func addRelationship(of owner: String, type: String, target: String, external: Bool) throws
+        -> String
+    {
+        let relsName = Self.relsPartName(for: owner)
+        let existingIds = Set(try relationships(of: owner).map(\.id))
+        var k = existingIds.count + 1
+        while existingIds.contains("rId\(k)") { k += 1 }
+        let rel =
+            "<Relationship Id=\"rId\(k)\" Type=\"\(RawXML.escapeAttribute(type))\" "
+            + "Target=\"\(RawXML.escapeAttribute(target))\"" + (external ? " TargetMode=\"External\"/>" : "/>")
+        let rels =
+            self[relsName]
+            ?? Data(
+                ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n"
+                    + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                    + "</Relationships>").utf8)
+        setPart(relsName, data: try Self.appending(rel, toRootOf: rels, part: relsName))
+        return "rId\(k)"
+    }
+
     /// Inserts `element` just before the root's end tag.
     static func appending(_ element: String, toRootOf xml: Data, part: String) throws -> Data {
         var bytes = Data([UInt8](xml))

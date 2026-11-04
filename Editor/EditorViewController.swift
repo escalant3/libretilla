@@ -70,6 +70,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         textView.isHorizontallyResizable = false
         textView.drawsBackground = false
         textView.setAccessibilityLabel(String(localized: "Document body"))
+        // Links look as their Word style says (usually "Hyperlink"), not AppKit's blue.
+        textView.linkTextAttributes = [:]
         textView.delegate = self
         textView.structureDelegate = self
         textView.textStorage?.delegate = self
@@ -226,6 +228,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     ) -> [NSAttributedString.Key: Any] {
         var attrs = newTypingAttributes
         for key in NSAttributedString.Key.cartillaNonInheritable { attrs[key] = nil }
+        // Typing inside a link (not at either end) extends it, as in Word.
+        if let storage = textView.textStorage, let link = linkAround(caret: textView.selectedRange(), in: storage) {
+            attrs[.cartillaHyperlink] = link.box
+            if let url = link.box.url { attrs[.link] = url }
+        }
         return attrs
     }
 

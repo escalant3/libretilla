@@ -23,6 +23,8 @@ public enum RunChange: Sendable, Equatable {
     case verticalAlignment(String?)
     /// Removes all direct character formatting Cartilla models (Clear Formatting).
     case clear
+    /// Sets (an id) or removes (nil) the run's character style (`w:rStyle`), e.g. "Hyperlink".
+    case characterStyle(String?)
 }
 
 public enum ParagraphChange: Sendable, Equatable {
@@ -200,6 +202,9 @@ extension AttributedStringBridge {
             field = .verticalAlignment
             let inheritedValue = inherited.verticalAlignment == "baseline" ? nil : inherited.verticalAlignment
             new.verticalAlignment = v == inheritedValue ? nil : (v ?? "baseline")
+        case .characterStyle(let id):
+            field = .style
+            new.styleId = id
         case .clear:
             // Character styles go too, as with Word's Clear Formatting. (Links are opaque and untouched.)
             return format.setting(Set(RunProperties.Field.allCases), from: RunProperties())

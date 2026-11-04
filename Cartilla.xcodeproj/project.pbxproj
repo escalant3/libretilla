@@ -12,6 +12,7 @@
 		1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */; };
 		273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */; };
 		2E69D7268F1BEDBF6C6645DA /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490FBEFBA93971536B964811 /* UITestSupport.swift */; };
+		2EE4D2B351768530F7B67E6C /* LinkCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5516DAD63E9ADD3597E2EDB9 /* LinkCommandTests.swift */; };
 		302BFA5C7FE8F07CE9E36389 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60403553CD3D734E8470524F /* MainToolbar.swift */; };
 		30E2A7A9C6DFB37F724C9F2E /* FormattingCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA63BD9C83F34C137AB1B64 /* FormattingCommandTests.swift */; };
 		348217EF2D746F98B5657B3F /* PrintTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADF56BBF8481680CB6EB886 /* PrintTextView.swift */; };
@@ -34,6 +35,7 @@
 		DFB5DD1B67049D91B3BD1713 /* PersistenceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A924860A205C14D83E9A055B /* PersistenceUITests.swift */; };
 		E7F59A974CD316FAAD456962 /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = 9271AFBF80EADBD48972DEBD /* Blank.docx */; };
 		EB314EB6BA2DC1D8ED22F04D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5866471B4EB11EBAFE10CE7 /* main.swift */; };
+		F4C5747FD38DF152E41B15B1 /* EditorViewController+Links.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8C6E41DE368374A11F70A5 /* EditorViewController+Links.swift */; };
 		F6C1E9FDDDE5D8A2CD4D8E4C /* OriginalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825E1F8161AC3973B5797760 /* OriginalsStore.swift */; };
 /* End PBXBuildFile section */
 
@@ -66,6 +68,7 @@
 		494F3478AAA91243011B8C02 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
 		4AB91AA22F40480516670E4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
+		5516DAD63E9ADD3597E2EDB9 /* LinkCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkCommandTests.swift; sourceTree = "<group>"; };
 		60403553CD3D734E8470524F /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		73AA5D43E2C6409D02666E0F /* FormatBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBar.swift; sourceTree = "<group>"; };
@@ -83,6 +86,7 @@
 		BF5899E4136F5F1ABACA0DBC /* EditorViewController+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Formatting.swift"; sourceTree = "<group>"; };
 		C4FCA90FB94EB59559A14C4A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8DD797E7B26063AAB35CB6A /* Cartilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cartilla.entitlements; sourceTree = "<group>"; };
+		CB8C6E41DE368374A11F70A5 /* EditorViewController+Links.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Links.swift"; sourceTree = "<group>"; };
 		D0C31C4C0964D6B3BA470348 /* CartillaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartillaDocument.swift; sourceTree = "<group>"; };
 		DD1D2E40BDC849665AB08222 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		E5866471B4EB11EBAFE10CE7 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -136,6 +140,7 @@
 			children = (
 				8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */,
 				0FA63BD9C83F34C137AB1B64 /* FormattingCommandTests.swift */,
+				5516DAD63E9ADD3597E2EDB9 /* LinkCommandTests.swift */,
 				9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */,
 				2A977F457011A4304254B54E /* RulerTests.swift */,
 				174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */,
@@ -150,6 +155,7 @@
 				494F3478AAA91243011B8C02 /* EditorViewController.swift */,
 				BF5899E4136F5F1ABACA0DBC /* EditorViewController+Formatting.swift */,
 				43E00E6A5CC4D5D4FC0C599A /* EditorViewController+Insert.swift */,
+				CB8C6E41DE368374A11F70A5 /* EditorViewController+Links.swift */,
 				FADF56BBF8481680CB6EB886 /* PrintTextView.swift */,
 			);
 			path = Editor;
@@ -361,6 +367,7 @@
 				BE2AECF8D862548DB1CE23F5 /* DocumentWindowController.swift in Sources */,
 				C36412E509AE768A1E99DB93 /* EditorViewController+Formatting.swift in Sources */,
 				74523400B5099FDCDFD8935A /* EditorViewController+Insert.swift in Sources */,
+				F4C5747FD38DF152E41B15B1 /* EditorViewController+Links.swift in Sources */,
 				DA78B3C7CED82E43862A7495 /* EditorViewController.swift in Sources */,
 				82E84615364B9C2E02D08C1A /* FormatBar.swift in Sources */,
 				9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */,
@@ -378,6 +385,7 @@
 			files = (
 				273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */,
 				30E2A7A9C6DFB37F724C9F2E /* FormattingCommandTests.swift in Sources */,
+				2EE4D2B351768530F7B67E6C /* LinkCommandTests.swift in Sources */,
 				985DC6259E26F45B4E594F71 /* PageSetupDocumentTests.swift in Sources */,
 				04C9C811252EDAE672ACEFA7 /* RulerTests.swift in Sources */,
 				1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */,

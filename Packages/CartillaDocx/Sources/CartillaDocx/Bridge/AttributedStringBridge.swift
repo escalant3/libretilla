@@ -10,14 +10,23 @@ import AppKit
 public struct AttributedStringBridge: Sendable {
     public let styles: StyleSheet
     public let numbering: Numbering
+    /// External link targets by relationship id, for showing links.
+    public let hyperlinkTargets: [String: String]
 
-    public init(styles: StyleSheet, numbering: Numbering = Numbering()) {
+    public init(styles: StyleSheet, numbering: Numbering = Numbering(), hyperlinkTargets: [String: String] = [:]) {
         self.styles = styles
         self.numbering = numbering
+        self.hyperlinkTargets = hyperlinkTargets
     }
 
     public init(_ document: DocxDocument) {
-        self.init(styles: document.styles, numbering: document.numbering)
+        self.init(styles: document.styles, numbering: document.numbering, hyperlinkTargets: document.hyperlinkTargets)
+    }
+
+    /// Where `link` points: its new target, its relationship's URL, or nil (bookmark links).
+    public func url(of link: Hyperlink) -> URL? {
+        if let target = link.newTarget { return URL(string: target) }
+        return link.relationshipId.flatMap { hyperlinkTargets[$0] }.flatMap(URL.init(string:))
     }
 
     // MARK: - Model → text
@@ -71,19 +80,27 @@ public struct AttributedStringBridge: Sendable {
             }
         }
 
+        func appendRun(_ r: Run, extra: [NSAttributedString.Key: Any] = [:]) {
+            var attrs = characterAttributes(
+                styles.resolveRun(paragraphStyle: p.properties.styleId, direct: r.properties))
+            attrs[.cartillaRun] = RunFormat(properties: r.properties, xml: r.propertiesXML)
+            attrs.merge(extra) { _, new in new }
+            // Page breaks show as a chip (an object character); the rest of the run as text.
+            for (i, piece) in r.text.split(separator: Run.pageBreak, omittingEmptySubsequences: false).enumerated() {
+                if i > 0 { append(Self.pageBreakCharacter, Self.pageBreakAttributes(attrs)) }
+                append(String(piece), attrs)
+            }
+        }
+
         for inline in p.inlines {
             switch inline {
             case .run(let r):
-                var attrs = characterAttributes(
-                    styles.resolveRun(paragraphStyle: p.properties.styleId, direct: r.properties))
-                attrs[.cartillaRun] = RunFormat(properties: r.properties, xml: r.propertiesXML)
-                // Page breaks show as a chip (an object character); the rest of the run as text.
-                for (i, piece) in r.text.split(separator: Run.pageBreak, omittingEmptySubsequences: false)
-                    .enumerated()
-                {
-                    if i > 0 { append(Self.pageBreakCharacter, Self.pageBreakAttributes(attrs)) }
-                    append(String(piece), attrs)
-                }
+                appendRun(r)
+            case .hyperlink(let link):
+                let box = HyperlinkBox(link, url: url(of: link))
+                var extra: [NSAttributedString.Key: Any] = [.cartillaHyperlink: box]
+                if let url = box.url { extra[.link] = url }
+                for r in link.runs { appendRun(r, extra: extra) }
             case .opaque(let o):
                 let resolved = styles.resolveRun(paragraphStyle: p.properties.styleId, direct: o.displayProperties)
                 var attrs = characterAttributes(resolved)
@@ -286,6 +303,8 @@ public struct AttributedStringBridge: Sendable {
             p.propertiesXML = nil
         }
         var inlines: [Inline] = []
+        // The box of each `.hyperlink` in `inlines`, in order.
+        var linkBoxes: [HyperlinkBox] = []
         let ns = text.string as NSString
 
         text.enumerateAttributes(in: range, options: []) { attrs, r, _ in
@@ -321,12 +340,37 @@ public struct AttributedStringBridge: Sendable {
                 ? String(repeating: Run.pageBreak, count: string.utf16.count)
                 : string.replacingOccurrences(of: "\u{FFFC}", with: "")
             guard !plain.isEmpty else { return }
+            let run: Run
             if let format = attrs[.cartillaRun] as? RunFormat {
-                Self.appendRun(&inlines, Run(text: plain, properties: format.properties, propertiesXML: format.xml))
+                run = Run(text: plain, properties: format.properties, propertiesXML: format.xml)
             } else {
                 let props = Self.runProperties(fromDisplay: attrs)
-                Self.appendRun(&inlines, Run(text: plain, properties: props, propertiesXML: props.xml()))
+                run = Run(text: plain, properties: props, propertiesXML: props.xml())
             }
+            if let box = attrs[.cartillaHyperlink] as? HyperlinkBox {
+                // Consecutive text of one link is one w:hyperlink; its runs are compared on the way out.
+                if case .hyperlink(var link) = inlines.last, linkBoxes.last.map({ $0 === box }) == true {
+                    var runs = [Inline.run(link.runs.last!)]
+                    link.runs.removeLast()
+                    Self.appendRun(&runs, run)
+                    link.runs += runs.compactMap { if case .run(let r) = $0 { r } else { nil } }
+                    inlines[inlines.count - 1] = .hyperlink(link)
+                } else {
+                    var link = box.link
+                    link.runs = [run]
+                    inlines.append(.hyperlink(link))
+                    linkBoxes.append(box)
+                }
+            } else {
+                Self.appendRun(&inlines, run)
+            }
+        }
+        // A link whose runs didn't change keeps its source bytes.
+        var k = 0
+        for (i, inline) in inlines.enumerated() {
+            guard case .hyperlink(let link) = inline else { continue }
+            inlines[i] = .hyperlink(linkBoxes[k].link.with(runs: link.runs))
+            k += 1
         }
         p.inlines = inlines
         return p

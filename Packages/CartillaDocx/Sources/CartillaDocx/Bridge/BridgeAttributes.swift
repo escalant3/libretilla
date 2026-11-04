@@ -19,13 +19,16 @@ extension NSAttributedString.Key {
     /// `OpaqueBlockBox` on the object character standing for a table, content control, ….
     public static let cartillaBlock = NSAttributedString.Key("cartilla.block")
 
+    /// `HyperlinkBox` on the text of a link Cartilla models (a `w:hyperlink` of plain runs). Characters with
+    /// the same box are saved as one `w:hyperlink`. `.link` carries its URL for display and clicking.
+    public static let cartillaHyperlink = NSAttributedString.Key("cartilla.hyperlink")
     /// `true` on the object character standing for a page break (`U+000C` in a run). Printing starts a new
     /// page after it and doesn't draw its chip.
     public static let cartillaPageBreak = NSAttributedString.Key("cartilla.pageBreak")
 
     /// Attributes that must not be inherited by newly typed text (`NSTextView.typingAttributes`).
     public static let cartillaNonInheritable: [NSAttributedString.Key] = [
-        .cartillaOpaque, .cartillaMarkers, .cartillaBlock, .cartillaPageBreak, .attachment, .link,
+        .cartillaOpaque, .cartillaMarkers, .cartillaBlock, .cartillaPageBreak, .cartillaHyperlink, .attachment, .link,
     ]
 }
 
@@ -104,6 +107,16 @@ public final class OpaqueInlineBox: NSObject, @unchecked Sendable {
     init(_ inline: OpaqueInline) { self.inline = inline }
 }
 
+public final class HyperlinkBox: NSObject, @unchecked Sendable {
+    public let link: Hyperlink
+    /// Where it points, for display and clicking: the external URL, or nil for a bookmark link.
+    public let url: URL?
+    public init(_ link: Hyperlink, url: URL?) {
+        self.link = link
+        self.url = url
+    }
+}
+
 public final class MarkerBox: NSObject, @unchecked Sendable {
     public let markers: [OpaqueInline]
     init(_ markers: [OpaqueInline]) { self.markers = markers }
@@ -125,6 +138,7 @@ struct Span: Equatable {
     var run: ObjectIdentifier?
     var opaque: ObjectIdentifier?
     var markers: ObjectIdentifier?
+    var hyperlink: ObjectIdentifier?
 
     static func signature(of text: NSAttributedString, in range: NSRange) -> [Span] {
         var spans: [Span] = []
@@ -134,12 +148,15 @@ struct Span: Equatable {
                     length: r.length,
                     run: (attrs[.cartillaRun] as AnyObject?).map(ObjectIdentifier.init),
                     opaque: (attrs[.cartillaOpaque] as AnyObject?).map(ObjectIdentifier.init),
-                    markers: (attrs[.cartillaMarkers] as AnyObject?).map(ObjectIdentifier.init)))
+                    markers: (attrs[.cartillaMarkers] as AnyObject?).map(ObjectIdentifier.init),
+                    hyperlink: (attrs[.cartillaHyperlink] as AnyObject?).map(ObjectIdentifier.init)))
         }
         // enumerateAttributes splits on any attribute (fonts, colours…); merge spans with equal identities.
         var merged: [Span] = []
         for s in spans {
-            if var last = merged.last, last.run == s.run, last.opaque == s.opaque, last.markers == s.markers {
+            if var last = merged.last, last.run == s.run, last.opaque == s.opaque, last.markers == s.markers,
+                last.hyperlink == s.hyperlink
+            {
                 last.length += s.length
                 merged[merged.count - 1] = last
             } else {

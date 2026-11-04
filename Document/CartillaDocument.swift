@@ -171,11 +171,16 @@ final class CartillaDocument: NSDocument {
 
     /// The id of the paragraph style with this built-in name, copying its definition from Cartilla's
     /// template if the document doesn't have it yet (a Pages file without "heading 3", say).
-    func paragraphStyleId(named name: String) -> String? {
+    func paragraphStyleId(named name: String) -> String? { styleId(named: name, type: "paragraph") }
+
+    /// The id of the character style with this built-in name ("Hyperlink"), copied in like paragraph styles.
+    func characterStyleId(named name: String) -> String? { styleId(named: name, type: "character") }
+
+    private func styleId(named name: String, type: String) -> String? {
         guard var doc = base else { return nil }
-        if let id = doc.styles.styleId(named: name) { return id }
+        if let id = doc.styles.styleId(named: name, type: type) { return id }
         let template = Self.emptyDocument.styles
-        guard let templateId = template.styleId(named: name),
+        guard let templateId = template.styleId(named: name, type: type),
             let id = doc.styles.ensureStyle(templateId, from: template)
         else { return nil }
         base = doc

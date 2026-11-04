@@ -159,6 +159,12 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   break" chip; runs mixing text and a break are modelled (they used to show only the chip). Insert ▸ Page Break
   (⌘↩) ends the text before the caret with a break and starts a new paragraph, as Word does, in one undo step.
   Print and PDF start a new page after each break and print nothing for it.
+- **Links.** A `w:hyperlink` of plain runs is now modelled (`Hyperlink`): its text is editable and stays a link,
+  and an unchanged link keeps its bytes. Insert ▸ Link… (⌘K) links the selection, inserts new link text at a
+  bare caret, or edits/removes the link the caret is in. New links get Word's "Hyperlink" character style and an
+  external relationship (reused for the same URL, so autosaves don't add more); `xmlns:r` is declared if missing.
+  Typing inside a link extends it, typing at its end doesn't. ⌘-click opens a link; a plain click places the caret.
+  Links containing fields, bookmarks or tracked changes stay opaque, as before.
 - **The paper fills the window** (owner's request, 2026-11-04): no gray canvas by default. The text column
   stays at the document's text width, centred, so line breaks match print and PDF. View ▸ Show Page Edges
   brings back the page on a gray canvas; the choice is remembered.
@@ -172,5 +178,5 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 
-**Still to do:** links, images, tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
+**Still to do:** images, tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
 print yet.

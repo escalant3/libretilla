@@ -80,16 +80,22 @@ import Testing
         #expect(String(decoding: back.body.serialized(), as: UTF8.self).components(separatedBy: "<w:sectPr").count == 3)
     }
 
-    @Test func editingInsideAHyperlinkKeepsTheTextAndReportsIt() throws {
+    @Test func editingInsideAHyperlinkKeepsTheLink() throws {
         let (doc, bridge, text) = try load("06-hyperlinks.docx")
+        let before = String(decoding: doc.body.serialized(), as: UTF8.self)
         let at = try location(of: "example.com for", in: text)
         text.replaceCharacters(in: NSRange(location: at, length: 7), with: "sample")
         let (back, notices) = try save(doc, bridge, text)
         #expect(back.body.plainText.contains("Visit sample.com for details."))
-        #expect(notices.count == 1)
-        // The other links are untouched.
+        #expect(notices.isEmpty)
+        // Still a link to the same relationship, now with the edited text; the other links are untouched.
+        let xml = String(decoding: back.body.serialized(), as: UTF8.self)
         #expect(
-            String(decoding: back.body.serialized(), as: UTF8.self).components(separatedBy: "<w:hyperlink").count == 4)
+            xml.components(separatedBy: "<w:hyperlink").count == before.components(separatedBy: "<w:hyperlink").count)
+        let edited = try #require(xml.range(of: "sample.com")).lowerBound
+        let open = try #require(xml.range(of: "<w:hyperlink", options: .backwards, range: xml.startIndex..<edited))
+        #expect(xml[open.lowerBound..<edited].contains("r:id="))
+        #expect(!xml[open.lowerBound..<edited].contains("</w:hyperlink>"))
     }
 
     @Test func typingAfterAHyperlinkDoesNotJoinIt() throws {

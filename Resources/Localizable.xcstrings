@@ -12,6 +12,16 @@
         }
       }
     },
+    "Add Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir enlace"
+          }
+        }
+      }
+    },
     "Add Space After Paragraph": {
       "localizations": {
         "es": {
@@ -128,6 +138,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lista con viñetas"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
           }
         }
       }
@@ -268,6 +288,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edición"
+          }
+        }
+      }
+    },
+    "Edit Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar enlace"
           }
         }
       }
@@ -652,6 +682,26 @@
         }
       }
     },
+    "Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace"
+          }
+        }
+      }
+    },
+    "Link…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace…"
+          }
+        }
+      }
+    },
     "List": {
       "localizations": {
         "es": {
@@ -898,6 +948,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rehacer"
+          }
+        }
+      }
+    },
+    "Remove Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar enlace"
           }
         }
       }
@@ -1162,6 +1222,16 @@
         }
       }
     },
+    "Text to show": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto que se muestra"
+          }
+        }
+      }
+    },
     "Title": {
       "localizations": {
         "es": {
@@ -1208,6 +1278,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deshacer"
+          }
+        }
+      }
+    },
+    "Update Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar enlace"
           }
         }
       }

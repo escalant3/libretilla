@@ -153,6 +153,8 @@ public struct Paragraph: Sendable {
 
 public enum Inline: Sendable {
     case run(Run)
+    /// A link holding only plain runs.
+    case hyperlink(Hyperlink)
     /// Paragraph content Cartilla doesn't model yet (hyperlinks, fields, drawings, bookmarks,
     /// tracked changes, inline content controls, …), kept verbatim.
     case opaque(OpaqueInline)
@@ -160,6 +162,8 @@ public enum Inline: Sendable {
     init(parsing e: RawXML.Element, in doc: RawXML.Document) {
         if e.name == "w:r", let run = Run(parsing: e, in: doc) {
             self = .run(run)
+        } else if e.name == "w:hyperlink", let link = Hyperlink(parsing: e, in: doc) {
+            self = .hyperlink(link)
         } else {
             self = .opaque(OpaqueInline(parsing: e, in: doc))
         }
@@ -168,6 +172,7 @@ public enum Inline: Sendable {
     public var visibleText: String {
         switch self {
         case .run(let r): r.text
+        case .hyperlink(let l): l.text
         case .opaque(let o): o.visibleText
         }
     }
@@ -175,6 +180,7 @@ public enum Inline: Sendable {
     public func serialized() -> Data {
         switch self {
         case .run(let r): r.serialized()
+        case .hyperlink(let l): l.serialized()
         case .opaque(let o): o.xml
         }
     }

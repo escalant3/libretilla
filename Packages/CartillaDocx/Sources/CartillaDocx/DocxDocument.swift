@@ -9,6 +9,8 @@ public struct DocxDocument: Sendable {
     public var styles: StyleSheet
     /// Edited through `Numbering.addList`; written back only if its bytes changed.
     public var numbering: Numbering
+    /// External link targets of the main part, by relationship id (as read).
+    public var hyperlinkTargets: [String: String] = [:]
 
     /// Why the document must open read-only, if it must.
     public var readOnlyReason: String? { body.readOnlyReason }
@@ -39,13 +41,19 @@ public struct OOXMLCodec: DocxCodec {
         // that can't be parsed is never rewritten either (its sheet has no source bytes).
         let styles = (try? StyleSheet(styles: part(Self.stylesType), theme: part(Self.themeType))) ?? StyleSheet()
         let numbering = (try? Numbering(xml: part(Self.numberingType))) ?? Numbering()
-        return DocxDocument(package: package, mainPartName: main, body: body, styles: styles, numbering: numbering)
+        var doc = DocxDocument(package: package, mainPartName: main, body: body, styles: styles, numbering: numbering)
+        doc.hyperlinkTargets = Dictionary(
+            rels.filter { $0.type == Self.hyperlinkType && $0.isExternal }.map { ($0.id, $0.target) },
+            uniquingKeysWith: { a, _ in a })
+        return doc
     }
 
     public func write(_ document: DocxDocument) throws -> Data {
         if let reason = document.readOnlyReason { throw DocxCodecError.unsupported(reason) }
         var package = document.package
-        package.setPart(document.mainPartName, data: document.body.serialized())
+        var body = document.body
+        try Self.resolveNewHyperlinks(in: &body, package: &package, part: document.mainPartName)
+        package.setPart(document.mainPartName, data: body.serialized())
         if let xml = document.styles.stylesXML {
             try package.setRelatedPart(
                 of: document.mainPartName, type: Self.stylesType, contentType: Self.stylesContentType,
