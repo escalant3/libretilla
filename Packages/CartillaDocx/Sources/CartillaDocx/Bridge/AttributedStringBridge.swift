@@ -77,7 +77,13 @@ public struct AttributedStringBridge: Sendable {
                 var attrs = characterAttributes(
                     styles.resolveRun(paragraphStyle: p.properties.styleId, direct: r.properties))
                 attrs[.cartillaRun] = RunFormat(properties: r.properties, xml: r.propertiesXML)
-                append(r.text, attrs)
+                // Page breaks show as a chip (an object character); the rest of the run as text.
+                for (i, piece) in r.text.split(separator: Run.pageBreak, omittingEmptySubsequences: false)
+                    .enumerated()
+                {
+                    if i > 0 { append(Self.pageBreakCharacter, Self.pageBreakAttributes(attrs)) }
+                    append(String(piece), attrs)
+                }
             case .opaque(let o):
                 let resolved = styles.resolveRun(paragraphStyle: p.properties.styleId, direct: o.displayProperties)
                 var attrs = characterAttributes(resolved)
@@ -310,7 +316,10 @@ public struct AttributedStringBridge: Sendable {
                 }
                 return
             }
-            let plain = string.replacingOccurrences(of: "\u{FFFC}", with: "")
+            let plain =
+                attrs[.cartillaPageBreak] != nil
+                ? String(repeating: Run.pageBreak, count: string.utf16.count)
+                : string.replacingOccurrences(of: "\u{FFFC}", with: "")
             guard !plain.isEmpty else { return }
             if let format = attrs[.cartillaRun] as? RunFormat {
                 Self.appendRun(&inlines, Run(text: plain, properties: format.properties, propertiesXML: format.xml))
@@ -488,6 +497,25 @@ extension AttributedStringBridge {
             }
         }
         return style
+    }
+
+    // MARK: Page breaks
+
+    static let pageBreakCharacter = "\u{FFFC}"
+
+    /// `run`'s attributes on a page break: its chip, marked so saving writes `<w:br w:type="page"/>`.
+    public static func pageBreakAttributes(_ run: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key: Any] {
+        var attrs = run
+        attrs[.attachment] = placeholderAttachment("Page break", font: run[.font] as? NSFont)
+        attrs[.cartillaPageBreak] = true
+        return attrs
+    }
+
+    /// A page break to insert at the caret, with the formatting the caret would type with.
+    public static func pageBreak(typingAttributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
+        var attrs = typingAttributes
+        for key in NSAttributedString.Key.cartillaNonInheritable { attrs[key] = nil }
+        return NSAttributedString(string: pageBreakCharacter, attributes: pageBreakAttributes(attrs))
     }
 
     /// A small rounded "chip" standing in for content the editor can't show yet.

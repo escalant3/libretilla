@@ -155,6 +155,10 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   Word's A4 margins (2.5 cm top/bottom, 3 cm sides). Charter is a book serif close to Century Schoolbook and
   Kindle's Bookerly, and ships with every Mac; the font table marks it as a serif so Word on Windows, which
   lacks it, substitutes one. Files that don't state a page size are also taken as A4.
+- **Page breaks.** Word's `<w:br w:type="page"/>` is now a character in a run (`U+000C`) shown as a "Page
+  break" chip; runs mixing text and a break are modelled (they used to show only the chip). Insert ▸ Page Break
+  (⌘↩) ends the text before the caret with a break and starts a new paragraph, as Word does, in one undo step.
+  Print and PDF start a new page after each break and print nothing for it.
 - **The paper fills the window** (owner's request, 2026-11-04): no gray canvas by default. The text column
   stays at the document's text width, centred, so line breaks match print and PDF. View ▸ Show Page Edges
   brings back the page on a gray canvas; the choice is remembered.
@@ -168,4 +172,5 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 
-**Still to do:** page break, links, images, tables.
+**Still to do:** links, images, tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
+print yet.

@@ -2,7 +2,7 @@ import AppKit
 import CartillaDocx
 
 /// Builds the standard macOS menu bar in code: AppKit's conventional items plus Cartilla's
-/// Format menu (M2). The Insert menu arrives in M3.
+/// Insert (M3) and Format (M2) menus.
 @MainActor
 enum MainMenu {
     static func make() -> NSMenu {
@@ -10,6 +10,7 @@ enum MainMenu {
         main.addItem(submenu(appMenu()))
         main.addItem(submenu(fileMenu()))
         main.addItem(submenu(editMenu()))
+        main.addItem(submenu(insertMenu()))
         main.addItem(submenu(formatMenu()))
         main.addItem(submenu(viewMenu()))
         let window = windowMenu()
@@ -151,6 +152,12 @@ enum MainMenu {
     }
 
     // MARK: Format
+
+    private static func insertMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "Insert"))
+        menu.addItem(item(String(localized: "Page Break"), #selector(EditorViewController.insertPageBreak(_:)), "\r"))
+        return menu
+    }
 
     private static func formatMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "Format"))

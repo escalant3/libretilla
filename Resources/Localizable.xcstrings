@@ -582,6 +582,16 @@
         }
       }
     },
+    "Insert": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertar"
+          }
+        }
+      }
+    },
     "Italic": {
       "localizations": {
         "es": {
@@ -738,6 +748,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir…"
+          }
+        }
+      }
+    },
+    "Page Break": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salto de página"
           }
         }
       }

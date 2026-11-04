@@ -19,9 +19,13 @@ extension NSAttributedString.Key {
     /// `OpaqueBlockBox` on the object character standing for a table, content control, ….
     public static let cartillaBlock = NSAttributedString.Key("cartilla.block")
 
+    /// `true` on the object character standing for a page break (`U+000C` in a run). Printing starts a new
+    /// page after it and doesn't draw its chip.
+    public static let cartillaPageBreak = NSAttributedString.Key("cartilla.pageBreak")
+
     /// Attributes that must not be inherited by newly typed text (`NSTextView.typingAttributes`).
     public static let cartillaNonInheritable: [NSAttributedString.Key] = [
-        .cartillaOpaque, .cartillaMarkers, .cartillaBlock, .attachment, .link,
+        .cartillaOpaque, .cartillaMarkers, .cartillaBlock, .cartillaPageBreak, .attachment, .link,
     ]
 }
 

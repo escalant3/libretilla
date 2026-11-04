@@ -298,14 +298,7 @@ final class CartillaDocument: NSDocument {
     {
         let info = Self.printInfo(for: pageSetup, basedOn: printInfo)
         info.dictionary().addEntries(from: printSettings)
-        let width = pageSetup.textWidth
-        let view = NSTextView(usingTextLayoutManager: true)
-        view.frame = NSRect(x: 0, y: 0, width: width, height: 100)
-        view.isVerticallyResizable = true
-        view.textContainerInset = .zero
-        view.textContainer?.lineFragmentPadding = 0
-        view.textStorage?.setAttributedString(editor?.textSnapshot() ?? initialText)
-        view.sizeToFit()
+        let view = PrintTextView(text: editor?.textSnapshot() ?? initialText, width: pageSetup.textWidth)
         return NSPrintOperation(view: view, printInfo: info)
     }
 

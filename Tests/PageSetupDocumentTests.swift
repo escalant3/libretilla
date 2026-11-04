@@ -149,11 +149,16 @@ final class PageSetupDocumentTests: XCTestCase {
         let pdf = try pdfPages(doc)
         XCTAssertGreaterThan(pdf.pageCount, 50)
         let lastWords = try XCTUnwrap(
-            doc.editor?.textView.string.split(whereSeparator: \.isWhitespace).suffix(3).joined(separator: " "))
-        let lastPage = try XCTUnwrap(pdf.page(at: pdf.pageCount - 1)?.string)
+            doc.editor?.textView.string.replacingOccurrences(of: "\u{FFFC}", with: "")
+                .split(whereSeparator: \.isWhitespace).suffix(3).joined(separator: " "))
+        // The document ends with a page break, so (as in Word) the last page is empty and the text ends on
+        // the page before.
         XCTAssertTrue(
-            lastPage.split(whereSeparator: \.isWhitespace).joined(separator: " ").contains(lastWords),
-            "last page ends with \(lastWords)")
+            pdf.page(at: pdf.pageCount - 1)?.string?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        let lastTextPage = try XCTUnwrap(pdf.page(at: pdf.pageCount - 2)?.string)
+        XCTAssertTrue(
+            lastTextPage.split(whereSeparator: \.isWhitespace).joined(separator: " ").contains(lastWords),
+            "last text page ends with \(lastWords)")
     }
 
     func testPDFOfALandscapeDocumentIsWide() throws {
@@ -163,5 +168,37 @@ final class PageSetupDocumentTests: XCTestCase {
         doc.setPageSetup(setup)
         let box = try XCTUnwrap(try pdfPages(doc).page(at: 0)).bounds(for: .mediaBox)
         XCTAssertEqual(box.size, CGSize(width: 792, height: 612))
+    }
+
+    // MARK: Page breaks
+
+    func testPageBreaksStartNewPagesInThePDFWithoutTheirChips() throws {
+        // Three short sections separated by Word page breaks, then "Last page."
+        let pdf = try pdfPages(try open("07-header-footer.docx"))
+        XCTAssertEqual(pdf.pageCount, 4)
+        XCTAssertTrue(pdf.page(at: 3)?.string?.contains("Last page.") ?? false)
+        XCTAssertFalse(pdf.string?.contains("Page break") ?? true)
+        XCTAssertFalse(pdf.string?.contains("\u{FFFC}") ?? true, "no object characters in the PDF's text")
+    }
+
+    func testInsertPageBreakIsOneUndoStepAndIsSaved() throws {
+        let doc = try open("01-plain.docx")
+        let editor = try XCTUnwrap(doc.editor)
+        let tv = editor.textView!
+        XCTAssertEqual(try pdfPages(doc).pageCount, 1)
+
+        let at = (tv.string as NSString).range(of: "A second paragraph").location
+        tv.setSelectedRange(NSRange(location: at, length: 0))
+        editor.insertPageBreak(nil)
+        XCTAssertEqual(tv.textStorage?.attribute(.cartillaPageBreak, at: at, effectiveRange: nil) as? Bool, true)
+        XCTAssertEqual(tv.selectedRange().location, at + 2, "the caret starts the next page")
+        XCTAssertEqual(try pdfPages(doc).pageCount, 2)
+
+        let saved = try saved(doc)
+        XCTAssertTrue(saved.body.plainText.contains("\u{000C}\nA second paragraph"))
+
+        doc.undoManager?.undo()
+        XCTAssertNil(tv.textStorage?.attribute(.cartillaPageBreak, at: at, effectiveRange: nil))
+        XCTAssertFalse(try self.saved(doc).body.plainText.contains("\u{000C}"))
     }
 }

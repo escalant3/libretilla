@@ -180,7 +180,7 @@ public enum Inline: Sendable {
     }
 }
 
-/// A run of plain text with formatting. Tabs are `\t` and line breaks `U+2028`.
+/// A run of plain text with formatting. Tabs are `\t`, line breaks `U+2028` and page breaks `U+000C`.
 public struct Run: Sendable {
     public var properties: RunProperties
     /// Raw `<w:rPr>…</w:rPr>`, or nil.
@@ -188,6 +188,8 @@ public struct Run: Sendable {
     public var text: String
 
     public static let lineBreak: Character = "\u{2028}"
+    /// `<w:br w:type="page"/>`.
+    public static let pageBreak: Character = "\u{000C}"
 
     public init(text: String, properties: RunProperties = RunProperties(), propertiesXML: Data? = nil) {
         self.text = text
@@ -195,7 +197,7 @@ public struct Run: Sendable {
         self.propertiesXML = propertiesXML
     }
 
-    /// Parses `w:r` if it only holds text, tabs and line breaks; nil otherwise (it becomes opaque).
+    /// Parses `w:r` if it only holds text, tabs, line and page breaks; nil otherwise (it becomes opaque).
     init?(parsing r: RawXML.Element, in doc: RawXML.Document) {
         var text = ""
         var rPr: RawXML.Element?
@@ -211,6 +213,9 @@ public struct Run: Sendable {
                 case "w:br" where e.attribute("w:type") == nil || e.attribute("w:type") == "textWrapping":
                     guard e.attribute("w:clear") == nil else { return nil }
                     text.append(Self.lineBreak)
+                case "w:br" where e.attribute("w:type") == "page":
+                    guard e.attribute("w:clear") == nil else { return nil }
+                    text.append(Self.pageBreak)
                 case "w:cr": text.append(Self.lineBreak)
                 case "w:lastRenderedPageBreak": continue  // layout hint; Word regenerates it
                 default: return nil
@@ -243,6 +248,9 @@ public struct Run: Sendable {
             case Self.lineBreak, "\n", "\r":
                 flush()
                 out.append(Data("<w:br/>".utf8))
+            case Self.pageBreak:
+                flush()
+                out.append(Data("<w:br w:type=\"page\"/>".utf8))
             default:
                 segment.append(ch)
             }
