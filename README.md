@@ -16,11 +16,20 @@ dialogs. You can export to PDF. There's no ribbon, no AI and no cloud.
 
 ## Build & run
 
+In Xcode: `open Cartilla.xcodeproj`, then ⌘R.
+
+From the terminal, without opening Xcode (Xcode 26 must still be installed, because `xcodebuild` ships with it):
+
 ```sh
-open Cartilla.xcodeproj               # then ⌘R
-# or
-xcodebuild -project Cartilla.xcodeproj -scheme Cartilla -destination 'platform=macOS,arch=arm64' build
+xcodebuild -project Cartilla.xcodeproj -scheme Cartilla -configuration Debug \
+  -destination 'platform=macOS,arch=arm64' -derivedDataPath build/DerivedData build
+open build/DerivedData/Build/Products/Debug/Cartilla.app                       # launch
+open -a build/DerivedData/Build/Products/Debug/Cartilla.app ~/Documents/Some.docx  # open a file with it
 ```
+
+The build is ad-hoc signed, which is enough to run it on the Mac that built it. `build/` is git-ignored.
+Opening a document through `open` (or Finder) matters, because the sandbox only grants access to files opened that
+way. Cartilla autosaves over the file you open, so try it on a copy.
 
 `Cartilla.xcodeproj` is generated from `project.yml` and committed. After changing `project.yml`, run
 `xcodegen generate` and commit both files. CI fails if they drift apart.

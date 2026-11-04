@@ -33,6 +33,9 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
 - [ ] Placeholder bundle id `app.cartilla.Cartilla`; confirm, or choose one tied to the domain.
 - [ ] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"); confirm the name.
+- [ ] **Later (deferred by the owner, 2026-11-04):** open Cartilla-written files in Microsoft Word and report any
+      repair prompt. Word isn't installed on the dev machine for now. Priority files: one with a new list
+      (`numbering.xml` created from scratch), one with a style Cartilla copied in, and a few edited corpus files.
 
 ## Milestone 1: Skeleton ✅ (2026-11-04)
 
@@ -62,8 +65,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
     prompt; `kill -9` loses only the last seconds; the unnamed-draft sheet.
 - Manual check: every fixture, edited by the codec, opens in Pages 14.5 and pandoc.
 
-**Not yet verified:** opening Cartilla-written files in **Microsoft Word**. It isn't installed on the dev
-machine. Please open a few edited files in Word and report any repair prompt.
+**Not yet verified:** opening Cartilla-written files in **Microsoft Word**. Deferred; see "Waiting on the human".
 
 **Known M1 limitations (planned)**
 
@@ -118,8 +120,8 @@ machine. Please open a few edited files in Word and report any repair prompt.
 
 **Not yet verified:**
 
-- **Microsoft Word.** Formatted files from Cartilla, in particular new lists (`numbering.xml` created from
-  scratch) and copied styles, still need opening in Word to check for repair prompts.
+- **Microsoft Word.** Deferred until Word is installed; see "Waiting on the human". New lists and copied
+  styles are the parts most worth checking.
 - **Manual pass in the running app:** the colour well popover, the highlight menu, and the font popup with
   fonts that aren't installed. The automated checks cover the logic, not the look.
 
