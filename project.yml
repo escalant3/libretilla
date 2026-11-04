@@ -1,0 +1,102 @@
+name: Cartilla
+options:
+  bundleIdPrefix: app.cartilla
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+  groupSortPosition: top
+settings:
+  base:
+    ARCHS: arm64
+    ONLY_ACTIVE_ARCH: NO
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    DEAD_CODE_STRIPPING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+packages:
+  CartillaDocx:
+    path: Packages/CartillaDocx
+targets:
+  Cartilla:
+    type: application
+    platform: macOS
+    sources:
+      - App
+      - Document
+      - Editor
+      - path: UI
+        excludes: ["**/*.md"]
+      - Resources
+    dependencies:
+      - package: CartillaDocx
+    entitlements:
+      path: App/Cartilla.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.files.bookmarks.app-scope: true
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Cartilla
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, es]
+        CFBundleShortVersionString: "0.0.1"
+        CFBundleVersion: "1"
+        LSApplicationCategoryType: public.app-category.productivity
+        LSMinimumSystemVersion: "26.0"
+        NSHumanReadableCopyright: "© 2026 Diego Escalante. MIT License."
+        NSPrincipalClass: NSApplication
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Word Document
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - org.openxmlformats.wordprocessingml.document
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).CartillaDocument
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.cartilla.Cartilla
+        PRODUCT_NAME: Cartilla
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: NO
+  CartillaTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests]
+    dependencies:
+      - target: Cartilla
+    settings:
+      base:
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Cartilla.app/Contents/MacOS/Cartilla
+        GENERATE_INFOPLIST_FILE: YES
+  CartillaUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources: [UITests]
+    dependencies:
+      - target: Cartilla
+    settings:
+      base:
+        TEST_TARGET_NAME: Cartilla
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Cartilla:
+    build:
+      targets:
+        Cartilla: all
+        CartillaTests: [test]
+        CartillaUITests: [test]
+    test:
+      gatherCoverageData: false
+      targets:
+        - CartillaTests
+        - name: CartillaUITests
+          skipped: false
