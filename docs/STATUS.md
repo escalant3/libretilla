@@ -186,5 +186,5 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
 - Pictures can't be resized in the editor yet; copying a picture within Cartilla saves the copy as a new image.
 
-**Still to do:** tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
+**Still to do:** tables, waiting on the owner's choice in [ADR 0006](decisions/0006-tables.md) (proposed). Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
 print yet.
