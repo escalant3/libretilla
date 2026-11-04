@@ -32,6 +32,16 @@
         }
       }
     },
+    "Cartilla can’t safely save this document: %@.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartilla no puede guardar este documento de forma segura: %@."
+          }
+        }
+      }
+    },
     "Clear Menu": {
       "localizations": {
         "es": {
@@ -62,6 +72,16 @@
         }
       }
     },
+    "Couldn’t save": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo guardar"
+          }
+        }
+      }
+    },
     "Cut": {
       "localizations": {
         "es": {
@@ -82,6 +102,16 @@
         }
       }
     },
+    "Draft": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrador"
+          }
+        }
+      }
+    },
     "Duplicate": {
       "localizations": {
         "es": {
@@ -98,6 +128,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edición"
+          }
+        }
+      }
+    },
+    "Edited": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editado"
           }
         }
       }
@@ -222,6 +262,16 @@
         }
       }
     },
+    "Open": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        }
+      }
+    },
     "Open Recent": {
       "localizations": {
         "es": {
@@ -262,6 +312,16 @@
         }
       }
     },
+    "Print": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imprimir"
+          }
+        }
+      }
+    },
     "Print…": {
       "localizations": {
         "es": {
@@ -278,6 +338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salir de Cartilla"
+          }
+        }
+      }
+    },
+    "Read-only": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo lectura"
           }
         }
       }
@@ -302,6 +372,16 @@
         }
       }
     },
+    "Restore Original…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar original…"
+          }
+        }
+      }
+    },
     "Revert To Saved": {
       "localizations": {
         "es": {
@@ -318,6 +398,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Guardar"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando…"
           }
         }
       }

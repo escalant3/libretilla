@@ -10,6 +10,9 @@
 		0996DD3CFAE689AB75FC825F /* LaunchSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */; };
 		1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */; };
 		273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */; };
+		302BFA5C7FE8F07CE9E36389 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60403553CD3D734E8470524F /* MainToolbar.swift */; };
+		37323870B27355E3F72DE8EC /* SaveStatusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90FE84762ECFFDC107CCCC45 /* SaveStatusViewController.swift */; };
+		4B3F2259410E09901A23C094 /* CartillaDocx in Frameworks */ = {isa = PBXBuildFile; productRef = 4DAD07F2B7F6CA4C365AC4B5 /* CartillaDocx */; };
 		6C17C3D9C19022F08927DB67 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */; };
 		953CD82E158C5AE5C112D3E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4FCA90FB94EB59559A14C4A /* Assets.xcassets */; };
 		9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1D2E40BDC849665AB08222 /* MainMenu.swift */; };
@@ -18,7 +21,10 @@
 		C6DA5B98D9C519F858F78581 /* CartillaDocx in Frameworks */ = {isa = PBXBuildFile; productRef = 39BAAFBF039B7546AC6038C6 /* CartillaDocx */; };
 		C99DCDCA7A33A4F75A713356 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 398F3574EE25EEB7560B4117 /* Localizable.xcstrings */; };
 		DA78B3C7CED82E43862A7495 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494F3478AAA91243011B8C02 /* EditorViewController.swift */; };
+		DFB5DD1B67049D91B3BD1713 /* PersistenceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A924860A205C14D83E9A055B /* PersistenceUITests.swift */; };
+		E7F59A974CD316FAAD456962 /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = 9271AFBF80EADBD48972DEBD /* Blank.docx */; };
 		EB314EB6BA2DC1D8ED22F04D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5866471B4EB11EBAFE10CE7 /* main.swift */; };
+		F6C1E9FDDDE5D8A2CD4D8E4C /* OriginalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825E1F8161AC3973B5797760 /* OriginalsStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,12 +51,17 @@
 		494F3478AAA91243011B8C02 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
 		4AB91AA22F40480516670E4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
+		60403553CD3D734E8470524F /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		73D8D52F61DBCD47ECFE2ADF /* CartillaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartillaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		825E1F8161AC3973B5797760 /* OriginalsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalsStore.swift; sourceTree = "<group>"; };
 		832488D9BBA18EEFA3E6B41B /* Cartilla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cartilla.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartillaDocumentTests.swift; sourceTree = "<group>"; };
+		90FE84762ECFFDC107CCCC45 /* SaveStatusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveStatusViewController.swift; sourceTree = "<group>"; };
+		9271AFBF80EADBD48972DEBD /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
 		9DB1953DCEE442C3CDF33F52 /* CartillaDocx */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CartillaDocx; path = Packages/CartillaDocx; sourceTree = SOURCE_ROOT; };
 		A41955E8938C49BE05794F9A /* DocumentWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowController.swift; sourceTree = "<group>"; };
+		A924860A205C14D83E9A055B /* PersistenceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceUITests.swift; sourceTree = "<group>"; };
 		C4FCA90FB94EB59559A14C4A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C8DD797E7B26063AAB35CB6A /* Cartilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cartilla.entitlements; sourceTree = "<group>"; };
 		D0C31C4C0964D6B3BA470348 /* CartillaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartillaDocument.swift; sourceTree = "<group>"; };
@@ -59,6 +70,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		C8B811183C3C2A76C7E04348 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4B3F2259410E09901A23C094 /* CartillaDocx in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F45EDFD528DFE23C377E3FC6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -85,6 +104,8 @@
 		3A5EF187346EB86803E5DEFA /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				60403553CD3D734E8470524F /* MainToolbar.swift */,
+				90FE84762ECFFDC107CCCC45 /* SaveStatusViewController.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -120,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */,
+				A924860A205C14D83E9A055B /* PersistenceUITests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -129,6 +151,7 @@
 			children = (
 				D0C31C4C0964D6B3BA470348 /* CartillaDocument.swift */,
 				A41955E8938C49BE05794F9A /* DocumentWindowController.swift */,
+				825E1F8161AC3973B5797760 /* OriginalsStore.swift */,
 			);
 			path = Document;
 			sourceTree = "<group>";
@@ -160,6 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				C4FCA90FB94EB59559A14C4A /* Assets.xcassets */,
+				9271AFBF80EADBD48972DEBD /* Blank.docx */,
 				398F3574EE25EEB7560B4117 /* Localizable.xcstrings */,
 			);
 			path = Resources;
@@ -173,6 +197,7 @@
 			buildConfigurationList = 4D8E194358D43AFE7DDAC76A /* Build configuration list for PBXNativeTarget "CartillaUITests" */;
 			buildPhases = (
 				07D1F9D6E042968B99C69695 /* Sources */,
+				C8B811183C3C2A76C7E04348 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -181,6 +206,7 @@
 			);
 			name = CartillaUITests;
 			packageProductDependencies = (
+				4DAD07F2B7F6CA4C365AC4B5 /* CartillaDocx */,
 			);
 			productName = CartillaUITests;
 			productReference = 73D8D52F61DBCD47ECFE2ADF /* CartillaUITests.xctest */;
@@ -276,6 +302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				953CD82E158C5AE5C112D3E2 /* Assets.xcassets in Resources */,
+				E7F59A974CD316FAAD456962 /* Blank.docx in Resources */,
 				C99DCDCA7A33A4F75A713356 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -288,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0996DD3CFAE689AB75FC825F /* LaunchSmokeTests.swift in Sources */,
+				DFB5DD1B67049D91B3BD1713 /* PersistenceUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,6 +328,9 @@
 				BE2AECF8D862548DB1CE23F5 /* DocumentWindowController.swift in Sources */,
 				DA78B3C7CED82E43862A7495 /* EditorViewController.swift in Sources */,
 				9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */,
+				302BFA5C7FE8F07CE9E36389 /* MainToolbar.swift in Sources */,
+				F6C1E9FDDDE5D8A2CD4D8E4C /* OriginalsStore.swift in Sources */,
+				37323870B27355E3F72DE8EC /* SaveStatusViewController.swift in Sources */,
 				EB314EB6BA2DC1D8ED22F04D /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -619,6 +650,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		39BAAFBF039B7546AC6038C6 /* CartillaDocx */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CartillaDocx;
+		};
+		4DAD07F2B7F6CA4C365AC4B5 /* CartillaDocx */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CartillaDocx;
 		};

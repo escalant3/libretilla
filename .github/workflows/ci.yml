@@ -39,7 +39,7 @@ jobs:
       - name: Fixture corpus is reproducible
         run: |
           python3 scripts/fixtures/make_corpus.py
-          git diff --exit-code -- Fixtures/generated
+          git diff --exit-code -- Fixtures/generated Resources/Blank.docx
 
       - name: CartillaDocx package tests
         working-directory: Packages/CartillaDocx

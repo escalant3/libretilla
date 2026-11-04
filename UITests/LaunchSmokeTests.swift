@@ -8,6 +8,7 @@ final class LaunchSmokeTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.textViews["Document body"].exists)
+        XCTAssertTrue(app.toolbars.buttons["Print"].exists)
         app.terminate()
     }
 }

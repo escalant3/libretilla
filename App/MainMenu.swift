@@ -82,6 +82,8 @@ enum MainMenu {
             item(String(localized: "Revert To Saved"), #selector(NSDocument.revertToSaved(_:))))
         menu.addItem(
             item(String(localized: "Browse All Versions…"), #selector(NSDocument.browseVersions(_:))))
+        menu.addItem(
+            item(String(localized: "Restore Original…"), #selector(CartillaDocument.restoreOriginal(_:))))
         menu.addItem(.separator())
         menu.addItem(
             item(String(localized: "Page Setup…"), #selector(NSDocument.runPageLayout(_:)), "p", [.command, .shift]))
