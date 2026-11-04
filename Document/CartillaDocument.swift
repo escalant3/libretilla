@@ -79,7 +79,11 @@ final class CartillaDocument: NSDocument {
 
     /// Moves what `read` produced into main-actor state.
     private func adoptLoaded() {
-        guard let l = loaded.withLock({ state -> Loaded? in defer { state = nil }; return state }) else {
+        guard
+            let l = loaded.withLock({ state -> Loaded? in
+                defer { state = nil }; return state
+            })
+        else {
             if base == nil {
                 // A new document starts from Cartilla's blank template (one empty paragraph).
                 base = Self.emptyDocument

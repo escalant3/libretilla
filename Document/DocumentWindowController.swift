@@ -18,7 +18,8 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
         window.contentMinSize = NSSize(width: 480, height: 320)
         window.setContentSize(NSSize(width: 900, height: 1000))
         // Setting the autosave name restores the saved frame, if any; reject frames that are too small.
-        let restored = window.setFrameAutosaveName("CartillaDocumentWindow") && window.setFrameUsingName("CartillaDocumentWindow")
+        let restored =
+            window.setFrameAutosaveName("CartillaDocumentWindow") && window.setFrameUsingName("CartillaDocumentWindow")
         let minimum = window.contentMinSize
         if !restored || window.contentLayoutRect.width < minimum.width
             || window.contentLayoutRect.height < minimum.height

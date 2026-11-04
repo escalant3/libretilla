@@ -30,8 +30,12 @@ enum MainToolbar {
         Item(
             id: .init("print"), label: String(localized: "Print"), symbol: "printer",
             action: #selector(NSDocument.printDocument(_:))),
-        Item(id: .init("undo"), label: String(localized: "Undo"), symbol: "arrow.uturn.backward", action: Selector(("undo:"))),
-        Item(id: .init("redo"), label: String(localized: "Redo"), symbol: "arrow.uturn.forward", action: Selector(("redo:"))),
+        Item(
+            id: .init("undo"), label: String(localized: "Undo"), symbol: "arrow.uturn.backward",
+            action: Selector(("undo:"))),
+        Item(
+            id: .init("redo"), label: String(localized: "Redo"), symbol: "arrow.uturn.forward",
+            action: Selector(("redo:"))),
     ]
 
     @MainActor final class Delegate: NSObject, NSToolbarDelegate {
