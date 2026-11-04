@@ -131,6 +131,11 @@ import Testing
         let all = NSRange(location: 0, length: l.text.length)
         l.bridge.apply(RunChange.clear, to: l.text, range: all)
         l.bridge.apply(ParagraphChange.clear, to: l.text, range: all)
+        // Decorations that are now off are gone from the display too, so reconciling keeps them off.
+        #expect(!l.bridge.reconcile(l.text, range: all))
+        #expect(
+            l.text.attribute(.underlineStyle, at: try range(of: "underlined", in: l.text).location, effectiveRange: nil)
+                == nil)
         let (back, _) = try save(l)
         for p in paragraphs(back) {
             for case .run(let r) in p.inlines { #expect(r.propertiesXML == nil, "\(r.text)") }
@@ -197,11 +202,13 @@ import Testing
     @Test func nestedListMarkersFollowWordNumbering() throws {
         let l = try load("03-nested-lists.docx")
         var markers: [String: String] = [:]
+        var depths: [String: Int] = [:]
         let ns = l.text.string as NSString
         for p in AttributedStringBridge.paragraphRanges(in: l.text, touching: NSRange(location: 0, length: ns.length)) {
             let style = l.text.attribute(.paragraphStyle, at: p.location, effectiveRange: nil) as? NSParagraphStyle
-            if let m = style?.textLists.first?.markerFormat.rawValue {
+            if let m = style?.textLists.last?.markerFormat.rawValue {
                 markers[ns.substring(with: p).trimmingCharacters(in: .newlines)] = m
+                depths[ns.substring(with: p).trimmingCharacters(in: .newlines)] = style?.textLists.count
             }
         }
         #expect(markers["Fruit"] == "•")
@@ -209,6 +216,8 @@ import Testing
         #expect(markers["Granny Smith"] == "▪")
         #expect(markers["Prepare"] == "1.")
         #expect(markers.count >= 10)
+        // TextKit 2 indents list items by nesting depth (gap G4).
+        #expect(depths["Fruit"] == 1 && depths["Apples"] == 2 && depths["Granny Smith"] == 3)
     }
 
     @Test func startingABulletListInADocumentWithoutNumberingCreatesThePart() throws {
@@ -221,7 +230,7 @@ import Testing
         l.bridge.apply(.list(numId: numId, level: 0), to: l.text, range: r)
         l.bridge.renumber(l.text)
         let style = l.text.attribute(.paragraphStyle, at: r.location, effectiveRange: nil) as? NSParagraphStyle
-        #expect(style?.textLists.first?.markerFormat.rawValue == "•")
+        #expect(style?.textLists.last?.markerFormat.rawValue == "•")
         #expect(style?.headIndent == 36)
         let (back, data) = try save(l)
         let p = try paragraph(containing: "plain paragraph", in: back)
@@ -245,7 +254,7 @@ import Testing
         bridge.renumber(l.text)
         func marker(_ s: String) throws -> String? {
             (l.text.attribute(.paragraphStyle, at: try range(of: s, in: l.text).location, effectiveRange: nil)
-                as? NSParagraphStyle)?.textLists.first?.markerFormat.rawValue
+                as? NSParagraphStyle)?.textLists.last?.markerFormat.rawValue
         }
         #expect(try marker("plain paragraph") == "1.")
         #expect(try marker("A second") == "2.")

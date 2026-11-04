@@ -36,8 +36,9 @@ public enum ParagraphChange: Sendable, Equatable {
     case spaceAfter(Double)
     /// Adds to the left indent (points; negative to decrease), never below zero.
     case indent(by: Double)
-    /// Makes the paragraph an item of list `numId` at `level`, or (nil) not a list item.
-    case list(numId: Int?, level: Int)
+    /// Makes the paragraph an item of list `numId` at `level` (nil keeps its current level, or 0),
+    /// or (`numId` nil) not a list item.
+    case list(numId: Int?, level: Int?)
     /// Moves a list item `by` levels (0…8).
     case listLevel(by: Int)
     /// Removes direct alignment, spacing, indents and tabs.
@@ -57,6 +58,9 @@ public struct SelectionFormat: Equatable {
     public var alignment: String?
     public var list: Numbering.ListKind?
     public var lineSpacing: Double?
+    /// Of the first selected paragraph.
+    public var spaceBefore: Double = 0
+    public var spaceAfter: Double = 0
     public var isListItem: Bool { list != nil }
 
     public init() {}
@@ -85,6 +89,11 @@ extension AttributedStringBridge {
         paragraph.length > 0 && text.attribute(.cartillaBlock, at: paragraph.location, effectiveRange: nil) != nil
     }
 
+    /// The paragraph's format (nil for pasted text not reconciled yet, or a block placeholder).
+    public static func paragraphFormatOf(_ text: NSAttributedString, _ paragraph: NSRange) -> ParagraphFormat? {
+        paragraphFormat(text, paragraph)
+    }
+
     func format(of text: NSAttributedString, paragraph: NSRange) -> ParagraphFormat {
         Self.paragraphFormat(text, paragraph) ?? ParagraphFormat(properties: ParagraphProperties(), xml: nil)
     }
@@ -107,7 +116,7 @@ extension AttributedStringBridge {
                 let key = ObjectIdentifier(old)
                 let new = replaced[key] ?? applying(change, to: old, paragraphStyle: styleId)
                 replaced[key] = new
-                text.addAttributes(displayAttributes(for: new, paragraphStyle: styleId), range: span)
+                Self.setDisplay(displayAttributes(for: new, paragraphStyle: styleId), on: text, range: span)
                 text.addAttribute(.cartillaRun, value: new, range: span)
             }
         }
@@ -119,11 +128,9 @@ extension AttributedStringBridge {
     ) -> [NSAttributedString.Key: Any] {
         var out = attrs
         let new = applying(change, to: runFormat(attrs, paragraphStyle: styleId), paragraphStyle: styleId)
-        for (k, v) in displayAttributes(for: new, paragraphStyle: styleId) { out[k] = v }
-        for k in [NSAttributedString.Key.underlineStyle, .strikethroughStyle, .superscript, .backgroundColor]
-        where displayAttributes(for: new, paragraphStyle: styleId)[k] == nil {
-            out[k] = nil
-        }
+        let display = displayAttributes(for: new, paragraphStyle: styleId)
+        for k in Self.optionalDisplayKeys { out[k] = nil }
+        for (k, v) in display { out[k] = v }
         out[.cartillaRun] = new
         return out
     }
@@ -133,6 +140,19 @@ extension AttributedStringBridge {
         if let f = attrs[.cartillaRun] as? RunFormat { return f }
         let empty = RunFormat(properties: RunProperties(), xml: nil)
         return reconciled(empty, attrs: attrs, paragraphStyle: styleId, text: nil) ?? empty
+    }
+
+    /// Display attributes that are present only when on (absent means off).
+    static let optionalDisplayKeys: [NSAttributedString.Key] = [
+        .underlineStyle, .strikethroughStyle, .superscript, .backgroundColor,
+    ]
+
+    /// Replaces a span's display attributes, removing decorations the new display doesn't have.
+    static func setDisplay(
+        _ display: [NSAttributedString.Key: Any], on text: NSMutableAttributedString, range: NSRange
+    ) {
+        for key in optionalDisplayKeys where display[key] == nil { text.removeAttribute(key, range: range) }
+        text.addAttributes(display, range: range)
     }
 
     /// The value each field has when the run sets nothing itself (paragraph style and character style).
@@ -247,7 +267,7 @@ extension AttributedStringBridge {
             let styleNumbering = effectiveParagraph(Self.styleOnly(ParagraphProperties(styleId: direct.styleId)))
             if let numId {
                 new.numId = numId
-                new.ilvl = level
+                new.ilvl = level ?? (effective.hasNumbering ? effective.ilvl ?? 0 : 0)
                 // Word puts list items in "List Paragraph" when they'd otherwise be Normal.
                 if direct.styleId == nil || direct.styleId == styles.defaultParagraphStyleId,
                     let list = styles.styleId(named: "List Paragraph")
@@ -307,7 +327,7 @@ extension AttributedStringBridge {
         let styleId = format.properties.styleId
         let effective = effectiveParagraph(format.properties)
         let oldStyle = text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-        let marker = effective.hasNumbering ? (oldStyle?.textLists.first?.markerFormat.rawValue ?? "") : nil
+        let marker = effective.hasNumbering ? (Self.listMarker(oldStyle)?.marker ?? "") : nil
         let paragraphStyle = Self.paragraphStyle(effective, marker: marker)
         let ns = text.string as NSString
         text.enumerateAttributes(in: paragraph, options: []) { attrs, span, _ in
@@ -327,12 +347,8 @@ extension AttributedStringBridge {
             } else {
                 display = displayAttributes(for: runFormat(attrs, paragraphStyle: styleId), paragraphStyle: styleId)
             }
-            for key in [NSAttributedString.Key.underlineStyle, .strikethroughStyle, .superscript, .backgroundColor]
-            where display[key] == nil {
-                text.removeAttribute(key, range: span)
-            }
             if attrs[.attachment] != nil { display[.font] = nil }
-            text.addAttributes(display, range: span)
+            Self.setDisplay(display, on: text, range: span)
         }
         text.addAttribute(.paragraphStyle, value: paragraphStyle, range: paragraph)
     }
@@ -348,10 +364,11 @@ extension AttributedStringBridge {
             let marker = effective.hasNumbering ? counter.next(numId: effective.numId!, ilvl: effective.ilvl ?? 0) : nil
             let current =
                 text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-            let currentMarker = current?.textLists.first?.markerFormat.rawValue
-            guard currentMarker != marker else { continue }
+            let lists = marker.map { Self.textLists(marker: $0, indent: effective.indentLeft) } ?? []
+            let shown = Self.listMarker(current)
+            guard shown?.marker != marker || (shown?.depth ?? 0) != lists.count else { continue }
             let style = (current?.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
-            style.textLists = marker.map { [NSTextList(markerFormat: NSTextList.MarkerFormat($0), options: 0)] } ?? []
+            style.textLists = lists
             text.addAttribute(.paragraphStyle, value: style, range: paragraph)
             changed.append(paragraph)
         }
@@ -589,26 +606,45 @@ extension AttributedStringBridge {
         if lists.count == 1 {
             out.list = lists.first == "b" ? .bullet : lists.first == "n" ? .numbered : nil
         }
+        out.spaceBefore = effective.first?.spaceBefore ?? 0
+        out.spaceAfter = effective.first?.spaceAfter ?? 0
         let lines = Set(effective.map { ($0.lineRule ?? "auto") == "auto" ? ($0.line ?? 1) : -1 })
         out.lineSpacing = lines.count == 1 && lines.first! > 0 ? lines.first : nil
 
+        // Spans of the selection, each with its paragraph's style (the typing attributes for a caret).
         var attrsList: [[NSAttributedString.Key: Any]] = []
-        if range.length == 0 || text.length == 0 {
-            attrsList = [typingAttributes]
-        } else {
-            text.enumerateAttributes(in: range, options: []) { attrs, span, _ in
-                if span.length == 1, (text.string as NSString).character(at: span.location) == 0x0A, range.length > 1 {
-                    return
-                }
-                attrsList.append(attrs)
+        var semanticFamilies: [String] = []
+        var semanticSizes: [Double] = []
+        func collect(_ attrs: [NSAttributedString.Key: Any], styleId: String?) {
+            attrsList.append(attrs)
+            if attrs[.cartillaOpaque] == nil, let run = attrs[.cartillaRun] as? RunFormat {
+                let resolved = styles.resolveRun(paragraphStyle: styleId, direct: run.properties)
+                if let family = styles.fontFamily(for: resolved) { semanticFamilies.append(family) }
+                semanticSizes.append(resolved.size ?? Double(Self.defaultFontSize))
+            } else if let font = attrs[.font] as? NSFont {
+                semanticFamilies.append(font.familyName ?? font.fontName)
+                semanticSizes.append(Double(font.pointSize))
             }
-            if attrsList.isEmpty { attrsList = [typingAttributes] }
+        }
+        let ns = text.string as NSString
+        if range.length == 0 || text.length == 0 {
+            collect(typingAttributes, styleId: formats.first?.properties.styleId)
+        } else {
+            for (paragraph, format) in zip(paragraphs, formats) {
+                let r = NSIntersectionRange(paragraph, range)
+                guard r.length > 0 else { continue }
+                text.enumerateAttributes(in: r, options: []) { attrs, span, _ in
+                    if span.length == 1, ns.character(at: span.location) == 0x0A { return }
+                    collect(attrs, styleId: format.properties.styleId)
+                }
+            }
+            if attrsList.isEmpty { collect(typingAttributes, styleId: formats.first?.properties.styleId) }
         }
         let fonts = attrsList.compactMap { $0[.font] as? NSFont }
-        let families = Set(fonts.map { $0.familyName ?? $0.fontName })
+        let families = Set(semanticFamilies)
         out.fontFamily = families.count == 1 ? families.first : nil
-        let sizes = Set(fonts.map(\.pointSize))
-        out.fontSize = sizes.count == 1 ? sizes.first.map(Double.init) : nil
+        let sizes = Set(semanticSizes)
+        out.fontSize = sizes.count == 1 ? sizes.first : nil
         let manager = NSFontManager.shared
         out.bold = !fonts.isEmpty && fonts.allSatisfy { manager.traits(of: $0).contains(.boldFontMask) }
         out.italic = !fonts.isEmpty && fonts.allSatisfy { manager.traits(of: $0).contains(.italicFontMask) }

@@ -404,6 +404,9 @@ extension AttributedStringBridge {
             blue: CGFloat(v & 0xFF) / 255, alpha: 1)
     }
 
+    /// How Cartilla shows a Word highlight colour (e.g. `yellow`).
+    public static func highlightColor(_ name: String) -> NSColor? { highlightColors[name] }
+
     static let highlightColors: [String: NSColor] = [
         "yellow": .systemYellow.withAlphaComponent(0.5), "green": .systemGreen.withAlphaComponent(0.4),
         "cyan": .cyan.withAlphaComponent(0.4), "magenta": .magenta.withAlphaComponent(0.4),
@@ -428,6 +431,22 @@ extension AttributedStringBridge {
         return merged
     }
 
+    /// TextKit 2 lays out list items itself: it ignores the paragraph's indents and indents by
+    /// nesting depth (`textLists.count`), half an inch per level, the same as Word's default lists.
+    /// So the depth is the list indent in half inches (gap G4 in docs/TEXTKIT2_GAPS.md). Only the
+    /// innermost list's marker is drawn; it's the literal marker text Word would show.
+    static func textLists(marker: String, indent: Double?) -> [NSTextList] {
+        let depth = min(9, max(1, Int(((indent ?? 36) / 36).rounded())))
+        let parents = (1..<depth).map { _ in NSTextList(markerFormat: NSTextList.MarkerFormat(""), options: 0) }
+        return parents + [NSTextList(markerFormat: NSTextList.MarkerFormat(marker), options: 0)]
+    }
+
+    /// The marker a paragraph style shows, and its list depth.
+    static func listMarker(_ style: NSParagraphStyle?) -> (marker: String, depth: Int)? {
+        guard let style, let last = style.textLists.last else { return nil }
+        return (last.markerFormat.rawValue, style.textLists.count)
+    }
+
     /// Default tab stops every half inch, as in Word's `w:defaultTabStop` default.
     static let defaultTabInterval: CGFloat = 36
 
@@ -446,9 +465,7 @@ extension AttributedStringBridge {
             return NSTextTab(textAlignment: alignment, location: CGFloat(tab.position), options: options)
         }
         style.defaultTabInterval = defaultTabInterval
-        if let marker {
-            style.textLists = [NSTextList(markerFormat: NSTextList.MarkerFormat(marker), options: 0)]
-        }
+        if let marker { style.textLists = textLists(marker: marker, indent: p.indentLeft) }
         switch p.alignment {
         case "center": style.alignment = .center
         case "right", "end": style.alignment = .right
