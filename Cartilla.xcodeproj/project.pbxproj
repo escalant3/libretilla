@@ -21,10 +21,12 @@
 		4B3F2259410E09901A23C094 /* CartillaDocx in Frameworks */ = {isa = PBXBuildFile; productRef = 4DAD07F2B7F6CA4C365AC4B5 /* CartillaDocx */; };
 		6C17C3D9C19022F08927DB67 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */; };
 		74523400B5099FDCDFD8935A /* EditorViewController+Insert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E00E6A5CC4D5D4FC0C599A /* EditorViewController+Insert.swift */; };
+		82B2E9DF0E2B35237C685079 /* PictureCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA875D2375CD6B165BEC9864 /* PictureCommandTests.swift */; };
 		82E84615364B9C2E02D08C1A /* FormatBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73AA5D43E2C6409D02666E0F /* FormatBar.swift */; };
 		953CD82E158C5AE5C112D3E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4FCA90FB94EB59559A14C4A /* Assets.xcassets */; };
 		985DC6259E26F45B4E594F71 /* PageSetupDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */; };
 		9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1D2E40BDC849665AB08222 /* MainMenu.swift */; };
+		ADC265470CFF546B5DEE992E /* EditorViewController+Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB57AB266013120608B4B4C /* EditorViewController+Pictures.swift */; };
 		AE280018A13B11F8331A23B5 /* CartillaTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CEE116E4D5DAA546C5AE52 /* CartillaTextView.swift */; };
 		BE2AECF8D862548DB1CE23F5 /* DocumentWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41955E8938C49BE05794F9A /* DocumentWindowController.swift */; };
 		C36412E509AE768A1E99DB93 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5899E4136F5F1ABACA0DBC /* EditorViewController+Formatting.swift */; };
@@ -69,6 +71,7 @@
 		4AB91AA22F40480516670E4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
 		5516DAD63E9ADD3597E2EDB9 /* LinkCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkCommandTests.swift; sourceTree = "<group>"; };
+		5EB57AB266013120608B4B4C /* EditorViewController+Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Pictures.swift"; sourceTree = "<group>"; };
 		60403553CD3D734E8470524F /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		73AA5D43E2C6409D02666E0F /* FormatBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBar.swift; sourceTree = "<group>"; };
@@ -90,6 +93,7 @@
 		D0C31C4C0964D6B3BA470348 /* CartillaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartillaDocument.swift; sourceTree = "<group>"; };
 		DD1D2E40BDC849665AB08222 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		E5866471B4EB11EBAFE10CE7 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		EA875D2375CD6B165BEC9864 /* PictureCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureCommandTests.swift; sourceTree = "<group>"; };
 		FADF56BBF8481680CB6EB886 /* PrintTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintTextView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -142,6 +146,7 @@
 				0FA63BD9C83F34C137AB1B64 /* FormattingCommandTests.swift */,
 				5516DAD63E9ADD3597E2EDB9 /* LinkCommandTests.swift */,
 				9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */,
+				EA875D2375CD6B165BEC9864 /* PictureCommandTests.swift */,
 				2A977F457011A4304254B54E /* RulerTests.swift */,
 				174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */,
 			);
@@ -156,6 +161,7 @@
 				BF5899E4136F5F1ABACA0DBC /* EditorViewController+Formatting.swift */,
 				43E00E6A5CC4D5D4FC0C599A /* EditorViewController+Insert.swift */,
 				CB8C6E41DE368374A11F70A5 /* EditorViewController+Links.swift */,
+				5EB57AB266013120608B4B4C /* EditorViewController+Pictures.swift */,
 				FADF56BBF8481680CB6EB886 /* PrintTextView.swift */,
 			);
 			path = Editor;
@@ -368,6 +374,7 @@
 				C36412E509AE768A1E99DB93 /* EditorViewController+Formatting.swift in Sources */,
 				74523400B5099FDCDFD8935A /* EditorViewController+Insert.swift in Sources */,
 				F4C5747FD38DF152E41B15B1 /* EditorViewController+Links.swift in Sources */,
+				ADC265470CFF546B5DEE992E /* EditorViewController+Pictures.swift in Sources */,
 				DA78B3C7CED82E43862A7495 /* EditorViewController.swift in Sources */,
 				82E84615364B9C2E02D08C1A /* FormatBar.swift in Sources */,
 				9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */,
@@ -387,6 +394,7 @@
 				30E2A7A9C6DFB37F724C9F2E /* FormattingCommandTests.swift in Sources */,
 				2EE4D2B351768530F7B67E6C /* LinkCommandTests.swift in Sources */,
 				985DC6259E26F45B4E594F71 /* PageSetupDocumentTests.swift in Sources */,
+				82B2E9DF0E2B35237C685079 /* PictureCommandTests.swift in Sources */,
 				04C9C811252EDAE672ACEFA7 /* RulerTests.swift in Sources */,
 				1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */,
 			);

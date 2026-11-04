@@ -12,15 +12,23 @@ public struct AttributedStringBridge: Sendable {
     public let numbering: Numbering
     /// External link targets by relationship id, for showing links.
     public let hyperlinkTargets: [String: String]
+    /// Embedded image bytes by relationship id, for showing pictures.
+    public let images: [String: Data]
 
-    public init(styles: StyleSheet, numbering: Numbering = Numbering(), hyperlinkTargets: [String: String] = [:]) {
+    public init(
+        styles: StyleSheet, numbering: Numbering = Numbering(), hyperlinkTargets: [String: String] = [:],
+        images: [String: Data] = [:]
+    ) {
         self.styles = styles
         self.numbering = numbering
         self.hyperlinkTargets = hyperlinkTargets
+        self.images = images
     }
 
     public init(_ document: DocxDocument) {
-        self.init(styles: document.styles, numbering: document.numbering, hyperlinkTargets: document.hyperlinkTargets)
+        self.init(
+            styles: document.styles, numbering: document.numbering, hyperlinkTargets: document.hyperlinkTargets,
+            images: document.images)
     }
 
     /// Where `link` points: its new target, its relationship's URL, or nil (bookmark links).
@@ -115,7 +123,8 @@ public struct AttributedStringBridge: Sendable {
                     }
                     append(t, attrs)
                 case .object(let label):
-                    attrs[.attachment] = Self.placeholderAttachment(label, font: attrs[.font] as? NSFont)
+                    attrs[.attachment] =
+                        pictureAttachment(o) ?? Self.placeholderAttachment(label, font: attrs[.font] as? NSFont)
                     append("\u{FFFC}", attrs)
                 }
             }
@@ -332,6 +341,17 @@ public struct AttributedStringBridge: Sendable {
                                     propertiesXML: box.inline.displayProperties.xml())))
                     }
                     notices.append("Part of a \(Self.describe(box.inline.kind)) was edited and kept as plain text.")
+                }
+                return
+            }
+            // An attachment that isn't the document's own (Insert ▸ Image…, paste, drop) is a new picture.
+            if let attachment = attrs[.attachment] as? NSTextAttachment, attrs[.cartillaPageBreak] == nil {
+                for _ in 0..<string.utf16.count {
+                    if let picture = Self.newPicture(from: attachment, runFormat: attrs[.cartillaRun] as? RunFormat) {
+                        inlines.append(.opaque(picture))
+                    } else {
+                        notices.append("An inserted image couldn't be read and wasn't saved.")
+                    }
                 }
                 return
             }

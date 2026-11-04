@@ -592,6 +592,26 @@
         }
       }
     },
+    "Image": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen"
+          }
+        }
+      }
+    },
+    "Image…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen…"
+          }
+        }
+      }
+    },
     "Increase Indent": {
       "localizations": {
         "es": {

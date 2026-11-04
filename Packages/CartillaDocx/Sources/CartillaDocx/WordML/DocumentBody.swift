@@ -285,12 +285,18 @@ public struct OpaqueInline: Sendable {
     public var displayProperties: RunProperties
     /// Can be dropped without changing the document's meaning (`w:proofErr`).
     public var isDroppable: Bool
+    /// The picture a drawing shows, when it's a single embedded image.
+    public var image: ImageReference?
+    /// A picture inserted in Cartilla, written as a new media part when saving (see `OOXMLCodec`).
+    public var newMedia: NewMedia?
 
     init(parsing e: RawXML.Element, in doc: RawXML.Document) {
         kind = e.name
         xml = doc.slice(e.range)
         isDroppable = e.name == "w:proofErr"
         displayProperties = RunProperties(e.descendants(named: "w:rPr").first)
+        image = ImageReference(drawing: e)
+        newMedia = nil
         if let label = Self.objectLabel(e) {
             display = .object(label: label)
         } else {

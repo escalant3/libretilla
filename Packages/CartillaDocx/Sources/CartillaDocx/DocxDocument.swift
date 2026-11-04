@@ -11,6 +11,8 @@ public struct DocxDocument: Sendable {
     public var numbering: Numbering
     /// External link targets of the main part, by relationship id (as read).
     public var hyperlinkTargets: [String: String] = [:]
+    /// Image bytes the main part embeds, by relationship id (as read).
+    public var images: [String: Data] = [:]
 
     /// Why the document must open read-only, if it must.
     public var readOnlyReason: String? { body.readOnlyReason }
@@ -45,6 +47,9 @@ public struct OOXMLCodec: DocxCodec {
         doc.hyperlinkTargets = Dictionary(
             rels.filter { $0.type == Self.hyperlinkType && $0.isExternal }.map { ($0.id, $0.target) },
             uniquingKeysWith: { a, _ in a })
+        for rel in rels where rel.type == Self.imageType && !rel.isExternal {
+            if let name = rel.resolvedPartName, let data = package[name] { doc.images[rel.id] = data }
+        }
         return doc
     }
 
@@ -53,6 +58,7 @@ public struct OOXMLCodec: DocxCodec {
         var package = document.package
         var body = document.body
         try Self.resolveNewHyperlinks(in: &body, package: &package, part: document.mainPartName)
+        try Self.resolveNewPictures(in: &body, package: &package, part: document.mainPartName)
         package.setPart(document.mainPartName, data: body.serialized())
         if let xml = document.styles.stylesXML {
             try package.setRelatedPart(

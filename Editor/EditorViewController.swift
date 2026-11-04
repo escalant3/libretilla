@@ -56,6 +56,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         // textContainerInset would misplace the ruler's right-indent marker.)
         textView.frame = NSRect(x: 0, y: 0, width: pageSetup.textWidth, height: pageSetup.pageSize.height)
         textView.isRichText = true
+        // Dropped and pasted images become pictures (saved as new media on the next save).
+        textView.importsGraphics = true
         textView.allowsUndo = true
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
@@ -165,6 +167,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         changeInLength delta: Int
     ) {
         guard !isLoading, editedRange.location != NSNotFound else { return }
+        if editedMask.contains(.editedCharacters) { fitNewPictures(in: textStorage, range: editedRange) }
         bridge.reconcile(textStorage, range: editedRange)
         // Splitting, joining or reformatting paragraphs can change list numbers further down.
         if !bridge.numbering.nums.isEmpty { scheduleRenumber() }

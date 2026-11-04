@@ -165,6 +165,12 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   external relationship (reused for the same URL, so autosaves don't add more); `xmlns:r` is declared if missing.
   Typing inside a link extends it, typing at its end doesn't. ⌘-click opens a link; a plain click places the caret.
   Links containing fields, bookmarks or tracked changes stay opaque, as before.
+- **Images.** Pictures (a DrawingML `wp:inline`/`wp:anchor` with one embedded `a:blip`) show as the real image
+  at their Word size; their XML is kept byte for byte. Insert ▸ Image…, paste and drag-and-drop add pictures,
+  scaled down to the text width. On save each new picture becomes a media part (`word/media/imageN.ext`), an
+  image relationship, a content-type default if needed, and Word's standard inline drawing with a unique
+  `wp:docPr` id; identical images share a part. PNG, JPEG and GIF are stored as they are (detected from their
+  bytes); anything else (HEIC, TIFF, PDF…) as PNG.
 - **The paper fills the window** (owner's request, 2026-11-04): no gray canvas by default. The text column
   stays at the document's text width, centred, so line breaks match print and PDF. View ▸ Show Page Edges
   brings back the page on a gray canvas; the choice is remembered.
@@ -177,6 +183,8 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - Multi-section documents use the last section's page setup throughout; each section keeps its own XML.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
+- Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
+- Pictures can't be resized in the editor yet; copying a picture within Cartilla saves the copy as a new image.
 
-**Still to do:** images, tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
+**Still to do:** tables. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
 print yet.
