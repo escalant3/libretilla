@@ -1,9 +1,10 @@
 # 0002. DOCX layer: our own lossless OOXML codec, not SwiftDocX
 
-- **Status:** Proposed (Milestone 0 recommendation; adding the ZIPFoundation dependency needs human approval)
+- **Status:** Accepted (2026-11-04). The ZIPFoundation runtime dependency still needs explicit approval before it is added
 - **Date:** 2026-11-04
-- **Evidence:** [`Spikes/SwiftDocXEval/RESULTS.md`](../../Spikes/SwiftDocXEval/RESULTS.md) (generated),
-  [`Fixtures/`](../../Fixtures/README.md), spike tests in `Spikes/SwiftDocXEval/Tests`
+- **Evidence:** [`0002-swiftdocx-evaluation.md`](0002-swiftdocx-evaluation.md) (archived spike results),
+  [`Fixtures/`](../../Fixtures/README.md). The spike code (`Spikes/SwiftDocXEval`) was removed after this decision
+  and can be recovered from git history at commit `09ad587`
 
 ## Context
 
@@ -63,8 +64,9 @@ Every output was also opened in Pages as a smoke test.
 ## Decision
 
 **Option (c).** `Packages/CartillaDocx` implements `DocxCodec` on **ZIPFoundation** plus our own small XML layer.
-SwiftDocX is not used by the app. It stays only in `Spikes/SwiftDocXEval`, as evidence and as a second opinion on
-what a minimal valid package looks like.
+SwiftDocX is not used anywhere in the project. We build the codec **gradually**, adding only what the current
+milestone needs (M1: package copy-through, paragraphs and runs; M2: styles, lists, paragraph formatting;
+M3: tables, images, hyperlinks, sections). Each step comes with its fixtures and round-trip tests.
 
 Design principles for M1:
 
@@ -81,7 +83,7 @@ Design principles for M1:
    - Unknown children inside a known element stay in place as opaque nodes.
 3. **Model.** `DocxDocument` gets blocks, runs, styles, numbering, sections and media (today's placeholder), and
    each block carries an origin token pointing back at its source bytes. The `AttributedStringBridge` maps
-   model ⇄ `NSAttributedString` (TextKit 1, ADR 0001) and keeps the origin token on the text as a custom
+   model ⇄ `NSAttributedString` (TextKit 2, ADR 0001) and keeps the origin token on the text as a custom
    attribute. An edit invalidates the token for that block only.
 4. **When something can't be preserved,** for example the user deletes half of a comment range: degrade
    structurally safe (drop the dangling marker), and record a notice for the non-blocking UI banner. Never
@@ -91,7 +93,8 @@ Design principles for M1:
    - an edit changes only `document.xml` (plus rels/content types when media is added);
    - read → write → read is equivalent on the model.
 
-   `DocxProbe` moves into `CartillaDocx`'s test support.
+   The spike's `DocxProbe` scanner and OPC checker (commit `09ad587`) are good starting points for
+   `CartillaDocx`'s test support.
 
 ## Consequences
 

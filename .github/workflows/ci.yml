@@ -27,7 +27,7 @@ jobs:
 
       - name: Lint (swift format, strict)
         run: |
-          find App Document Editor UI Tests UITests Packages/CartillaDocx Spikes/SwiftDocXEval \
+          find App Document Editor UI Tests UITests Packages/CartillaDocx \
             -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict
 
       - name: Xcode project is in sync with project.yml
@@ -43,10 +43,6 @@ jobs:
 
       - name: CartillaDocx package tests
         working-directory: Packages/CartillaDocx
-        run: swift test
-
-      - name: SwiftDocX evaluation spike tests
-        working-directory: Spikes/SwiftDocXEval
         run: swift test
 
       - name: Build and test app (unit + UI)

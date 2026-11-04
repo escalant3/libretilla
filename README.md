@@ -28,10 +28,9 @@ xcodebuild -project Cartilla.xcodeproj -scheme Cartilla -destination 'platform=m
 ```sh
 xcodebuild test -project Cartilla.xcodeproj -scheme Cartilla -destination 'platform=macOS,arch=arm64'
 (cd Packages/CartillaDocx && swift test)
-(cd Spikes/SwiftDocXEval && swift test)        # SwiftDocX evaluation (ADR 0002)
 ```
 
-Lint: `find App Document Editor UI Tests UITests Packages/CartillaDocx Spikes/SwiftDocXEval -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict`
+Lint: `find App Document Editor UI Tests UITests Packages/CartillaDocx -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict`
 (swift-format ships with Xcode; config in `.swift-format`). Format files one at a time with
 `swift format format --in-place <file>`: in swift-format 6.3, `--in-place` only rewrites the first file when given several.
 
@@ -41,12 +40,11 @@ Lint: `find App Document Editor UI Tests UITests Packages/CartillaDocx Spikes/Sw
 |---|---|
 | `App/` | Entry point, app delegate, main menu, Info.plist, entitlements (sandboxed) |
 | `Document/` | `NSDocument` subclass (autosave in place) and window controller |
-| `Editor/` | Text view and page canvas (TextKit 1: [ADR 0001](docs/decisions/0001-textkit.md)) |
+| `Editor/` | Text view and page canvas (TextKit 2: [ADR 0001](docs/decisions/0001-textkit.md), [known gaps](docs/TEXTKIT2_GAPS.md)) |
 | `UI/` | Toolbar, format bar, inspectors (from M1) |
 | `Packages/CartillaDocx/` | `DocxCodec`, document model, attributed-string bridge ([ADR 0002](docs/decisions/0002-docx-library.md)) |
 | `Resources/` | Assets, `Localizable.xcstrings` (English, Spanish) |
 | `Fixtures/` | `.docx` test corpus ([README](Fixtures/README.md)) |
-| `Spikes/SwiftDocXEval/` | Milestone 0 SwiftDocX evaluation (not part of the app) |
 | `scripts/` | Fixture generators; later build, sign, notarize, DMG |
 | `docs/decisions/` | Architecture decision records |
 
