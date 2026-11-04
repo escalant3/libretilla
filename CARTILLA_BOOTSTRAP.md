@@ -22,7 +22,7 @@ Sibling reference (not a dependency, not a suite): [SimpleSpread](https://github
 | R6 | **MIT license**, provided dependency licenses are compatible (see §8). |
 | R7 | Distributed as a **signed, notarized DMG** from the project website. |
 | R8 | Localized in **English and Spanish** from day one (String Catalogs). |
-| R9 | **Cloud-editor persistence model:** no manual saving. Every edit is kept automatically, in the real `.docx` file, and survives closing, quitting, crashes and power loss. There is no "Do you want to save changes?" dialog, ever. See §5.4. |
+| R9 | **Cloud-editor persistence model:** no manual saving. Every edit is kept automatically, in the real `.docx` file, and survives closing, quitting, crashes and power loss. There is no "Do you want to save changes?" dialog, ever. The one accepted exception is the standard system sheet shown when closing a never-named, non-empty document (ADR 0003). See §5.4. |
 
 ## 3. Non-goals (say no to these)
 
@@ -101,9 +101,9 @@ Cartilla/
 - **Only save after real edits.** Opening a Word-authored file and closing it must not rewrite it (no mtime change, no re-serialization). Only an actual change marks the document dirty. Selection moves, scrolling and zoom must not touch the file (store view state outside the `.docx`, e.g. in the app's state-restoration data).
 
 **New documents (the part that differs from Word 97):**
-- Google Docs creates the document the moment you click "New". Target the same: File ▸ New opens a window titled "Untitled" and typing is persisted immediately as an autosaved draft (system-managed `autosavesDrafts`), restored automatically after a quit or crash.
+- File ▸ New opens a window titled "Untitled" immediately, and typing is persisted right away as a system-managed autosaved draft (stored in the app's sandbox container), restored automatically after a quit or crash.
 - Naming happens by **clicking the title in the title bar** (system rename/move popover, free with autosave-in-place) or File ▸ Rename…/Move To…. We never block typing with a save panel.
-- Decision for the spike (ADR 0003, ask the human): where do unnamed documents go? Options: (a) system draft until first named, with the standard Save panel only on close of an unnamed non-empty document (TextEdit/Pages behaviour); (b) **recommended for the Docs feel:** create `Untitled.docx` immediately in a user-configurable default folder (default `~/Documents/Cartilla` or iCloud Drive if available), rename on first title edit or from the first heading. Empty untitled documents are discarded on close in both options.
+- **Decided (ADR 0003): unnamed documents stay system drafts until named, the same as Pages and TextEdit.** Closing an unnamed, non-empty document shows the standard system sheet (name and place it, or delete it). That's the only accepted exception to R9's no-dialog rule. Closing an empty unnamed document discards it silently. There is no custom default folder and no file is created in the user's folders before the document is named.
 - Quit with unnamed drafts: no dialog; they come back on relaunch (window restoration on; verify `NSQuitAlwaysKeepsWindows` behaviour).
 
 **Status indicator (replaces the Save button):** next to the editable title show a small, quiet state: `Saved` / `Saving…` / `Couldn't save — Retry` (with details in a popover). Updates from document change count and write completion. VoiceOver announces failures only, not routine saves. The toolbar has **no Save button**; `⌘S` stays in the menu (forces an immediate save, harmless).
@@ -113,7 +113,7 @@ Cartilla/
 2. **Read-only / locked files, read-only volumes, files without write permission:** open as read-only with an obvious banner and offer "Duplicate to edit"; never show a failing "Saving…" loop.
 3. **Volumes without Versions** (FAT/exFAT/some network shares): autosave still works but history is unavailable; tell the user once.
 4. **Disk full / permission lost mid-session:** keep the in-memory document, show `Couldn't save`, retry on next change and on regaining space, and prompt Save As… on window close if the last save failed.
-5. **Safety of overwriting Word-authored originals:** because we autosave over the user's real file, the lossless round-trip policy is a prerequisite for enabling autosave on files we didn't create. Until the corpus tests pass, autosave must be gated by a "first edit of an existing file" step that makes a **one-time sibling backup** (`name (original).docx`, or rely on the Versions snapshot if available) — decide in ADR 0003 and remove the sibling backup when the round-trip suite is green.
+5. **Safety of overwriting Word-authored originals:** because we autosave over the user's real file, the lossless round-trip policy is a prerequisite for enabling autosave on files we didn't create. Until the corpus tests pass, autosave must be gated by a "first edit of an existing file" step that makes a **one-time sibling backup** (`name (original).docx`, or rely on the Versions snapshot if available) — decide in ADR 0004 (open) and remove the sibling backup when the round-trip suite is green.
 6. **Crash recovery:** drafts and unsaved changes recovered through the standard NSDocument autosave-information mechanism; test by `kill -9` during typing.
 7. **Large documents / slow disks (iCloud, network):** autosave is debounced and coalesced; never queue more than one write in flight.
 8. **Undo after reopen:** undo history is not persisted; Versions covers the "go back" need. Say so in docs.
@@ -179,7 +179,8 @@ Prerequisite for the human: an **Apple Developer Program** membership (needed fo
 - When a native control can't do something, write down the trade-off in an ADR instead of silently building a custom control.
 - Never silently drop unsupported DOCX content (see round-trip policy); add a fixture for every fidelity bug fixed.
 - Keep the app launchable and the main branch green.
-- Open questions to resolve with the human early: where new/unnamed documents live (§5.4, ADR 0003), whether to keep a one-time backup of Word-authored originals, minimum macOS version (suggested **macOS 14**; the arm64-only target makes this cheap), sandboxed or not, Sparkle yes/no, header/footer in 1.0 or 1.1, domain/website host.
+- Open questions to resolve with the human early: whether to keep a one-time backup of Word-authored originals (ADR 0004), Sparkle yes/no, header/footer in 1.0 or 1.1, domain/website host.
+- Resolved (2026-11-04): unnamed documents are system drafts until named (ADR 0003); minimum macOS version is **macOS 26**; the app is **sandboxed**.
 
 ## 12. First prompt to give Claude Code
 
