@@ -230,9 +230,11 @@ for r in results {
         md += "| \(r.name) | ❌ \(r.readError ?? "") | | | | | | | | | | |\n"
         continue
     }
-    let hf = (n(s, .headerReference) + n(s, .footerReference)) == 0
+    let hf =
+        (n(s, .headerReference) + n(s, .footerReference)) == 0
         ? "·" : ((m.hasHeader || m.hasFooter) ? "✅" : "0/\(n(s, .headerReference) + n(s, .footerReference)) ❌")
-    md += "| \(r.name) | ✅ | \(String(format: "%.1f", r.readMillis)) | \(cell(s.words, m.words)) "
+    md +=
+        "| \(r.name) | ✅ | \(String(format: "%.1f", r.readMillis)) | \(cell(s.words, m.words)) "
         + "| \(cell(n(s, .paragraph), m.paragraphs)) | \(cell(n(s, .headingParagraph), m.headings)) "
         + "| \(cell(n(s, .listParagraph), m.listItems)) | \(cell(n(s, .table), m.tables)) "
         + "| \(cell(n(s, .hyperlink), m.hyperlinks)) | \(cell(n(s, .imageBlip), m.images)) "
@@ -250,7 +252,8 @@ md += """
 for r in results {
     guard let m = r.model else { continue }
     let s = r.source
-    md += "| \(r.name) | \(cell(n(s, .bold), m.bold)) | \(cell(n(s, .italic), m.italic)) "
+    md +=
+        "| \(r.name) | \(cell(n(s, .bold), m.bold)) | \(cell(n(s, .italic), m.italic)) "
         + "| \(cell(n(s, .underline), m.underline)) | \(cell(n(s, .strike), m.strike)) "
         + "| \(cell(n(s, .color), m.color)) | \(cell(n(s, .highlight), m.highlight)) "
         + "| \(cell(n(s, .fontSize), m.fontSize)) | \(cell(n(s, .fonts), m.font)) "
@@ -273,7 +276,8 @@ for r in results {
             continue
         }
         let problems = o.probe.packageProblems.count + o.probe.malformedParts.count
-        s += "| \(r.name) | \(cell(r.source.words, o.probe.words)) | \(o.diff.identical.count)/\(r.source.parts.count) "
+        s +=
+            "| \(r.name) | \(cell(r.source.words, o.probe.words)) | \(o.diff.identical.count)/\(r.source.parts.count) "
             + "| \(o.diff.changed.count) | \(o.diff.dropped.count) | \(o.diff.added.count) "
             + "| \(o.rereadWords) | \(problems == 0 ? "none" : "\(problems) ❌") | \(o.pages) |\n"
     }
@@ -315,7 +319,8 @@ for (part, files) in droppedUnion.sorted(by: { $0.key < $1.key }) {
     md += "- `\(part)`: \(files.count) fixture\(files.count == 1 ? "" : "s")\n"
 }
 let changedAlways = Set(results.compactMap { $0.rebuilt?.diff.changed }.joined())
-md += "\nParts always rewritten from scratch (never byte-identical): "
+md +=
+    "\nParts always rewritten from scratch (never byte-identical): "
     + changedAlways.sorted().map { "`\($0)`" }.joined(separator: ", ") + ".\n"
 
 md += """

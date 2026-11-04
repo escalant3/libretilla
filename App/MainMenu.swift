@@ -37,8 +37,9 @@ enum MainMenu {
     private static func appMenu() -> NSMenu {
         let menu = NSMenu(title: "Cartilla")
         menu.addItem(
-            item(String(localized: "About Cartilla"),
-                 #selector(NSApplication.orderFrontStandardAboutPanel(_:))))
+            item(
+                String(localized: "About Cartilla"),
+                #selector(NSApplication.orderFrontStandardAboutPanel(_:))))
         menu.addItem(.separator())
         let services = NSMenu(title: String(localized: "Services"))
         let servicesItem = NSMenuItem(title: services.title, action: nil, keyEquivalent: "")
@@ -48,8 +49,9 @@ enum MainMenu {
         menu.addItem(.separator())
         menu.addItem(item(String(localized: "Hide Cartilla"), #selector(NSApplication.hide(_:)), "h"))
         menu.addItem(
-            item(String(localized: "Hide Others"),
-                 #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option]))
+            item(
+                String(localized: "Hide Others"),
+                #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option]))
         menu.addItem(
             item(String(localized: "Show All"), #selector(NSApplication.unhideAllApplications(_:))))
         menu.addItem(.separator())
@@ -63,15 +65,17 @@ enum MainMenu {
         menu.addItem(item(String(localized: "Open…"), #selector(NSDocumentController.openDocument(_:)), "o"))
         let recent = NSMenu(title: String(localized: "Open Recent"))
         recent.addItem(
-            item(String(localized: "Clear Menu"),
-                 #selector(NSDocumentController.clearRecentDocuments(_:))))
+            item(
+                String(localized: "Clear Menu"),
+                #selector(NSDocumentController.clearRecentDocuments(_:))))
         let recentItem = NSMenuItem(title: recent.title, action: nil, keyEquivalent: "")
         recentItem.submenu = recent
         menu.addItem(recentItem)
         menu.addItem(.separator())
         menu.addItem(item(String(localized: "Close"), #selector(NSWindow.performClose(_:)), "w"))
         menu.addItem(item(String(localized: "Save"), #selector(NSDocument.save(_:)), "s"))
-        menu.addItem(item(String(localized: "Duplicate"), #selector(NSDocument.duplicate(_:)), "s", [.command, .shift]))
+        menu.addItem(
+            item(String(localized: "Duplicate"), #selector(NSDocument.duplicate(_:)), "s", [.command, .shift]))
         menu.addItem(item(String(localized: "Rename…"), #selector(NSDocument.rename(_:))))
         menu.addItem(item(String(localized: "Move To…"), #selector(NSDocument.move(_:))))
         menu.addItem(
@@ -116,8 +120,9 @@ enum MainMenu {
     private static func viewMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "View"))
         menu.addItem(
-            item(String(localized: "Enter Full Screen"), #selector(NSWindow.toggleFullScreen(_:)), "f",
-                 [.command, .control]))
+            item(
+                String(localized: "Enter Full Screen"), #selector(NSWindow.toggleFullScreen(_:)), "f",
+                [.command, .control]))
         return menu
     }
 

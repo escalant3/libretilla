@@ -12,4 +12,4 @@ _None yet._
 | Package | Version | License | Used by |
 |---|---|---|---|
 | [Techopolis/SwiftDocX](https://github.com/Techopolis/SwiftDocX) | 1.0.2 | MIT | `Spikes/SwiftDocXEval` |
-| [weichsel/ZIPFoundation](https://github.com/weichsel/ZIPFoundation) | (transitive) | MIT | `Spikes/SwiftDocXEval` (via SwiftDocX) |
+| [weichsel/ZIPFoundation](https://github.com/weichsel/ZIPFoundation) | 0.9.20 | MIT | `Spikes/SwiftDocXEval` (via SwiftDocX) |

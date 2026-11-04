@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & test (arm64, macOS 26)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE"; fi
+          xcodebuild -version
+          swift --version
+          uname -m
+
+      - name: Lint (swift format, strict)
+        run: |
+          find App Document Editor UI Tests UITests Packages/CartillaDocx Spikes/SwiftDocXEval \
+            -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict
+
+      - name: Xcode project is in sync with project.yml
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen generate --quiet
+          git diff --exit-code -- Cartilla.xcodeproj App/Info.plist App/Cartilla.entitlements
+
+      - name: Fixture corpus is reproducible
+        run: |
+          python3 scripts/fixtures/make_corpus.py
+          git diff --exit-code -- Fixtures/generated
+
+      - name: CartillaDocx package tests
+        working-directory: Packages/CartillaDocx
+        run: swift test
+
+      - name: SwiftDocX evaluation spike tests
+        working-directory: Spikes/SwiftDocXEval
+        run: swift test
+
+      - name: Build and test app (unit + UI)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild test \
+            -project Cartilla.xcodeproj -scheme Cartilla \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO \
+            | tee build/xcodebuild.log | grep -E '^(Test Case|\*\*)|: error: ' || true
+          grep -q '\*\* TEST SUCCEEDED \*\*' build/xcodebuild.log
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult
+          path: build/DerivedData/Logs/Test/*.xcresult

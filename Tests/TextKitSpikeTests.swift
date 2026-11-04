@@ -34,7 +34,8 @@ final class TextKitSpikeTests: XCTestCase {
         let out = NSMutableAttributedString(string: "Before the table.\n")
         for row in 0..<2 {
             for col in 0..<2 {
-                let block = NSTextTableBlock(table: table, startingRow: row, rowSpan: 1, startingColumn: col, columnSpan: 1)
+                let block = NSTextTableBlock(
+                    table: table, startingRow: row, rowSpan: 1, startingColumn: col, columnSpan: 1)
                 block.setWidth(1, type: .absoluteValueType, for: .border)
                 block.setBorderColor(.black)
                 block.setWidth(4, type: .absoluteValueType, for: .padding)
@@ -104,8 +105,9 @@ final class TextKitSpikeTests: XCTestCase {
     /// Does TextKit 2 actually *lay out* the table (cells side by side), or merely tolerate it?
     func testTextKit2TableGeometryAndEditing() throws {
         let tv = makeTextView(textKit2: true)
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 900), styleMask: [.titled],
-                              backing: .buffered, defer: false)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 900), styleMask: [.titled],
+            backing: .buffered, defer: false)
         window.contentView = tv
         tv.textContentStorage?.textStorage?.setAttributedString(Self.tableText())
         let tlm = try XCTUnwrap(tv.textLayoutManager)
@@ -118,9 +120,12 @@ final class TextKitSpikeTests: XCTestCase {
             }
             return true
         }
-        let c00 = try XCTUnwrap(frames["r0c0"]), c01 = try XCTUnwrap(frames["r0c1"]), c10 = try XCTUnwrap(frames["r1c0"])
+        let c00 = try XCTUnwrap(frames["r0c0"]), c01 = try XCTUnwrap(frames["r0c1"]),
+            c10 = try XCTUnwrap(frames["r1c0"])
         let sideBySide = abs(c00.minY - c01.minY) < 1 && c01.minX > c00.minX
-        report("TK2 table geometry: r0c0=\(c00.integral) r0c1=\(c01.integral) r1c0=\(c10.integral) sideBySide=\(sideBySide)")
+        report(
+            "TK2 table geometry: r0c0=\(c00.integral) r0c1=\(c01.integral) r1c0=\(c10.integral) sideBySide=\(sideBySide)"
+        )
 
         // Type into the first cell, as a user would.
         let cellStart = (tv.string as NSString).range(of: "r0c0").location
@@ -143,11 +148,14 @@ final class TextKitSpikeTests: XCTestCase {
         lm.ensureLayout(for: tc)
         func rect(_ s: String) -> CGRect {
             let r = (tv.string as NSString).range(of: s)
-            return lm.boundingRect(forGlyphRange: lm.glyphRange(forCharacterRange: r, actualCharacterRange: nil), in: tc)
+            return lm.boundingRect(
+                forGlyphRange: lm.glyphRange(forCharacterRange: r, actualCharacterRange: nil), in: tc)
         }
         let c00 = rect("r0c0"), c01 = rect("r0c1"), c10 = rect("r1c0")
         let sideBySide = abs(c00.minY - c01.minY) < 1 && c01.minX > c00.maxX
-        report("TK1 table geometry: r0c0=\(c00.integral) r0c1=\(c01.integral) r1c0=\(c10.integral) sideBySide=\(sideBySide)")
+        report(
+            "TK1 table geometry: r0c0=\(c00.integral) r0c1=\(c01.integral) r1c0=\(c10.integral) sideBySide=\(sideBySide)"
+        )
         XCTAssertTrue(sideBySide)
         XCTAssertGreaterThan(c10.minY, c00.maxY)
     }
@@ -228,7 +236,9 @@ final class TextKitSpikeTests: XCTestCase {
             containers += 1
             lm.ensureLayout(for: lm.textContainers.last!)
         } while NSMaxRange(lm.glyphRange(for: lm.textContainers.last!)) < lm.numberOfGlyphs && containers < 1000
-        report("TK1 multi-container pages=\(containers) seconds=\(String(format: "%.2f", Date().timeIntervalSince(start)))")
+        report(
+            "TK1 multi-container pages=\(containers) seconds=\(String(format: "%.2f", Date().timeIntervalSince(start)))"
+        )
         XCTAssertGreaterThan(containers, 100)
         XCTAssertLessThan(containers, 1000)
     }
@@ -262,7 +272,9 @@ final class TextKitSpikeTests: XCTestCase {
             }
         }
         let perKey = Date().timeIntervalSince(start) / 50 * 1000
-        report("edit+relayout \(textKit2 ? "TK2" : "TK1") ms/keystroke=\(String(format: "%.3f", perKey)) tk2=\(tv.textLayoutManager != nil)")
+        report(
+            "edit+relayout \(textKit2 ? "TK2" : "TK1") ms/keystroke=\(String(format: "%.3f", perKey)) tk2=\(tv.textLayoutManager != nil)"
+        )
         return perKey
     }
 

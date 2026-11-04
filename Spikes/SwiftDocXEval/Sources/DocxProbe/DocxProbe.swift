@@ -234,7 +234,8 @@ enum PackageChecker {
             let dir = (relsName as NSString).deletingLastPathComponent  // e.g. word/_rels
             let base = (dir as NSString).deletingLastPathComponent  // e.g. word
             for rel in Relationships.parse(data) where rel.mode != "External" {
-                let target = rel.target.hasPrefix("/")
+                let target =
+                    rel.target.hasPrefix("/")
                     ? String(rel.target.dropFirst())
                     : resolve(rel.target, against: base)
                 if parts[target] == nil { problems.append("\(relsName): dangling \(rel.id) → \(rel.target)") }
