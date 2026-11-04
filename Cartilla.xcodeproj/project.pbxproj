@@ -20,6 +20,7 @@
 		6C17C3D9C19022F08927DB67 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */; };
 		82E84615364B9C2E02D08C1A /* FormatBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73AA5D43E2C6409D02666E0F /* FormatBar.swift */; };
 		953CD82E158C5AE5C112D3E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4FCA90FB94EB59559A14C4A /* Assets.xcassets */; };
+		985DC6259E26F45B4E594F71 /* PageSetupDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */; };
 		9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1D2E40BDC849665AB08222 /* MainMenu.swift */; };
 		AE280018A13B11F8331A23B5 /* CartillaTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CEE116E4D5DAA546C5AE52 /* CartillaTextView.swift */; };
 		BE2AECF8D862548DB1CE23F5 /* DocumentWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41955E8938C49BE05794F9A /* DocumentWindowController.swift */; };
@@ -72,6 +73,7 @@
 		8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartillaDocumentTests.swift; sourceTree = "<group>"; };
 		90FE84762ECFFDC107CCCC45 /* SaveStatusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveStatusViewController.swift; sourceTree = "<group>"; };
 		9271AFBF80EADBD48972DEBD /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
+		9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSetupDocumentTests.swift; sourceTree = "<group>"; };
 		9DB1953DCEE442C3CDF33F52 /* CartillaDocx */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CartillaDocx; path = Packages/CartillaDocx; sourceTree = SOURCE_ROOT; };
 		A41955E8938C49BE05794F9A /* DocumentWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowController.swift; sourceTree = "<group>"; };
 		A924860A205C14D83E9A055B /* PersistenceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceUITests.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 			children = (
 				8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */,
 				0FA63BD9C83F34C137AB1B64 /* FormattingCommandTests.swift */,
+				9C8166D7CE8835FC6C789ED3 /* PageSetupDocumentTests.swift */,
 				2A977F457011A4304254B54E /* RulerTests.swift */,
 				174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */,
 			);
@@ -367,6 +370,7 @@
 			files = (
 				273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */,
 				30E2A7A9C6DFB37F724C9F2E /* FormattingCommandTests.swift in Sources */,
+				985DC6259E26F45B4E594F71 /* PageSetupDocumentTests.swift in Sources */,
 				04C9C811252EDAE672ACEFA7 /* RulerTests.swift in Sources */,
 				1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */,
 			);

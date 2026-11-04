@@ -5,11 +5,11 @@ import os
 /// A page-width text column on a quiet canvas (bootstrap §5.1 "page view", stage 1).
 /// True pagination is a v1.1 milestone.
 final class EditorViewController: NSViewController, NSTextViewDelegate, @preconcurrency NSTextStorageDelegate {
-    /// US Letter width in points; becomes document-driven in M3 (page setup).
-    static let pageWidth: CGFloat = 612
-    static let pageMargin: CGFloat = 72
+    /// The document's page size and margins (from its final `w:sectPr`); set with `apply(_:)`.
+    private(set) var pageSetup = PageSetup.letter
 
     private(set) var textView: CartillaTextView!
+    private var canvas: PageCanvasView!
     /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
     weak var document: CartillaDocument?
     /// Called (coalesced) when the selection or its formatting changes, for the format bar.
@@ -36,8 +36,6 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         scrollView.automaticallyAdjustsContentInsets = true
 
         let canvas = PageCanvasView()
-        canvas.pageWidth = Self.pageWidth
-        canvas.margin = Self.pageMargin
         scrollView.documentView = canvas
 
         // TextKit 2, deliberately (ADR 0001). Never touch `textView.layoutManager`: it forces a
@@ -45,8 +43,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         let textView = CartillaTextView(usingTextLayoutManager: true)
         // The text view is the page's text column; the canvas draws the page around it. (A horizontal
         // textContainerInset would misplace the ruler's right-indent marker.)
-        let column = Self.pageWidth - 2 * Self.pageMargin
-        textView.frame = NSRect(x: 0, y: 0, width: column, height: 792)
+        textView.frame = NSRect(x: 0, y: 0, width: pageSetup.textWidth, height: pageSetup.pageSize.height)
         textView.isRichText = true
         textView.allowsUndo = true
         textView.usesFindBar = true
@@ -55,14 +52,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         textView.usesRuler = true
         textView.usesFontPanel = true
         textView.isAutomaticSpellingCorrectionEnabled = true
-        textView.textContainerInset = NSSize(width: 0, height: Self.pageMargin)
         textView.textContainer?.widthTracksTextView = true
         // Text starts exactly at the margin, as in Word (so lines wrap at Word's text width too).
         textView.textContainer?.lineFragmentPadding = 0
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
-        textView.minSize = NSSize(width: column, height: 792)
-        textView.maxSize = NSSize(width: column, height: .greatestFiniteMagnitude)
         textView.drawsBackground = false
         textView.setAccessibilityLabel(String(localized: "Document body"))
         textView.delegate = self
@@ -70,6 +64,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         textView.textStorage?.delegate = self
         canvas.page = textView
         self.textView = textView
+        self.canvas = canvas
         fallbackObserver = NotificationCenter.default.addObserver(
             forName: NSTextView.willSwitchToNSLayoutManagerNotification, object: textView, queue: .main
         ) { _ in
@@ -77,6 +72,27 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
             Self.log.fault("NSTextView fell back to TextKit 1")
         }
         view = scrollView
+        apply(pageSetup)
+    }
+
+    // MARK: Page
+
+    /// Lays the page out for `setup`: the text view is the text column, the canvas draws the page around
+    /// it. The top margin is the inset above the text (TextKit's inset is symmetric, so the space below the
+    /// last line is the top margin too; continuous scroll has no page bottoms anyway).
+    func apply(_ setup: PageSetup) {
+        loadViewIfNeeded()
+        pageSetup = setup
+        let column = setup.textWidth
+        let margins = setup.margins
+        canvas.pageWidth = setup.pageSize.width
+        canvas.leftMargin = margins.left
+        textView.textContainerInset = NSSize(width: 0, height: margins.top)
+        textView.minSize = NSSize(width: column, height: setup.pageSize.height)
+        textView.maxSize = NSSize(width: column, height: .greatestFiniteMagnitude)
+        textView.setFrameSize(NSSize(width: column, height: max(textView.frame.height, setup.pageSize.height)))
+        canvas.needsLayout = true
+        canvas.needsDisplay = true
     }
 
     // MARK: Content
@@ -227,14 +243,14 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
 /// Document view that keeps the page horizontally centred and grows with it.
 final class PageCanvasView: NSView {
     var pageWidth: CGFloat = 612
-    /// Left and right page margins: the page view (the text column) sits this far inside the page.
-    var margin: CGFloat = 72
+    /// The left page margin: the page view (the text column) starts this far inside the page.
+    var leftMargin: CGFloat = 72
     private let verticalPadding: CGFloat = 32
 
     /// The white page behind the text column.
     var pageRect: NSRect {
         guard let page else { return .zero }
-        return NSRect(x: page.frame.minX - margin, y: page.frame.minY, width: pageWidth, height: page.frame.height)
+        return NSRect(x: page.frame.minX - leftMargin, y: page.frame.minY, width: pageWidth, height: page.frame.height)
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -282,7 +298,7 @@ final class PageCanvasView: NSView {
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }
-        let x = ((width - pageWidth) / 2).rounded() + margin
+        let x = ((width - pageWidth) / 2).rounded() + leftMargin
         if page.frame.origin != NSPoint(x: x, y: verticalPadding) {
             page.setFrameOrigin(NSPoint(x: x, y: verticalPadding))
             needsDisplay = true

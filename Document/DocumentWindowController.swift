@@ -44,6 +44,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             guard let self else { return }
             self.formatBar.update(format, bridge: bridge, editable: self.editor.textView.isEditable)
         }
+        editor.apply(document.pageSetup)
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)
         document.onSaveStateChange = { [weak self, weak document] state in

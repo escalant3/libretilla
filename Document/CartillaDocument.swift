@@ -104,6 +104,7 @@ final class CartillaDocument: NSDocument {
     override func revert(toContentsOf url: URL, ofType typeName: String) throws {
         try super.revert(toContentsOf: url, ofType: typeName)
         adoptLoaded()
+        editor?.apply(pageSetup)
         editor?.show(initialText, editable: !isReadOnly)
     }
 
@@ -209,6 +210,64 @@ final class CartillaDocument: NSDocument {
         editor?.restyleAll()
     }
 
+    // MARK: Page setup (M3)
+
+    /// The page size, orientation and margins, from the document's final `w:sectPr`.
+    var pageSetup: PageSetup { base?.body.pageSetup ?? .letter }
+
+    /// Changes the page setup, undoably. The text is untouched; the next save rewrites only the changed
+    /// `w:pgSz` / `w:pgMar` attributes.
+    func setPageSetup(_ setup: PageSetup, actionName: String = String(localized: "Page Setup")) {
+        guard var doc = base, setup != doc.body.pageSetup else { return }
+        let old = doc.body.pageSetup
+        doc.body.pageSetup = setup
+        base = doc
+        undoManager?.registerUndo(withTarget: self) { target in
+            MainActor.assumeIsolated {
+                target.setPageSetup(old, actionName: actionName)
+            }
+        }
+        undoManager?.setActionName(actionName)
+        editor?.apply(setup)
+    }
+
+    /// Printer choice, scaling and other settings from the last Page Setup or Print sheet.
+    private var printSettings = NSPrintInfo.shared.copy() as! NSPrintInfo
+
+    /// What File ▸ Page Setup… and printing start from: the document's own paper size, orientation and
+    /// margins. Derived, never stored through `super`: NSDocument's setter would count as an edit, so
+    /// merely opening a document would mark it edited. Page setup changes are undoable through
+    /// `setPageSetup` instead.
+    override var printInfo: NSPrintInfo {
+        get { Self.printInfo(for: pageSetup, basedOn: printSettings) }
+        set { printSettings = newValue.copy() as! NSPrintInfo }
+    }
+
+    /// Print settings for `setup`: paper size, orientation and margins as in the document.
+    static func printInfo(for setup: PageSetup, basedOn info: NSPrintInfo) -> NSPrintInfo {
+        let info = info.copy() as! NSPrintInfo
+        let margins = setup.margins
+        info.orientation = setup.isLandscape ? .landscape : .portrait
+        info.paperSize = setup.pageSize
+        info.topMargin = margins.top
+        info.bottomMargin = margins.bottom
+        info.leftMargin = margins.left
+        info.rightMargin = margins.right
+        info.horizontalPagination = .fit
+        info.verticalPagination = .automatic
+        info.isHorizontallyCentered = false
+        info.isVerticallyCentered = false
+        return info
+    }
+
+    /// File ▸ Page Setup… changes paper size and orientation; margins stay as the document has them
+    /// (the system sheet doesn't edit them).
+    override func shouldChangePrintInfo(_ newPrintInfo: NSPrintInfo) -> Bool {
+        guard !isReadOnly else { return false }
+        setPageSetup(pageSetup.withPaper(newPrintInfo.paperSize, landscape: newPrintInfo.orientation == .landscape))
+        return true
+    }
+
     // MARK: Restore Original (ADR 0004)
 
     var canRestoreOriginal: Bool {
@@ -223,6 +282,7 @@ final class CartillaDocument: NSDocument {
             return
         }
         base = docx
+        editor?.apply(pageSetup)
         editor?.replaceAllUndoably(AttributedStringBridge(docx).attributedString(for: docx.body))
     }
 
@@ -236,12 +296,9 @@ final class CartillaDocument: NSDocument {
     override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws
         -> NSPrintOperation
     {
-        let info = printInfo.copy() as! NSPrintInfo
+        let info = Self.printInfo(for: pageSetup, basedOn: printInfo)
         info.dictionary().addEntries(from: printSettings)
-        info.horizontalPagination = .fit
-        info.verticalPagination = .automatic
-        info.isVerticallyCentered = false
-        let width = info.paperSize.width - info.leftMargin - info.rightMargin
+        let width = pageSetup.textWidth
         let view = NSTextView(usingTextLayoutManager: true)
         view.frame = NSRect(x: 0, y: 0, width: width, height: 100)
         view.isVerticallyResizable = true
@@ -250,6 +307,38 @@ final class CartillaDocument: NSDocument {
         view.textStorage?.setAttributedString(editor?.textSnapshot() ?? initialText)
         view.sizeToFit()
         return NSPrintOperation(view: view, printInfo: info)
+    }
+
+    // MARK: PDF export (M3)
+
+    /// File ▸ Export as PDF…: asks where, then writes the PDF.
+    @objc func exportPDF(_ sender: Any?) {
+        guard let window = windowControllers.first?.window else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.nameFieldStringValue = (displayName as NSString).deletingPathExtension + ".pdf"
+        panel.canSelectHiddenExtension = true
+        panel.beginSheetModal(for: window) { [weak self] response in
+            MainActor.assumeIsolated {
+                guard response == .OK, let self, let url = panel.url else { return }
+                do {
+                    try self.writePDF(to: url)
+                } catch {
+                    self.presentError(error, modalFor: window, delegate: nil, didPresent: nil, contextInfo: nil)
+                }
+            }
+        }
+    }
+
+    /// Writes the document as a PDF, paginated with the document's own paper size and margins.
+    func writePDF(to url: URL, showsProgress: Bool = true) throws {
+        let op = try printOperation(withSettings: [
+            .jobDisposition: NSPrintInfo.JobDisposition.save,
+            .jobSavingURL: url,
+        ])
+        op.showsPrintPanel = false
+        op.showsProgressPanel = showsProgress
+        guard op.run() else { throw CocoaError(.fileWriteUnknown, userInfo: [NSURLErrorKey: url]) }
     }
 
     // MARK: New documents

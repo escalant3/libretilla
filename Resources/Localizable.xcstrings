@@ -292,6 +292,16 @@
         }
       }
     },
+    "Export as PDF…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar como PDF…"
+          }
+        }
+      }
+    },
     "File": {
       "localizations": {
         "es": {
@@ -718,6 +728,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir…"
+          }
+        }
+      }
+    },
+    "Page Setup": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar página"
           }
         }
       }

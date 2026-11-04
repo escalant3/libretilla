@@ -47,6 +47,44 @@ public struct PageSetup: Sendable, Equatable {
     /// The width of the text column, in points.
     public var textWidth: CGFloat { pageSize.width - margins.left - margins.right }
 
+    /// Word's exact sizes (portrait, twips) for common papers. AppKit reports paper sizes in whole
+    /// points, which would turn A4's 11906 × 16838 into 11900 × 16840.
+    static let standardPapers: [(width: Int, height: Int)] = [
+        (12240, 15840),  // Letter
+        (12240, 20160),  // Legal
+        (10440, 15120),  // Executive
+        (15840, 24480),  // Tabloid
+        (11906, 16838),  // A4
+        (8391, 11906),  // A5
+        (16838, 23811),  // A3
+        (10319, 14571),  // B5 (JIS)
+        (9978, 14173),  // B5 (ISO)
+    ]
+
+    /// This setup on a paper of `size` points (as AppKit reports it) and orientation, margins unchanged.
+    /// The same paper keeps the document's exact twips; a standard paper gets Word's exact size.
+    public func withPaper(_ size: CGSize, landscape: Bool) -> PageSetup {
+        // The page as it lies: wide for landscape, tall for portrait.
+        var w = Int((size.width * Self.twipsPerPoint).rounded())
+        var h = Int((size.height * Self.twipsPerPoint).rounded())
+        if landscape != (w > h) { (w, h) = (h, w) }
+        // Within one point counts as the same size (AppKit's rounding).
+        func near(_ a: Int, _ b: Int) -> Bool { abs(a - b) <= Int(Self.twipsPerPoint) }
+        var setup = self
+        setup.isLandscape = landscape
+        if near(w, width) && near(h, height) {
+            return setup
+        }
+        if let paper = Self.standardPapers.first(where: { p in
+            landscape ? near(w, p.height) && near(h, p.width) : near(w, p.width) && near(h, p.height)
+        }) {
+            (setup.width, setup.height) = landscape ? (paper.height, paper.width) : (paper.width, paper.height)
+        } else {
+            (setup.width, setup.height) = (w, h)
+        }
+        return setup
+    }
+
     /// Reads `w:pgSz` and `w:pgMar` from a `w:sectPr`; missing values fall back to `letter`'s.
     init(sectPr: RawXML.Element?) {
         var setup = PageSetup.letter

@@ -107,6 +107,27 @@ import Testing
         #expect(try codec.write(doc) == original)
     }
 
+    @Test func paperFromAppKitSnapsToWordsExactSizes() {
+        // AppKit rounds A4 to 595 × 842 points.
+        let a4 = PageSetup.letter.withPaper(CGSize(width: 595, height: 842), landscape: false)
+        #expect((a4.width, a4.height) == (11906, 16838))
+        #expect(a4.margins.left == 72)
+        let landscape = PageSetup.letter.withPaper(CGSize(width: 842, height: 595), landscape: true)
+        #expect((landscape.width, landscape.height, landscape.isLandscape) == (16838, 11906, true))
+        // Some printers report a landscape page tall; it's turned to lie wide.
+        let turned = PageSetup.letter.withPaper(CGSize(width: 612, height: 792), landscape: true)
+        #expect((turned.width, turned.height) == (15840, 12240))
+        // An unknown paper is taken as reported.
+        let custom = PageSetup.letter.withPaper(CGSize(width: 500, height: 700), landscape: false)
+        #expect((custom.width, custom.height) == (10000, 14000))
+    }
+
+    @Test func samePaperKeepsTheDocumentsExactTwips() {
+        // Pages' 12240 × 14240 is 612 × 712 pt; OK in Page Setup without changes must not rewrite it.
+        let pages = PageSetup(width: 12240, height: 14237, top: 1440, right: 1440, bottom: 1440, left: 1440)
+        #expect(pages.withPaper(CGSize(width: 612, height: 712), landscape: false) == pages)
+    }
+
     @Test func negativeTopMarginKeepsItsSign() throws {
         var doc = try codec.read(try Corpus.data("01-plain.docx"))
         var setup = doc.body.pageSetup

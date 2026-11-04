@@ -87,6 +87,7 @@ enum MainMenu {
         menu.addItem(
             item(String(localized: "Restore Original…"), #selector(CartillaDocument.restoreOriginal(_:))))
         menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Export as PDF…"), #selector(CartillaDocument.exportPDF(_:))))
         menu.addItem(
             item(String(localized: "Page Setup…"), #selector(NSDocument.runPageLayout(_:)), "p", [.command, .shift]))
         menu.addItem(item(String(localized: "Print…"), #selector(NSDocument.printDocument(_:)), "p"))
