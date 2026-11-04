@@ -1,6 +1,6 @@
 # 0002. DOCX layer: our own lossless OOXML codec, not SwiftDocX
 
-- **Status:** Accepted (2026-11-04). The ZIPFoundation runtime dependency still needs explicit approval before it is added
+- **Status:** Accepted (2026-11-04). ZIPFoundation 0.9.20 approved and added the same day
 - **Date:** 2026-11-04
 - **Evidence:** [`0002-swiftdocx-evaluation.md`](0002-swiftdocx-evaluation.md) (archived spike results),
   [`Fixtures/`](../../Fixtures/README.md). The spike code (`Spikes/SwiftDocXEval`) was removed after this decision

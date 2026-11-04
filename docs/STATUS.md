@@ -8,7 +8,8 @@
   sandboxed (user-selected read-write + app-scoped bookmarks), hardened runtime (Release), EN/ES string catalog.
 - App shell: programmatic standard menus, stub autosave-in-place `NSDocument` that declares the `.docx` type,
   page-width text view on a gray canvas. Unit tests and a UI launch smoke test pass.
-- `Packages/CartillaDocx`: the `DocxCodec` protocol and a placeholder `DocxDocument` model.
+- `Packages/CartillaDocx`: the `DocxCodec` protocol, a placeholder `DocxDocument` model, and ZIPFoundation 0.9.20
+  (MIT, approved) with a smoke test that reads a fixture.
 - Fixture corpus: 10 generated Word-style files, plus one from pandoc and one exported from Pages.
   Reproducible, and checked by CI.
 - SwiftDocX evaluation ([archived results](decisions/0002-swiftdocx-evaluation.md); spike code removed, see
@@ -25,8 +26,6 @@ DOCX layer gradually.
 
 ## Waiting on the human
 
-- [ ] Approve **ZIPFoundation 0.9.20 (MIT)** as the app's first runtime dependency (zip read/write for the
-      DOCX layer), or ask for a small in-house zip implementation on Apple's Compression framework instead.
 - [ ] Header/footer in 1.0 or 1.1. Recommendation in ADR 0002: preserve plus print/PDF and a simple editing sheet in
       1.0; inline editing in 1.1.
 - [ ] ADR 0003: where new/unnamed documents live, and the one-time backup of Word-authored originals.
