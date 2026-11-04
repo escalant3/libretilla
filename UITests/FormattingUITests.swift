@@ -92,16 +92,11 @@ final class FormattingUITests: CartillaUITestCase {
         XCTAssertTrue(try waitUntil(5) { !window.rulers.firstMatch.exists })
     }
 
+    /// Opens a copy of the plain fixture and replaces every "paragraph" with "párrafo" from the find bar.
+    /// Leaves the find bar open with focus in its Replace field.
     @MainActor
-    func testFindAndReplaceAll() throws {
-        // The find string is shared by every app (the find pasteboard): put the user's back afterwards.
-        let findPasteboard = NSPasteboard(name: .find)
-        let previous = findPasteboard.string(forType: .string)
-        defer {
-            findPasteboard.clearContents()
-            if let previous { findPasteboard.setString(previous, forType: .string) }
-        }
-        let file = try copyFixture("01-plain.docx", as: "Replace.docx")
+    func replaceAllParagraphs(as name: String) throws -> (file: URL, window: XCUIElement) {
+        let file = try copyFixture("01-plain.docx", as: name)
         app.launch()
         let window = try open(file)
         window.textViews["Document body"].click()
@@ -118,10 +113,38 @@ final class FormattingUITests: CartillaUITestCase {
         replace.typeKey("a", modifierFlags: .command)
         replace.typeText("párrafo")
         window.buttons["All"].click()
-        XCTAssertTrue(
-            try waitUntil(15) {
-                let t = try text(of: file)
-                return t.contains("plain párrafo of text") && !t.contains("paragraph")
-            })
+        return (file, window)
+    }
+
+    func everyParagraphReplaced(in file: URL) throws -> Bool {
+        let t = try text(of: file)
+        return t.contains("plain párrafo of text") && !t.contains("paragraph")
+    }
+
+    /// Saves the user's find string (the find pasteboard is shared by every app) and puts it back afterwards.
+    func preserveFindPasteboard() {
+        let findPasteboard = NSPasteboard(name: .find)
+        let previous = findPasteboard.string(forType: .string)
+        addTeardownBlock {
+            findPasteboard.clearContents()
+            if let previous { findPasteboard.setString(previous, forType: .string) }
+        }
+    }
+
+    @MainActor
+    func testFindAndReplaceAll() throws {
+        preserveFindPasteboard()
+        let (file, _) = try replaceAllParagraphs(as: "Replace.docx")
+        XCTAssertTrue(try waitUntil(15) { try everyParagraphReplaced(in: file) })
+    }
+
+    /// DEBUG(ci/debug-find-replace-autosave): same as above, but closes the find bar after Replace All so
+    /// focus goes back to the document. Tells us whether focus in the find bar is what blocks autosave on CI.
+    @MainActor
+    func testFindAndReplaceAllThenDone() throws {
+        preserveFindPasteboard()
+        let (file, window) = try replaceAllParagraphs(as: "ReplaceDone.docx")
+        window.buttons["Done"].click()
+        XCTAssertTrue(try waitUntil(15) { try everyParagraphReplaced(in: file) })
     }
 }

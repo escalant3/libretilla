@@ -114,6 +114,7 @@ final class CartillaDocument: NSDocument {
         to url: URL, ofType typeName: String, for saveOperation: NSDocument.SaveOperationType,
         completionHandler: @escaping (Error?) -> Void
     ) {
+        traceAutosave("save(operation: \(saveOperation.rawValue))")
         let text = editor?.textSnapshot() ?? initialText
         let base = self.base ?? Self.emptyDocument
         snapshot.withLock { $0 = Snapshot(base: base, text: text) }
@@ -158,7 +159,34 @@ final class CartillaDocument: NSDocument {
         }
     }
 
+    // DEBUG(ci/debug-find-replace-autosave): temporary tracing of the autosave path. Remove before merging.
+    private func traceAutosave(_ event: String) {
+        let responder = editor?.view.window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil"
+        Self.log.notice(
+            "[AutosaveTrace] \(event, privacy: .public) edited=\(self.isDocumentEdited) unautosaved=\(self.hasUnautosavedChanges) firstResponder=\(responder, privacy: .public)"
+        )
+    }
+
+    override func scheduleAutosaving() {
+        traceAutosave("scheduleAutosaving")
+        super.scheduleAutosaving()
+    }
+
+    override func autosave(
+        withImplicitCancellability autosavingIsImplicitlyCancellable: Bool,
+        completionHandler: @escaping (Error?) -> Void
+    ) {
+        traceAutosave("autosave(implicitlyCancellable: \(autosavingIsImplicitlyCancellable))")
+        super.autosave(withImplicitCancellability: autosavingIsImplicitlyCancellable) { [weak self] error in
+            MainActor.assumeIsolated {
+                self?.traceAutosave("autosave finished, error: \(error.map { "\($0)" } ?? "none")")
+            }
+            completionHandler(error)
+        }
+    }
+
     override func updateChangeCount(_ change: NSDocument.ChangeType) {
+        traceAutosave("updateChangeCount(\(change.rawValue))")
         super.updateChangeCount(change)
         if case .saving = saveState { return }
         if !isReadOnly { saveState = isDocumentEdited ? .edited : .saved }
