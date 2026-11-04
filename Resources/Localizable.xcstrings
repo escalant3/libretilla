@@ -12,6 +12,96 @@
         }
       }
     },
+    "Add Space After Paragraph": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir espacio después del párrafo"
+          }
+        }
+      }
+    },
+    "Add Space Before Paragraph": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir espacio antes del párrafo"
+          }
+        }
+      }
+    },
+    "Align Left": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alinear a la izquierda"
+          }
+        }
+      }
+    },
+    "Align Right": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alinear a la derecha"
+          }
+        }
+      }
+    },
+    "Alignment": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alineación"
+          }
+        }
+      }
+    },
+    "Automatic Text Color": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color de texto automático"
+          }
+        }
+      }
+    },
+    "Bigger": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más grande"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azul"
+          }
+        }
+      }
+    },
+    "Bold": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Negrita"
+          }
+        }
+      }
+    },
     "Bring All to Front": {
       "localizations": {
         "es": {
@@ -32,12 +122,42 @@
         }
       }
     },
+    "Bulleted List": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista con viñetas"
+          }
+        }
+      }
+    },
     "Cartilla can’t safely save this document: %@.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Cartilla no puede guardar este documento de forma segura: %@."
+          }
+        }
+      }
+    },
+    "Center": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centrar"
+          }
+        }
+      }
+    },
+    "Clear Formatting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar formato"
           }
         }
       }
@@ -58,6 +178,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Code": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código"
           }
         }
       }
@@ -88,6 +218,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cortar"
+          }
+        }
+      }
+    },
+    "Decrease Indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reducir sangría"
           }
         }
       }
@@ -192,12 +332,152 @@
         }
       }
     },
+    "Find and Replace…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar y reemplazar…"
+          }
+        }
+      }
+    },
     "Find…": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Buscar…"
+          }
+        }
+      }
+    },
+    "Font": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de letra"
+          }
+        }
+      }
+    },
+    "Font Size": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño de letra"
+          }
+        }
+      }
+    },
+    "Font size": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño de letra"
+          }
+        }
+      }
+    },
+    "Format": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato"
+          }
+        }
+      }
+    },
+    "Format bar": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barra de formato"
+          }
+        }
+      }
+    },
+    "Gray": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gris"
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verde"
+          }
+        }
+      }
+    },
+    "Heading 1": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 1"
+          }
+        }
+      }
+    },
+    "Heading 2": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 2"
+          }
+        }
+      }
+    },
+    "Heading 3": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 3"
+          }
+        }
+      }
+    },
+    "Heading 4": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 4"
+          }
+        }
+      }
+    },
+    "Heading 5": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 5"
+          }
+        }
+      }
+    },
+    "Heading 6": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título 6"
           }
         }
       }
@@ -222,12 +502,132 @@
         }
       }
     },
+    "Hide Format Bar": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar barra de formato"
+          }
+        }
+      }
+    },
     "Hide Others": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Ocultar otros"
+          }
+        }
+      }
+    },
+    "Hide Ruler": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar regla"
+          }
+        }
+      }
+    },
+    "Highlight": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resaltado"
+          }
+        }
+      }
+    },
+    "Increase Indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aumentar sangría"
+          }
+        }
+      }
+    },
+    "Indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sangría"
+          }
+        }
+      }
+    },
+    "Italic": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursiva"
+          }
+        }
+      }
+    },
+    "Jump to Selection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ir a la selección"
+          }
+        }
+      }
+    },
+    "Justify": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Justificar"
+          }
+        }
+      }
+    },
+    "Line Spacing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlineado"
+          }
+        }
+      }
+    },
+    "Line Spacing %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlineado %@"
+          }
+        }
+      }
+    },
+    "Line and paragraph spacing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlineado y espaciado de párrafo"
+          }
+        }
+      }
+    },
+    "List": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista"
           }
         }
       }
@@ -258,6 +658,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nuevo"
+          }
+        }
+      }
+    },
+    "No Highlight": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin resaltado"
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        }
+      }
+    },
+    "Numbered List": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista numerada"
           }
         }
       }
@@ -302,12 +732,52 @@
         }
       }
     },
+    "Paragraph Spacing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espaciado de párrafo"
+          }
+        }
+      }
+    },
+    "Paragraph Style": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estilo de párrafo"
+          }
+        }
+      }
+    },
+    "Paragraph style": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estilo de párrafo"
+          }
+        }
+      }
+    },
     "Paste": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Pegar"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rosa"
           }
         }
       }
@@ -342,6 +812,16 @@
         }
       }
     },
+    "Quote": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cita"
+          }
+        }
+      }
+    },
     "Read-only": {
       "localizations": {
         "es": {
@@ -352,12 +832,42 @@
         }
       }
     },
+    "Red": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rojo"
+          }
+        }
+      }
+    },
     "Redo": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Rehacer"
+          }
+        }
+      }
+    },
+    "Remove Space After Paragraph": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar espacio después del párrafo"
+          }
+        }
+      }
+    },
+    "Remove Space Before Paragraph": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar espacio antes del párrafo"
           }
         }
       }
@@ -452,12 +962,222 @@
         }
       }
     },
+    "Show Colors": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar colores"
+          }
+        }
+      }
+    },
+    "Show Fonts": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar tipos de letra"
+          }
+        }
+      }
+    },
+    "Show Format Bar": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar barra de formato"
+          }
+        }
+      }
+    },
+    "Show Ruler": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar regla"
+          }
+        }
+      }
+    },
+    "Smaller": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más pequeño"
+          }
+        }
+      }
+    },
+    "Spacing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espaciado"
+          }
+        }
+      }
+    },
+    "Strikethrough": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tachado"
+          }
+        }
+      }
+    },
+    "Style": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estilo"
+          }
+        }
+      }
+    },
+    "Subscript": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subíndice"
+          }
+        }
+      }
+    },
+    "Subtitle": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subtítulo"
+          }
+        }
+      }
+    },
+    "Superscript": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Superíndice"
+          }
+        }
+      }
+    },
+    "Text": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texto"
+          }
+        }
+      }
+    },
+    "Text Color": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color del texto"
+          }
+        }
+      }
+    },
+    "Text color": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color del texto"
+          }
+        }
+      }
+    },
+    "Title": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título"
+          }
+        }
+      }
+    },
+    "Turquoise": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turquesa"
+          }
+        }
+      }
+    },
+    "Typing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escritura"
+          }
+        }
+      }
+    },
+    "Underline": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subrayado"
+          }
+        }
+      }
+    },
     "Undo": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Deshacer"
+          }
+        }
+      }
+    },
+    "Update Style": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar estilo"
+          }
+        }
+      }
+    },
+    "Update Style to Match Selection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar estilo según la selección"
+          }
+        }
+      }
+    },
+    "Use Selection for Find": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar selección para buscar"
           }
         }
       }
@@ -478,6 +1198,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ventana"
+          }
+        }
+      }
+    },
+    "Yellow": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amarillo"
           }
         }
       }

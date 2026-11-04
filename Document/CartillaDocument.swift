@@ -73,7 +73,7 @@ final class CartillaDocument: NSDocument {
 
     override nonisolated func read(from data: Data, ofType typeName: String) throws {
         let docx = try Self.codec.read(data)
-        let text = AttributedStringBridge(styles: docx.styles).attributedString(for: docx.body)
+        let text = AttributedStringBridge(docx).attributedString(for: docx.body)
         loaded.withLock { $0 = Loaded(docx: docx, text: text, originalData: data) }
     }
 
@@ -87,8 +87,7 @@ final class CartillaDocument: NSDocument {
             if base == nil {
                 // A new document starts from Cartilla's blank template (one empty paragraph).
                 base = Self.emptyDocument
-                initialText = AttributedStringBridge(styles: Self.emptyDocument.styles)
-                    .attributedString(for: Self.emptyDocument.body)
+                initialText = AttributedStringBridge(Self.emptyDocument).attributedString(for: Self.emptyDocument.body)
             }
             return
         }
@@ -138,7 +137,7 @@ final class CartillaDocument: NSDocument {
             throw CocoaError(.fileWriteUnknown)
         }
         unblockUserInteraction()
-        let result = AttributedStringBridge(styles: snap.base.styles).body(from: snap.text, base: snap.base.body)
+        let result = AttributedStringBridge(snap.base).body(from: snap.text, base: snap.base.body)
         for notice in result.notices { Self.log.notice("\(notice)") }
         var doc = snap.base
         doc.body = result.body
@@ -164,6 +163,52 @@ final class CartillaDocument: NSDocument {
         if !isReadOnly { saveState = isDocumentEdited ? .edited : .saved }
     }
 
+    // MARK: Styles and lists (M2)
+
+    /// Maps the editor's text to and from this document's styles and lists, as they are now.
+    var bridge: AttributedStringBridge { AttributedStringBridge(base ?? Self.emptyDocument) }
+
+    /// The id of the paragraph style with this built-in name, copying its definition from Cartilla's
+    /// template if the document doesn't have it yet (a Pages file without "heading 3", say).
+    func paragraphStyleId(named name: String) -> String? {
+        guard var doc = base else { return nil }
+        if let id = doc.styles.styleId(named: name) { return id }
+        let template = Self.emptyDocument.styles
+        guard let templateId = template.styleId(named: name),
+            let id = doc.styles.ensureStyle(templateId, from: template)
+        else { return nil }
+        base = doc
+        return id
+    }
+
+    /// A new list instance in `numbering.xml`.
+    func addList(_ kind: Numbering.ListKind) -> Int? {
+        guard var doc = base else { return nil }
+        // New list items use "List Paragraph" like Word's; make sure it exists.
+        if doc.styles.styleId(named: "List Paragraph") == nil {
+            let template = Self.emptyDocument.styles
+            if let id = template.styleId(named: "List Paragraph") { _ = doc.styles.ensureStyle(id, from: template) }
+        }
+        let numId = doc.numbering.addList(kind)
+        base = doc
+        return numId
+    }
+
+    /// Replaces the style sheet, undoably (Update Style to Match Selection).
+    func setStyles(_ styles: StyleSheet, actionName: String) {
+        guard var doc = base else { return }
+        let old = doc.styles
+        doc.styles = styles
+        base = doc
+        undoManager?.registerUndo(withTarget: self) { target in
+            MainActor.assumeIsolated {
+                target.setStyles(old, actionName: actionName)
+            }
+        }
+        undoManager?.setActionName(actionName)
+        editor?.restyleAll()
+    }
+
     // MARK: Restore Original (ADR 0004)
 
     var canRestoreOriginal: Bool {
@@ -178,7 +223,7 @@ final class CartillaDocument: NSDocument {
             return
         }
         base = docx
-        editor?.replaceAllUndoably(AttributedStringBridge(styles: docx.styles).attributedString(for: docx.body))
+        editor?.replaceAllUndoably(AttributedStringBridge(docx).attributedString(for: docx.body))
     }
 
     override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
@@ -201,12 +246,15 @@ final class CartillaDocument: NSDocument {
         view.frame = NSRect(x: 0, y: 0, width: width, height: 100)
         view.isVerticallyResizable = true
         view.textContainerInset = .zero
+        view.textContainer?.lineFragmentPadding = 0
         view.textStorage?.setAttributedString(editor?.textSnapshot() ?? initialText)
         view.sizeToFit()
         return NSPrintOperation(view: view, printInfo: info)
     }
 
     // MARK: New documents
+
+    static let emptyBridge = AttributedStringBridge(emptyDocument)
 
     /// The package a new document starts from: Cartilla's minimal valid `.docx`.
     static let emptyDocument: DocxDocument = {

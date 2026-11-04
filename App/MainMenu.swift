@@ -1,7 +1,8 @@
 import AppKit
+import CartillaDocx
 
-/// Builds the standard macOS menu bar in code. M0 only wires the conventional
-/// items AppKit already implements; Format/Insert menus arrive in M2/M3.
+/// Builds the standard macOS menu bar in code: AppKit's conventional items plus Cartilla's
+/// Format menu (M2). The Insert menu arrives in M3.
 @MainActor
 enum MainMenu {
     static func make() -> NSMenu {
@@ -9,6 +10,7 @@ enum MainMenu {
         main.addItem(submenu(appMenu()))
         main.addItem(submenu(fileMenu()))
         main.addItem(submenu(editMenu()))
+        main.addItem(submenu(formatMenu()))
         main.addItem(submenu(viewMenu()))
         let window = windowMenu()
         main.addItem(submenu(window))
@@ -113,6 +115,17 @@ enum MainMenu {
             [.command, .shift])
         findPrev.tag = Int(NSFindPanelAction.previous.rawValue)
         find.addItem(findPrev)
+        let replace = item(
+            String(localized: "Find and Replace…"), #selector(NSTextView.performTextFinderAction(_:)), "f",
+            [.command, .option])
+        replace.tag = NSTextFinder.Action.showReplaceInterface.rawValue
+        find.addItem(replace)
+        let useSelection = item(
+            String(localized: "Use Selection for Find"), #selector(NSTextView.performFindPanelAction(_:)), "e")
+        useSelection.tag = Int(NSFindPanelAction.setFindString.rawValue)
+        find.addItem(useSelection)
+        find.addItem(
+            item(String(localized: "Jump to Selection"), #selector(NSTextView.centerSelectionInVisibleArea(_:)), "j"))
         let findItemParent = NSMenuItem(title: find.title, action: nil, keyEquivalent: "")
         findItemParent.submenu = find
         menu.addItem(findItemParent)
@@ -123,8 +136,153 @@ enum MainMenu {
         let menu = NSMenu(title: String(localized: "View"))
         menu.addItem(
             item(
+                String(localized: "Hide Format Bar"), #selector(DocumentWindowController.toggleFormatBar(_:)), "b",
+                [.command, .option]))
+        menu.addItem(item(String(localized: "Show Ruler"), #selector(NSText.toggleRuler(_:)), "r"))
+        menu.addItem(.separator())
+        menu.addItem(
+            item(
                 String(localized: "Enter Full Screen"), #selector(NSWindow.toggleFullScreen(_:)), "f",
                 [.command, .control]))
+        return menu
+    }
+
+    // MARK: Format
+
+    private static func formatMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "Format"))
+        menu.addItem(submenuItem(fontMenu()))
+        menu.addItem(submenuItem(textMenu()))
+        menu.addItem(submenuItem(styleMenu()))
+        menu.addItem(submenuItem(listMenu()))
+        menu.addItem(.separator())
+        menu.addItem(
+            item(String(localized: "Clear Formatting"), #selector(EditorViewController.clearFormatting(_:)), "\\"))
+        return menu
+    }
+
+    private static func submenuItem(_ menu: NSMenu) -> NSMenuItem {
+        let item = NSMenuItem(title: menu.title, action: nil, keyEquivalent: "")
+        item.submenu = menu
+        return item
+    }
+
+    private static func fontMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "Font"))
+        menu.addItem(item(String(localized: "Show Fonts"), #selector(NSFontManager.orderFrontFontPanel(_:)), "t"))
+        menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Bold"), #selector(EditorViewController.toggleBold(_:)), "b"))
+        menu.addItem(item(String(localized: "Italic"), #selector(EditorViewController.toggleItalic(_:)), "i"))
+        menu.addItem(item(String(localized: "Underline"), #selector(EditorViewController.toggleUnderline(_:)), "u"))
+        menu.addItem(
+            item(
+                String(localized: "Strikethrough"), #selector(EditorViewController.toggleStrikethrough(_:)), "x",
+                [.command, .shift]))
+        menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Bigger"), #selector(EditorViewController.increaseFontSize(_:)), "+"))
+        menu.addItem(item(String(localized: "Smaller"), #selector(EditorViewController.decreaseFontSize(_:)), "-"))
+        menu.addItem(.separator())
+        menu.addItem(
+            item(
+                String(localized: "Superscript"), #selector(EditorViewController.toggleSuperscript(_:)), "+",
+                [.command, .control]))
+        menu.addItem(
+            item(
+                String(localized: "Subscript"), #selector(EditorViewController.toggleSubscript(_:)), "-",
+                [.command, .control]))
+        menu.addItem(.separator())
+        menu.addItem(
+            item(
+                String(localized: "Show Colors"), #selector(NSApplication.orderFrontColorPanel(_:)), "c",
+                [.command, .shift]))
+        menu.addItem(
+            item(String(localized: "Automatic Text Color"), #selector(EditorViewController.applyAutomaticTextColor(_:)))
+        )
+        let highlight = NSMenu(title: String(localized: "Highlight"))
+        highlight.addItem(item(String(localized: "No Highlight"), #selector(EditorViewController.applyHighlight(_:))))
+        for (name, title) in FormatBarViewController.highlights {
+            let i = item(title, #selector(EditorViewController.applyHighlight(_:)))
+            i.representedObject = name
+            i.image = FormatBarViewController.swatch(AttributedStringBridge.highlightColor(name))
+            highlight.addItem(i)
+        }
+        menu.addItem(submenuItem(highlight))
+        return menu
+    }
+
+    private static func textMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "Text"))
+        let alignments: [(String, String)] = [
+            (String(localized: "Align Left"), "{"), (String(localized: "Center"), "|"),
+            (String(localized: "Align Right"), "}"), (String(localized: "Justify"), ""),
+        ]
+        for (i, (title, key)) in alignments.enumerated() {
+            let a = item(title, #selector(EditorViewController.applyAlignment(_:)), key)
+            a.tag = i
+            menu.addItem(a)
+        }
+        menu.addItem(.separator())
+        let spacing = NSMenu(title: String(localized: "Spacing"))
+        for i in spacingItems() { spacing.addItem(i) }
+        menu.addItem(submenuItem(spacing))
+        menu.addItem(.separator())
+        menu.addItem(
+            item(String(localized: "Increase Indent"), #selector(EditorViewController.increaseIndent(_:)), "]"))
+        menu.addItem(
+            item(String(localized: "Decrease Indent"), #selector(EditorViewController.decreaseIndent(_:)), "["))
+        return menu
+    }
+
+    /// Line spacing presets and paragraph spacing toggles (Format ▸ Text ▸ Spacing and the format bar).
+    static func spacingItems() -> [NSMenuItem] {
+        var items: [NSMenuItem] = []
+        for (title, value) in [("1", 1.0), ("1.15", 1.15), ("1.5", 1.5), ("2", 2.0)] {
+            let i = item(
+                String(localized: "Line Spacing \(title)"), #selector(EditorViewController.applyLineSpacing(_:)))
+            i.representedObject = value
+            items.append(i)
+        }
+        items.append(.separator())
+        items.append(
+            item(String(localized: "Add Space Before Paragraph"), #selector(EditorViewController.toggleSpaceBefore(_:)))
+        )
+        items.append(
+            item(String(localized: "Add Space After Paragraph"), #selector(EditorViewController.toggleSpaceAfter(_:))))
+        return items
+    }
+
+    private static func styleMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "Style"))
+        for (i, (name, title)) in StyleChoice.standard.enumerated() {
+            // ⌥⌘0 Normal, ⌥⌘1…6 headings, as in Google Docs.
+            let key: String =
+                switch i {
+                case 0: "0"
+                case 3...8: String(i - 2)
+                default: ""
+                }
+            let s = item(title, #selector(EditorViewController.applyParagraphStyle(_:)), key, [.command, .option])
+            s.representedObject = StyleChoice.builtIn(name).key
+            menu.addItem(s)
+        }
+        menu.addItem(.separator())
+        menu.addItem(
+            item(
+                String(localized: "Update Style to Match Selection"),
+                #selector(EditorViewController.updateStyleToMatchSelection(_:))))
+        return menu
+    }
+
+    private static func listMenu() -> NSMenu {
+        let menu = NSMenu(title: String(localized: "List"))
+        menu.addItem(
+            item(
+                String(localized: "Bulleted List"), #selector(EditorViewController.toggleBulletedList(_:)), "8",
+                [.command, .shift]))
+        menu.addItem(
+            item(
+                String(localized: "Numbered List"), #selector(EditorViewController.toggleNumberedList(_:)), "7",
+                [.command, .shift]))
         return menu
     }
 

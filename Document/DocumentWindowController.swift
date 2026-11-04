@@ -1,8 +1,10 @@
 import AppKit
 
-final class DocumentWindowController: NSWindowController, NSWindowDelegate {
+final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMenuItemValidation {
     private let editor = EditorViewController()
     private let status = SaveStatusViewController()
+    private let formatBar = FormatBarViewController()
+    static let formatBarHiddenKey = "CartillaFormatBarHidden"
 
     init(document: CartillaDocument) {
         let window = DocumentWindow(
@@ -29,11 +31,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
         }
         window.toolbar = MainToolbar.make()
         window.addTitlebarAccessoryViewController(status)
+        formatBar.target = editor
+        window.addTitlebarAccessoryViewController(formatBar)
+        formatBar.isHidden = UserDefaults.standard.bool(forKey: Self.formatBarHiddenKey)
         super.init(window: window)
         window.delegate = self
         shouldCascadeWindows = true
 
         document.editor = editor
+        editor.document = document
+        editor.onSelectionFormatChange = { [weak self] format, bridge in
+            guard let self else { return }
+            self.formatBar.update(format, bridge: bridge, editable: self.editor.textView.isEditable)
+        }
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)
         document.onSaveStateChange = { [weak self, weak document] state in
@@ -59,6 +69,21 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
 
     func windowDidBecomeMain(_ notification: Notification) {
         window?.makeFirstResponder(editor.textView)
+    }
+
+    // MARK: Format bar
+
+    @objc func toggleFormatBar(_ sender: Any?) {
+        formatBar.isHidden.toggle()
+        UserDefaults.standard.set(formatBar.isHidden, forKey: Self.formatBarHiddenKey)
+    }
+
+    func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(toggleFormatBar(_:)) {
+            item.title =
+                formatBar.isHidden ? String(localized: "Show Format Bar") : String(localized: "Hide Format Bar")
+        }
+        return true
     }
 }
 

@@ -4,12 +4,23 @@ import os
 
 /// A page-width text column on a quiet canvas (bootstrap §5.1 "page view", stage 1).
 /// True pagination is a v1.1 milestone.
-final class EditorViewController: NSViewController, NSTextViewDelegate {
+final class EditorViewController: NSViewController, NSTextViewDelegate, @preconcurrency NSTextStorageDelegate {
     /// US Letter width in points; becomes document-driven in M3 (page setup).
     static let pageWidth: CGFloat = 612
     static let pageMargin: CGFloat = 72
 
-    private(set) var textView: NSTextView!
+    private(set) var textView: CartillaTextView!
+    /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
+    weak var document: CartillaDocument?
+    /// Called (coalesced) when the selection or its formatting changes, for the format bar.
+    var onSelectionFormatChange: ((SelectionFormat, AttributedStringBridge) -> Void)?
+
+    /// While loading, storage edits are the bridge's own and need no reconciling.
+    private var isLoading = false
+    private var renumberScheduled = false
+    private var selectionUpdateScheduled = false
+
+    var bridge: AttributedStringBridge { document?.bridge ?? CartillaDocument.emptyBridge }
     nonisolated(unsafe) private var fallbackObserver: (any NSObjectProtocol)?
     nonisolated private static let log = Logger(subsystem: "app.cartilla.Cartilla", category: "Editor")
 
@@ -26,27 +37,37 @@ final class EditorViewController: NSViewController, NSTextViewDelegate {
 
         let canvas = PageCanvasView()
         canvas.pageWidth = Self.pageWidth
+        canvas.margin = Self.pageMargin
         scrollView.documentView = canvas
 
         // TextKit 2, deliberately (ADR 0001). Never touch `textView.layoutManager`: it forces a
         // permanent fallback to TextKit 1. Known TK2 gaps: docs/TEXTKIT2_GAPS.md.
-        let textView = NSTextView(usingTextLayoutManager: true)
-        textView.frame = NSRect(x: 0, y: 0, width: Self.pageWidth, height: 792)
+        let textView = CartillaTextView(usingTextLayoutManager: true)
+        // The text view is the page's text column; the canvas draws the page around it. (A horizontal
+        // textContainerInset would misplace the ruler's right-indent marker.)
+        let column = Self.pageWidth - 2 * Self.pageMargin
+        textView.frame = NSRect(x: 0, y: 0, width: column, height: 792)
         textView.isRichText = true
         textView.allowsUndo = true
         textView.usesFindBar = true
         textView.isIncrementalSearchingEnabled = true
         textView.isContinuousSpellCheckingEnabled = true
+        textView.usesRuler = true
+        textView.usesFontPanel = true
         textView.isAutomaticSpellingCorrectionEnabled = true
-        textView.textContainerInset = NSSize(width: Self.pageMargin, height: Self.pageMargin)
+        textView.textContainerInset = NSSize(width: 0, height: Self.pageMargin)
         textView.textContainer?.widthTracksTextView = true
+        // Text starts exactly at the margin, as in Word (so lines wrap at Word's text width too).
+        textView.textContainer?.lineFragmentPadding = 0
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
-        textView.minSize = NSSize(width: Self.pageWidth, height: 792)
-        textView.maxSize = NSSize(width: Self.pageWidth, height: .greatestFiniteMagnitude)
-        textView.backgroundColor = .textBackgroundColor
+        textView.minSize = NSSize(width: column, height: 792)
+        textView.maxSize = NSSize(width: column, height: .greatestFiniteMagnitude)
+        textView.drawsBackground = false
         textView.setAccessibilityLabel(String(localized: "Document body"))
         textView.delegate = self
+        textView.structureDelegate = self
+        textView.textStorage?.delegate = self
         canvas.page = textView
         self.textView = textView
         fallbackObserver = NotificationCenter.default.addObserver(
@@ -64,10 +85,13 @@ final class EditorViewController: NSViewController, NSTextViewDelegate {
     /// (opening a file must never rewrite it).
     func show(_ text: NSAttributedString, editable: Bool) {
         loadViewIfNeeded()
+        isLoading = true
         textView.textStorage?.setAttributedString(text)
+        isLoading = false
         textView.isEditable = editable
         textView.setSelectedRange(NSRange(location: 0, length: 0))
         textView.undoManager?.removeAllActions()
+        scheduleSelectionUpdate()
     }
 
     /// An immutable copy of the current content, for saving off the main thread.
@@ -84,15 +108,88 @@ final class EditorViewController: NSViewController, NSTextViewDelegate {
         textView.setSelectedRange(NSRange(location: 0, length: 0))
     }
 
+    /// Redraws every paragraph (after the style sheet changed).
+    func restyleAll() {
+        guard let storage = textView.textStorage else { return }
+        let bridge = self.bridge
+        isLoading = true
+        storage.beginEditing()
+        for p in AttributedStringBridge.paragraphRanges(
+            in: storage, touching: NSRange(location: 0, length: storage.length))
+        {
+            bridge.restyle(storage, paragraph: p)
+        }
+        bridge.renumber(storage)
+        storage.endEditing()
+        isLoading = false
+        scheduleSelectionUpdate()
+    }
+
+    // MARK: NSTextStorageDelegate
+
+    /// AppKit's own tools (Font panel, ruler, paste) change display attributes directly; work out
+    /// which Word properties that means. Cartilla's own commands are already consistent (no-op).
+    func textStorage(
+        _ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions,
+        range editedRange: NSRange,
+        changeInLength delta: Int
+    ) {
+        guard !isLoading, editedRange.location != NSNotFound else { return }
+        bridge.reconcile(textStorage, range: editedRange)
+        // Splitting, joining or reformatting paragraphs can change list numbers further down.
+        if !bridge.numbering.nums.isEmpty { scheduleRenumber() }
+    }
+
+    private func scheduleRenumber() {
+        guard !renumberScheduled else { return }
+        renumberScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let storage = self.textView.textStorage else { return }
+            self.renumberScheduled = false
+            // Markers are display only: no undo action, no change to the document.
+            self.withoutReconciling {
+                storage.beginEditing()
+                self.bridge.renumber(storage)
+                storage.endEditing()
+            }
+        }
+    }
+
+    /// Storage edits that are the bridge's own (display only) and need no reconciling.
+    func withoutReconciling(_ body: () -> Void) {
+        let was = isLoading
+        isLoading = true
+        body()
+        isLoading = was
+    }
+
+    func scheduleSelectionUpdate() {
+        guard !selectionUpdateScheduled else { return }
+        selectionUpdateScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let storage = self.textView.textStorage else { return }
+            self.selectionUpdateScheduled = false
+            let bridge = self.bridge
+            let format = bridge.selectionFormat(
+                storage, range: self.textView.selectedRange(), typingAttributes: self.textView.typingAttributes)
+            self.onSelectionFormatChange?(format, bridge)
+        }
+    }
+
     // MARK: NSTextViewDelegate
 
     /// Content Cartilla only preserves (links, fields, objects, tables) is edited whole or not at all.
+    /// Formatting changes (no replacement string) are always allowed; they skip such content.
     func textView(
         _ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?
     ) -> Bool {
-        guard let storage = textView.textStorage else { return true }
+        guard let storage = textView.textStorage, replacementString != nil else { return true }
         return Self.editIsAllowed(affectedCharRange, in: storage)
     }
+
+    func textViewDidChangeSelection(_ notification: Notification) { scheduleSelectionUpdate() }
+
+    func textDidChange(_ notification: Notification) { scheduleSelectionUpdate() }
 
     /// Typed text never joins a link, field or object, nor copies its markers.
     func textView(
@@ -130,7 +227,31 @@ final class EditorViewController: NSViewController, NSTextViewDelegate {
 /// Document view that keeps the page horizontally centred and grows with it.
 final class PageCanvasView: NSView {
     var pageWidth: CGFloat = 612
+    /// Left and right page margins: the page view (the text column) sits this far inside the page.
+    var margin: CGFloat = 72
     private let verticalPadding: CGFloat = 32
+
+    /// The white page behind the text column.
+    var pageRect: NSRect {
+        guard let page else { return .zero }
+        return NSRect(x: page.frame.minX - margin, y: page.frame.minY, width: pageWidth, height: page.frame.height)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.textBackgroundColor.setFill()
+        pageRect.intersection(dirtyRect).fill()
+    }
+
+    /// Clicks in the page's side margins go to the text.
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        if let page, pageRect.contains(point) {
+            window?.makeFirstResponder(page)
+            page.mouseDown(with: event)
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
 
     var page: NSView? {
         didSet {
@@ -148,7 +269,10 @@ final class PageCanvasView: NSView {
 
     override var isFlipped: Bool { true }
 
-    @objc private func pageFrameChanged(_ note: Notification) { needsLayout = true }
+    @objc private func pageFrameChanged(_ note: Notification) {
+        needsLayout = true
+        needsDisplay = true
+    }
 
     override func layout() {
         super.layout()
@@ -158,10 +282,12 @@ final class PageCanvasView: NSView {
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }
-        let x = ((width - pageWidth) / 2).rounded()
+        let x = ((width - pageWidth) / 2).rounded() + margin
         if page.frame.origin != NSPoint(x: x, y: verticalPadding) {
             page.setFrameOrigin(NSPoint(x: x, y: verticalPadding))
+            needsDisplay = true
         }
+        (page as? CartillaTextView)?.alignRulerOrigin()
     }
 
     override func resize(withOldSuperviewSize oldSize: NSSize) { needsLayout = true }
