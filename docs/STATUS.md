@@ -137,6 +137,29 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - No Paragraph… dialog yet for exact spacing and indent values; use the ruler, the spacing menu or the indent
   buttons.
 
-## Next: Milestone 3 (insert & page)
+## Milestone 3: Insert & page (in progress)
 
-Tables, images, links, page break, page setup, PDF export, print.
+**CI is off (2026-11-04).** The owner disabled the GitHub Actions workflow to focus on whether Cartilla is
+useful; verify locally (`swift test` in the package, `xcodebuild test`). Re-enable with `gh workflow enable CI`.
+Left open: on CI only, `testFindAndReplaceAll` never sees an autosave after Replace All (it passes locally every
+time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
+
+**Done**
+
+- **Page setup** from the final `w:sectPr` (`PageSetup` in CartillaDocx): paper size, orientation and margins.
+  The editor's page and text column follow it, so A4 documents show and wrap at A4 width.
+- **File ▸ Page Setup…** shows the document's paper and orientation. A change is one undoable step, saved by
+  rewriting only the changed `w:pgSz` / `w:pgMar` attributes. AppKit's whole-point sizes snap to Word's exact
+  twips (A4 stays 11906 × 16838), and OK without a change rewrites nothing.
+- **Print and File ▸ Export as PDF…** paginate with the document's own paper size and margins.
+- **Tests:** 11 new package tests (`PageSetupTests`), 6 app tests (`PageSetupDocumentTests`: editor geometry,
+  undo and save, the Page Setup sheet, PDF paper size, a 50+ page PDF that keeps its last line, landscape).
+
+**Known limitations so far**
+
+- Margins have no editor yet (only Page Setup's paper and orientation); the ruler still sets paragraph indents.
+- Multi-section documents use the last section's page setup throughout; each section keeps its own XML.
+- The space below the last line equals the top margin (TextKit's inset is symmetric).
+- Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
+
+**Still to do:** page break, links, images, tables.
