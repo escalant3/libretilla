@@ -72,7 +72,6 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - No formatting UI yet (M2). Typed text takes the formatting of the run it's typed into.
 - Links, fields, content controls and objects can be deleted whole but not edited inside (M3).
 - Tables show as a placeholder line. TextKit 2 can't lay them out (gap G1), and table editing is M3.
-- New documents are US Letter.
 
 ## Milestone 2: Formatting ✅ (2026-11-04)
 
@@ -152,6 +151,10 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   rewriting only the changed `w:pgSz` / `w:pgMar` attributes. AppKit's whole-point sizes snap to Word's exact
   twips (A4 stays 11906 × 16838), and OK without a change rewrites nothing.
 - **Print and File ▸ Export as PDF…** paginate with the document's own paper size and margins.
+- **New documents are A4 in Charter** (owner's request, 2026-11-04): 12 pt body, 1.15 line spacing, Spanish
+  Word's A4 margins (2.5 cm top/bottom, 3 cm sides). Charter is a book serif close to Century Schoolbook and
+  Kindle's Bookerly, and ships with every Mac; the font table marks it as a serif so Word on Windows, which
+  lacks it, substitutes one. Files that don't state a page size are also taken as A4.
 - **Tests:** 11 new package tests (`PageSetupTests`), 6 app tests (`PageSetupDocumentTests`: editor geometry,
   undo and save, the Page Setup sheet, PDF paper size, a 50+ page PDF that keeps its last line, landscape).
 

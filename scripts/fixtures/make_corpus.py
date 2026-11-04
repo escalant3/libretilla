@@ -115,7 +115,7 @@ def page_break() -> str:
 
 def sect_pr(*, header: str | None = None, footer: str | None = None, cols: int = 1,
             w: int = 12240, h: int = 15840, orient: str | None = None, type_: str | None = None,
-            title_pg: bool = False) -> str:
+            title_pg: bool = False, margins: tuple[int, int, int, int] = (1440, 1440, 1440, 1440)) -> str:
     refs = ""
     if header:
         refs += f'<w:headerReference w:type="default" r:id="{header}"/>'
@@ -126,7 +126,8 @@ def sect_pr(*, header: str | None = None, footer: str | None = None, cols: int =
     col = f'<w:cols w:num="{cols}" w:space="720"/>' if cols > 1 else '<w:cols w:space="720"/>'
     tp = "<w:titlePg/>" if title_pg else ""
     return (f"<w:sectPr>{refs}{typ}<w:pgSz w:w=\"{w}\" w:h=\"{h}\"{o}/>"
-            '<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>'
+            f'<w:pgMar w:top="{margins[0]}" w:right="{margins[1]}" w:bottom="{margins[2]}" w:left="{margins[3]}"'
+            ' w:header="720" w:footer="720" w:gutter="0"/>'
             f'{col}{tp}<w:docGrid w:linePitch="360"/></w:sectPr>')
 
 
@@ -150,7 +151,7 @@ def style_p(sid, name, *, based="Normal", next_="Normal", ppr="", rpr_="", ui=No
 HEADING_SIZES = {1: 32, 2: 26, 3: 24, 4: 22, 5: 22, 6: 22}
 
 
-def styles_xml() -> str:
+def styles_xml(*, body_size: int = 22, line: int = 259, text_width: int = 9360) -> str:
     headings = "".join(
         style_p(f"Heading{n}", f"heading {n}", ui=9,
                 ppr='<w:keepNext/><w:keepLines/><w:spacing w:before="240" w:after="0"/>',
@@ -162,9 +163,9 @@ def styles_xml() -> str:
     return (XML_DECL + f"<w:styles {W_NS}>"
             "<w:docDefaults><w:rPrDefault><w:rPr>"
             '<w:rFonts w:asciiTheme="minorHAnsi" w:eastAsiaTheme="minorHAnsi" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi"/>'
-            '<w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-US" w:eastAsia="en-US" w:bidi="ar-SA"/>'
+            f'<w:sz w:val="{body_size}"/><w:szCs w:val="{body_size}"/><w:lang w:val="en-US" w:eastAsia="en-US" w:bidi="ar-SA"/>'
             "</w:rPr></w:rPrDefault><w:pPrDefault><w:pPr>"
-            '<w:spacing w:after="160" w:line="259" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
+            f'<w:spacing w:after="160" w:line="{line}" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
             '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>'
             + style_p("Title", "Title", ui=10, ppr='<w:spacing w:after="0" w:line="240" w:lineRule="auto"/><w:contextualSpacing/>',
                       rpr_='<w:rFonts w:asciiTheme="majorHAnsi" w:hAnsiTheme="majorHAnsi"/><w:kern w:val="28"/><w:sz w:val="56"/><w:szCs w:val="56"/>')
@@ -176,8 +177,8 @@ def styles_xml() -> str:
             + style_p("SourceCode", "Source Code", ppr='<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>',
                       rpr_='<w:rFonts w:ascii="Menlo" w:hAnsi="Menlo" w:cs="Menlo"/><w:sz w:val="20"/>')
             + style_p("ListParagraph", "List Paragraph", ui=34, ppr='<w:ind w:left="720"/><w:contextualSpacing/>')
-            + style_p("Header", "header", q=False, ppr='<w:tabs><w:tab w:val="center" w:pos="4680"/><w:tab w:val="right" w:pos="9360"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>')
-            + style_p("Footer", "footer", q=False, ppr='<w:tabs><w:tab w:val="center" w:pos="4680"/><w:tab w:val="right" w:pos="9360"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>')
+            + style_p("Header", "header", q=False, ppr=f'<w:tabs><w:tab w:val="center" w:pos="{text_width // 2}"/><w:tab w:val="right" w:pos="{text_width}"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>')
+            + style_p("Footer", "footer", q=False, ppr=f'<w:tabs><w:tab w:val="center" w:pos="{text_width // 2}"/><w:tab w:val="right" w:pos="{text_width}"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/>')
             + style_p("FootnoteText", "footnote text", q=False, ppr='<w:spacing w:after="0" w:line="240" w:lineRule="auto"/>', rpr_='<w:sz w:val="20"/>')
             + style_p("CommentText", "annotation text", q=False, rpr_='<w:sz w:val="20"/>')
             + '<w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont"><w:name w:val="Default Paragraph Font"/><w:uiPriority w:val="1"/><w:semiHidden/><w:unhideWhenUsed/></w:style>'
@@ -219,6 +220,11 @@ WEB_SETTINGS = XML_DECL + f'<w:webSettings {W_NS}><w:optimizeForBrowser/><w:allo
 
 def _fill(color_xml: str) -> str:
     return f"<a:solidFill>{color_xml}</a:solidFill>"
+
+
+def theme_xml(major: str = "Calibri Light", minor: str = "Calibri") -> str:
+    return THEME.replace('<a:latin typeface="Calibri Light"/>', f'<a:latin typeface="{major}"/>', 1).replace(
+        '<a:latin typeface="Calibri"/>', f'<a:latin typeface="{minor}"/>', 1)
 
 
 THEME = (XML_DECL + f'<a:theme xmlns:a="{NS["a"]}" name="Office Theme"><a:themeElements>'
@@ -300,6 +306,10 @@ class Package:
         self.defaults = {"rels": "application/vnd.openxmlformats-package.relationships+xml", "xml": "application/xml"}
         self.doc_rels: list[tuple[str, str, str, str | None]] = []  # id, type, target, mode
         self._next = 1
+        # Parts the blank template sets differently from the fixtures.
+        self.styles = styles_xml()
+        self.theme = THEME
+        self.font_table = FONT_TABLE
 
     def rel(self, type_: str, target: str, external: bool = False) -> str:
         rid = f"rId{self._next}"
@@ -322,7 +332,7 @@ class Package:
         wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
         # Standard Word parts, in Word's relationship order.
         self.rel("styles", "styles.xml")
-        self.add("word/styles.xml", styles_xml(), f"{wml}.styles+xml")
+        self.add("word/styles.xml", self.styles, f"{wml}.styles+xml")
         if numbering:
             self.rel("numbering", "numbering.xml")
             self.add("word/numbering.xml", numbering_xml(), f"{wml}.numbering+xml")
@@ -331,9 +341,9 @@ class Package:
         self.rel("webSettings", "webSettings.xml")
         self.add("word/webSettings.xml", WEB_SETTINGS, f"{wml}.webSettings+xml")
         self.rel("fontTable", "fontTable.xml")
-        self.add("word/fontTable.xml", FONT_TABLE, f"{wml}.fontTable+xml")
+        self.add("word/fontTable.xml", self.font_table, f"{wml}.fontTable+xml")
         self.rel("theme", "theme/theme1.xml")
-        self.add("word/theme/theme1.xml", THEME, "application/vnd.openxmlformats-officedocument.theme+xml")
+        self.add("word/theme/theme1.xml", self.theme, "application/vnd.openxmlformats-officedocument.theme+xml")
         self.add("word/document.xml", document_xml, self.CT_MAIN)
         self.add("docProps/core.xml", core_xml(self.title, self.creator),
                  "application/vnd.openxmlformats-package.core-properties+xml")
@@ -657,10 +667,24 @@ FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hype
             f08_spanish, f09_large, f10_word_features]
 
 
+# New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a
+# book serif in the spirit of Century Schoolbook and Kindle's Bookerly that ships with every Mac. The font
+# table marks it as a proportional serif so Word on Windows (which lacks it) substitutes a serif.
+BLANK_PAGE = dict(w=11906, h=16838, margins=(1417, 1701, 1417, 1701))
+BLANK_FONT = "Charter"
+
+
 def blank(out: Path):
     """The template every new Cartilla document starts from (Resources/Blank.docx)."""
     pkg = Package("", application="Cartilla", creator="")
-    pkg.write(out, document(p()))
+    text_width = BLANK_PAGE["w"] - BLANK_PAGE["margins"][1] - BLANK_PAGE["margins"][3]
+    pkg.styles = styles_xml(body_size=24, line=276, text_width=text_width)
+    pkg.theme = theme_xml(major=BLANK_FONT, minor=BLANK_FONT)
+    pkg.font_table = FONT_TABLE.replace(
+        "</w:fonts>",
+        f'<w:font w:name="{BLANK_FONT}"><w:charset w:val="00"/><w:family w:val="roman"/>'
+        '<w:pitch w:val="variable"/></w:font></w:fonts>')
+    pkg.write(out, document(p(), sect_pr(**BLANK_PAGE)))
 
 
 def main() -> None:

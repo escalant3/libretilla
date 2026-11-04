@@ -28,28 +28,37 @@ import Testing
         #expect(!pages.isLandscape)
     }
 
-    @Test func sectionWithoutPageSizeIsLetter() throws {
+    @Test func sectionWithoutPageSizeIsA4() throws {
         // pandoc writes a w:sectPr with only footnote settings.
         let doc = try codec.read(try Corpus.data("11-pandoc.docx"))
         #expect(try #require(sectPr(doc)).contains("w:footnotePr"))
-        #expect(doc.body.pageSetup == .letter)
+        #expect(doc.body.pageSetup == .a4)
     }
 
     @Test func pageSizeAndMarginsGoAfterFootnoteSettings() throws {
         var doc = try codec.read(try Corpus.data("11-pandoc.docx"))
-        doc.body.pageSetup = .a4
+        doc.body.pageSetup = .letter
         let xml = try #require(sectPr(doc))
         let footnotes = try #require(xml.range(of: "</w:footnotePr>"))
-        let size = try #require(xml.range(of: #"<w:pgSz w:w="11906" w:h="16838"/>"#))
+        let size = try #require(xml.range(of: #"<w:pgSz w:w="12240" w:h="15840"/>"#))
         let margins = try #require(
             xml.range(
                 of:
-                    #"<w:pgMar w:top="1417" w:right="1701" w:bottom="1417" w:left="1701" w:header="720" w:footer="720" w:gutter="0"/>"#
+                    #"<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>"#
             ))
         #expect(footnotes.upperBound <= size.lowerBound && size.upperBound <= margins.lowerBound)
         let data = try codec.write(doc)
         #expect(try PackageChecker.problems(data).isEmpty)
-        #expect(try codec.read(data).body.pageSetup == .a4)
+        #expect(try codec.read(data).body.pageSetup == .letter)
+    }
+
+    @Test func changingOnlyMarginsWritesTheAssumedPageSizeToo() throws {
+        // Without w:pgSz, Word would pick its own locale's paper; write the A4 Cartilla showed.
+        var doc = try codec.read(try Corpus.data("11-pandoc.docx"))
+        var setup = doc.body.pageSetup
+        setup.left = 1440
+        doc.body.pageSetup = setup
+        #expect(try #require(sectPr(doc)).contains(#"<w:pgSz w:w="11906" w:h="16838"/>"#))
     }
 
     @Test func changingMarginsRewritesOnlyThoseAttributes() throws {
@@ -88,16 +97,16 @@ import Testing
     @Test func settingAPageSetupCreatesSectionPropertiesWhenMissing() throws {
         var doc = try codec.read(try Corpus.data("01-plain.docx"))
         doc.body.blocks.remove(at: try #require(doc.body.sectionPropertiesIndex))
-        #expect(doc.body.pageSetup == .letter)
-        doc.body.pageSetup = .a4
+        #expect(doc.body.pageSetup == .fallback)
+        doc.body.pageSetup = .letter
         #expect(
             try #require(sectPr(doc))
-                == #"<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>"#
-                + #"<w:pgMar w:top="1417" w:right="1701" w:bottom="1417" w:left="1701" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>"#
+                == #"<w:sectPr><w:pgSz w:w="12240" w:h="15840"/>"#
+                + #"<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>"#
         )
         let data = try codec.write(doc)
         #expect(try PackageChecker.problems(data).isEmpty)
-        #expect(try codec.read(data).body.pageSetup == .a4)
+        #expect(try codec.read(data).body.pageSetup == .letter)
     }
 
     @Test func settingTheSameSetupChangesNothing() throws {

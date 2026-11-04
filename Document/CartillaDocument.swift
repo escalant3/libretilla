@@ -213,7 +213,7 @@ final class CartillaDocument: NSDocument {
     // MARK: Page setup (M3)
 
     /// The page size, orientation and margins, from the document's final `w:sectPr`.
-    var pageSetup: PageSetup { base?.body.pageSetup ?? .letter }
+    var pageSetup: PageSetup { base?.body.pageSetup ?? .fallback }
 
     /// Changes the page setup, undoably. The text is untouched; the next save rewrites only the changed
     /// `w:pgSz` / `w:pgMar` attributes.

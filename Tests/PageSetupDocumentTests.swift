@@ -62,6 +62,24 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(letter.editor).textView.frame.width, 468)
     }
 
+    func testNewDocumentsAreA4InCharter() throws {
+        let doc = CartillaDocument()
+        doc.makeWindowControllers()
+        XCTAssertEqual(doc.pageSetup, .a4)
+        let tv = try XCTUnwrap(doc.editor?.textView)
+        XCTAssertEqual(tv.frame.width, PageSetup.a4.textWidth, accuracy: 0.5)
+        tv.insertText("Hola", replacementRange: NSRange(location: 0, length: 0))
+        let font = try XCTUnwrap(tv.textStorage?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+        XCTAssertEqual(font.familyName, "Charter")
+        XCTAssertEqual(font.pointSize, 12)
+
+        let saved = try saved(doc)
+        XCTAssertEqual(saved.body.pageSetup, .a4)
+        let (_, normal) = saved.styles.resolveParagraphStyle(nil)
+        XCTAssertEqual(saved.styles.fontFamily(for: normal), "Charter")
+        XCTAssertEqual(normal.size, 12)
+    }
+
     func testPageSetupChangeIsUndoableAndSaved() throws {
         let doc = try open("01-plain.docx")
         var setup = doc.pageSetup

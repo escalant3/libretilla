@@ -6,7 +6,7 @@ import os
 /// True pagination is a v1.1 milestone.
 final class EditorViewController: NSViewController, NSTextViewDelegate, @preconcurrency NSTextStorageDelegate {
     /// The document's page size and margins (from its final `w:sectPr`); set with `apply(_:)`.
-    private(set) var pageSetup = PageSetup.letter
+    private(set) var pageSetup = PageSetup.fallback
 
     private(set) var textView: CartillaTextView!
     private var canvas: PageCanvasView!

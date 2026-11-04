@@ -24,7 +24,10 @@ public struct PageSetup: Sendable, Equatable {
         self.isLandscape = isLandscape
     }
 
-    /// Word's default when a document has no `w:sectPr`: US Letter, 1 inch margins.
+    /// What Cartilla assumes when a document doesn't say (no `w:sectPr`, or no `w:pgSz`/`w:pgMar`):
+    /// A4, as Word does in A4 locales. New documents are A4 too (`Resources/Blank.docx`).
+    public static let fallback = a4
+    /// US Letter, 1 inch margins (Word's US default).
     public static let letter = PageSetup(width: 12240, height: 15840, top: 1440, right: 1440, bottom: 1440, left: 1440)
     /// ISO A4 with Spanish-locale Word's default margins: 2.5 cm top and bottom, 3 cm left and right.
     public static let a4 = PageSetup(width: 11906, height: 16838, top: 1417, right: 1701, bottom: 1417, left: 1701)
@@ -85,9 +88,9 @@ public struct PageSetup: Sendable, Equatable {
         return setup
     }
 
-    /// Reads `w:pgSz` and `w:pgMar` from a `w:sectPr`; missing values fall back to `letter`'s.
+    /// Reads `w:pgSz` and `w:pgMar` from a `w:sectPr`; missing values come from `fallback`.
     init(sectPr: RawXML.Element?) {
-        var setup = PageSetup.letter
+        var setup = PageSetup.fallback
         func int(_ e: RawXML.Element?, _ name: String) -> Int? {
             e?.attribute(name).flatMap { Int($0) ?? Double($0).map { Int($0.rounded()) } }
         }
@@ -112,12 +115,12 @@ extension DocumentBody {
         blocks.lastIndex { if case .opaque(let o) = $0 { o.isSectionProperties } else { false } }
     }
 
-    /// The document's page setup (Word's default, US Letter, if it has no `w:sectPr`).
+    /// The document's page setup (`PageSetup.fallback`, A4, if it has no `w:sectPr`).
     public var pageSetup: PageSetup {
         get {
             guard let i = sectionPropertiesIndex, case .opaque(let o) = blocks[i],
                 let doc = try? RawXML.Document(data: o.xml, part: "w:sectPr")
-            else { return .letter }
+            else { return .fallback }
             return PageSetup(sectPr: doc.root)
         }
         set {
@@ -127,24 +130,28 @@ extension DocumentBody {
             // Only the changed attributes are rewritten; header/footer distances, gutter, paper codes
             // and everything else in the section keep their bytes.
             let old = pageSetup
+            // A size or margins element the section lacks is written whole: Word would otherwise use its
+            // own locale's defaults, not the fallback Cartilla showed.
+            let writeSize = existing.map { Self.sectionLacks("w:pgSz", $0) } ?? true
+            let writeMargins = existing.map { Self.sectionLacks("w:pgMar", $0) } ?? true
             var size: [(String, String?)] = []
-            if newValue.width != old.width || existing == nil { size.append(("w:w", String(newValue.width))) }
-            if newValue.height != old.height || existing == nil { size.append(("w:h", String(newValue.height))) }
+            if newValue.width != old.width || writeSize { size.append(("w:w", String(newValue.width))) }
+            if newValue.height != old.height || writeSize { size.append(("w:h", String(newValue.height))) }
             if newValue.isLandscape != old.isLandscape {
                 size.append(("w:orient", newValue.isLandscape ? "landscape" : nil))
             }
             var margins: [(String, String?)] = []
             // Keep Word's sign convention for top/bottom when only the size changes.
             func signed(_ value: Int, like current: Int) -> Int { current < 0 ? -abs(value) : value }
-            if newValue.top != old.top || existing == nil {
+            if newValue.top != old.top || writeMargins {
                 margins.append(("w:top", String(signed(newValue.top, like: old.top))))
             }
-            if newValue.right != old.right || existing == nil { margins.append(("w:right", String(newValue.right))) }
-            if newValue.bottom != old.bottom || existing == nil {
+            if newValue.right != old.right || writeMargins { margins.append(("w:right", String(newValue.right))) }
+            if newValue.bottom != old.bottom || writeMargins {
                 margins.append(("w:bottom", String(signed(newValue.bottom, like: old.bottom))))
             }
-            if newValue.left != old.left || existing == nil { margins.append(("w:left", String(newValue.left))) }
-            if existing == nil || Self.marginsElementIsMissing(existing!) {
+            if newValue.left != old.left || writeMargins { margins.append(("w:left", String(newValue.left))) }
+            if writeMargins {
                 // `w:pgMar` requires header, footer and gutter; use Word's defaults for a new one.
                 margins += [("w:header", "720"), ("w:footer", "720"), ("w:gutter", "0")]
             }
@@ -166,9 +173,9 @@ extension DocumentBody {
         }
     }
 
-    private static func marginsElementIsMissing(_ block: OpaqueBlock) -> Bool {
+    private static func sectionLacks(_ child: String, _ block: OpaqueBlock) -> Bool {
         guard let doc = try? RawXML.Document(data: block.xml, part: "w:sectPr") else { return true }
-        return doc.root.firstChild(named: "w:pgMar") == nil
+        return doc.root.firstChild(named: child) == nil
     }
 }
 

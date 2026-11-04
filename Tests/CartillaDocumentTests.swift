@@ -93,7 +93,7 @@ final class CartillaDocumentTests: XCTestCase {
         let editor = EditorViewController()
         editor.loadView()
         // The text view is the page's text column; the canvas draws the page and its margins.
-        XCTAssertEqual(editor.textView.frame.width, PageSetup.letter.textWidth)
+        XCTAssertEqual(editor.textView.frame.width, PageSetup.fallback.textWidth)
         XCTAssertEqual(editor.textView.textContainerInset.width, 0)
         XCTAssertEqual(editor.textView.textContainer?.lineFragmentPadding, 0)
         XCTAssertTrue(editor.textView.allowsUndo)
