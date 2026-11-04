@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0996DD3CFAE689AB75FC825F /* LaunchSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD416316AD13F8683406741 /* LaunchSmokeTests.swift */; };
+		1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */; };
 		273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */; };
-		359737FDE95654CCC7AB4008 /* TextKitSpikeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4F3B3294519680761AAFAF /* TextKitSpikeTests.swift */; };
 		6C17C3D9C19022F08927DB67 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ABC6BB8AB14A03F3071AD5 /* AppDelegate.swift */; };
 		953CD82E158C5AE5C112D3E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C4FCA90FB94EB59559A14C4A /* Assets.xcassets */; };
 		9CA8C2A5AA11F3ED9FF8A04E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1D2E40BDC849665AB08222 /* MainMenu.swift */; };
@@ -39,7 +39,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2A4F3B3294519680761AAFAF /* TextKitSpikeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextKitSpikeTests.swift; sourceTree = "<group>"; };
+		174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextKit2CompatibilityTests.swift; sourceTree = "<group>"; };
 		398F3574EE25EEB7560B4117 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		42957A3C53F54C33F671A093 /* CartillaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartillaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		494F3478AAA91243011B8C02 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				8925B74F8F3FEA420F69673D /* CartillaDocumentTests.swift */,
-				2A4F3B3294519680761AAFAF /* TextKitSpikeTests.swift */,
+				174C9C8BB9E19B84A7127C23 /* TextKit2CompatibilityTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -309,7 +309,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				273B9A2990AE84444E0A36DA /* CartillaDocumentTests.swift in Sources */,
-				359737FDE95654CCC7AB4008 /* TextKitSpikeTests.swift in Sources */,
+				1A5752EF36B3BCE7471017B9 /* TextKit2CompatibilityTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

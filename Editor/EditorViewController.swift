@@ -1,4 +1,5 @@
 import AppKit
+import os
 
 /// A page-width text column on a quiet canvas (bootstrap §5.1 "page view", stage 1).
 /// True pagination is a v1.1 milestone.
@@ -8,6 +9,12 @@ final class EditorViewController: NSViewController {
     static let pageMargin: CGFloat = 72
 
     private(set) var textView: NSTextView!
+    nonisolated(unsafe) private var fallbackObserver: (any NSObjectProtocol)?
+    private static let log = Logger(subsystem: "app.cartilla.Cartilla", category: "Editor")
+
+    deinit {
+        if let fallbackObserver { NotificationCenter.default.removeObserver(fallbackObserver) }
+    }
 
     override func loadView() {
         let scrollView = NSScrollView()
@@ -20,7 +27,10 @@ final class EditorViewController: NSViewController {
         canvas.pageWidth = Self.pageWidth
         scrollView.documentView = canvas
 
-        let textView = NSTextView(frame: NSRect(x: 0, y: 0, width: Self.pageWidth, height: 792))
+        // TextKit 2, deliberately (ADR 0001). Never touch `textView.layoutManager`: it forces a
+        // permanent fallback to TextKit 1. Known TK2 gaps: docs/TEXTKIT2_GAPS.md.
+        let textView = NSTextView(usingTextLayoutManager: true)
+        textView.frame = NSRect(x: 0, y: 0, width: Self.pageWidth, height: 792)
         textView.isRichText = true
         textView.allowsUndo = true
         textView.usesFindBar = true
@@ -37,6 +47,12 @@ final class EditorViewController: NSViewController {
         textView.setAccessibilityLabel(String(localized: "Document body"))
         canvas.page = textView
         self.textView = textView
+        fallbackObserver = NotificationCenter.default.addObserver(
+            forName: NSTextView.willSwitchToNSLayoutManagerNotification, object: textView, queue: .main
+        ) { _ in
+            // Something forced TextKit 1. Record it as a new gap in docs/TEXTKIT2_GAPS.md.
+            Self.log.fault("NSTextView fell back to TextKit 1")
+        }
         view = scrollView
     }
 }
