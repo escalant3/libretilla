@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/*/.build/
+Spikes/*/.build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Spike / test output
+Spikes/*/out/
+*.dmg
