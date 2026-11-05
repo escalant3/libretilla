@@ -147,4 +147,12 @@ final class FormattingUITests: CartillaUITestCase {
         window.buttons["Done"].click()
         XCTAssertTrue(try waitUntil(15) { try everyParagraphReplaced(in: file) })
     }
+
+    /// DEBUG(ci/debug-find-replace-autosave): same steps, waiting a minute. Tells "slow" from "never".
+    @MainActor
+    func testFindAndReplaceAllWaitsAMinute() throws {
+        preserveFindPasteboard()
+        let (file, _) = try replaceAllParagraphs(as: "ReplaceSlow.docx")
+        XCTAssertTrue(try waitUntil(60) { try everyParagraphReplaced(in: file) })
+    }
 }
