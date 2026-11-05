@@ -101,13 +101,18 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     /// Keeps the whole window on the screen's visible area. AppKit only pulls a window's top edge back on
     /// screen, so the default size plus the outline sidebar ran off the right of a 1024-point display.
     static func fitOnScreen(_ window: NSWindow) {
-        guard let visible = (window.screen ?? NSScreen.main)?.visibleFrame, !visible.isEmpty else { return }
+        if let frame = onScreenFrame(for: window), frame != window.frame { window.setFrame(frame, display: false) }
+    }
+
+    /// `window`'s frame moved and shrunk to lie within its screen's visible area.
+    static func onScreenFrame(for window: NSWindow) -> NSRect? {
+        guard let visible = (window.screen ?? NSScreen.main)?.visibleFrame, !visible.isEmpty else { return nil }
         var frame = window.frame
         frame.size.width = min(frame.width, visible.width)
         frame.size.height = min(frame.height, visible.height)
         frame.origin.x = min(max(frame.minX, visible.minX), visible.maxX - frame.width)
         frame.origin.y = min(max(frame.minY, visible.minY), visible.maxY - frame.height)
-        if frame != window.frame { window.setFrame(frame, display: false) }
+        return frame
     }
 
     deinit {
@@ -145,15 +150,33 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     /// keep it on screen whenever it's shown or resized.
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
-        if let window { Self.fitOnScreen(window) }
+        scheduleFitOnScreen()
     }
 
-    func windowDidResize(_ notification: Notification) {
-        if let window { Self.fitOnScreen(window) }
+    func windowDidResize(_ notification: Notification) { scheduleFitOnScreen() }
+
+    private var fitScheduled = false
+    /// The frame the last fit asked for; if the window kept a different one (its minimum size), don't insist.
+    private var lastFitTarget: NSRect?
+
+    /// Fits on the next turn of the run loop: resizing from inside a resize or layout pass makes AppKit abort
+    /// ("needs another update constraints pass").
+    private func scheduleFitOnScreen() {
+        guard !fitScheduled else { return }
+        fitScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.fitScheduled = false
+            guard let window = self.window, let target = Self.onScreenFrame(for: window), target != window.frame,
+                target != self.lastFitTarget
+            else { return }
+            self.lastFitTarget = target
+            window.setFrame(target, display: true)
+        }
     }
 
     func windowDidBecomeMain(_ notification: Notification) {
-        if let window { Self.fitOnScreen(window) }
+        scheduleFitOnScreen()
         window?.makeFirstResponder(editor.textView)
     }
 
