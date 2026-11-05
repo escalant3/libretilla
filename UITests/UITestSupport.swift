@@ -16,6 +16,11 @@ class CartillaUITestCase: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        // Start as a fresh install does, outline hidden, whatever an earlier test left: with it open the format
+        // bar is narrower and, on a small screen, some of its groups are in the » menu.
+        app.launchArguments += ["-CartillaOutlineShown", "NO"]
+        // And at the default window size, not a frame some earlier run saved (an empty frame is rejected).
+        app.launchArguments += ["-NSWindow Frame CartillaDocumentWindow", ""]
         work = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-ui-\(UUID())")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
     }

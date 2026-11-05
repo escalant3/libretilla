@@ -196,7 +196,7 @@ enum MainMenu {
         return item
     }
 
-    private static func fontMenu() -> NSMenu {
+    static func fontMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "Font"))
         menu.addItem(item(String(localized: "Show Fonts"), #selector(NSFontManager.orderFrontFontPanel(_:)), "t"))
         menu.addItem(.separator())
@@ -240,7 +240,7 @@ enum MainMenu {
         return menu
     }
 
-    private static func textMenu() -> NSMenu {
+    static func textMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "Text"))
         let alignments: [(String, String)] = [
             (String(localized: "Align Left"), "{"), (String(localized: "Center"), "|"),
@@ -281,7 +281,7 @@ enum MainMenu {
         return items
     }
 
-    private static func styleMenu() -> NSMenu {
+    static func styleMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "Style"))
         for (i, (name, title)) in StyleChoice.standard.enumerated() {
             // ⌥⌘0 Normal, ⌥⌘1…6 headings, as in Google Docs.
@@ -303,7 +303,7 @@ enum MainMenu {
         return menu
     }
 
-    private static func listMenu() -> NSMenu {
+    static func listMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "List"))
         menu.addItem(
             item(

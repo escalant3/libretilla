@@ -103,7 +103,14 @@ final class PolishUITests: CartillaUITestCase {
         window.typeKey("s", modifierFlags: [.command, .control])
         XCTAssertTrue(window.tables["outline"].waitForExistence(timeout: 5))
         let body = window.textViews["Document body"].frame
+        // On GitHub's runners the contrast audit flags plainly readable labels: Settings' "Page in Dark Mode" and
+        // "Show format bar", the title bar's "Saved". Its own crops of them show black text on white or light
+        // gray, waiting doesn't change it, and it marks the windows "Disabled". A false positive there: skip the
+        // contrast check on CI only (CARTILLA_CI, set by the workflow through TEST_RUNNER_CARTILLA_CI). Every
+        // other check runs on CI, and the whole audit runs everywhere else.
+        let onCI = ProcessInfo.processInfo.environment["CARTILLA_CI"] != nil
         func exempt(_ issue: XCUIAccessibilityAuditIssue, in audited: XCUIElement) -> Bool {
+            if onCI, issue.auditType == .contrast { return true }
             // A tooltip AppKit happens to show under the pointer isn't Cartilla's.
             if issue.element?.elementType == .helpTag { return true }
             // AppKit's window tab is labelled with the file name ("Audit.docx"), which the audit doesn't

@@ -127,6 +127,8 @@ final class CartillaDocument: NSDocument {
                     self.saveState = .failed(error.localizedDescription)
                 } else {
                     self.saveState = self.isDocumentEdited ? .edited : .saved
+                    // The file has caught up: the backstop's clock restarts at the next change.
+                    if !self.hasUnautosavedChanges { self.firstUnsavedChange = nil }
                 }
             }
             completionHandler(error)
@@ -160,8 +162,62 @@ final class CartillaDocument: NSDocument {
 
     override func updateChangeCount(_ change: NSDocument.ChangeType) {
         super.updateChangeCount(change)
+        scheduleAutosaveBackstop()
         if case .saving = saveState { return }
         if !isReadOnly { saveState = isDocumentEdited ? .edited : .saved }
+    }
+
+    // MARK: Autosave backstop
+
+    /// How long after a change the file must have caught up. NSDocument normally autosaves about 3 s after it.
+    static let autosaveBackstopDelay: TimeInterval = 5
+    /// Tests only: drop NSDocument's own scheduled autosave, to check the backstop alone keeps the file current.
+    nonisolated(unsafe) static var suppressesScheduledAutosaveForTesting = false
+    private var autosaveBackstopPending = false
+    /// When the oldest change the file doesn't have yet was made (nil when it's current).
+    private var firstUnsavedChange: Date?
+
+    override func scheduleAutosaving() {
+        if Self.suppressesScheduledAutosaveForTesting { return }
+        super.scheduleAutosaving()
+    }
+
+    /// The file on disk is the document (bootstrap §5.4), so an edit must reach it within seconds. NSDocument
+    /// schedules an autosave after each change, but that autosave doesn't always run: on GitHub's macOS
+    /// runners it never did after Find and Replace ▸ All, whatever happened next. If changes are still
+    /// unautosaved this long after the first change since the file was last current, autosave now. Measured
+    /// from that first change, not the last, so continuous typing can't postpone it.
+    private func scheduleAutosaveBackstop() {
+        guard hasUnautosavedChanges, !isReadOnly else {
+            firstUnsavedChange = nil
+            return
+        }
+        let first = firstUnsavedChange ?? Date()
+        firstUnsavedChange = first
+        guard !autosaveBackstopPending else { return }
+        autosaveBackstopPending = true
+        let due = max(0, Self.autosaveBackstopDelay - Date().timeIntervalSince(first))
+        DispatchQueue.main.asyncAfter(deadline: .now() + due) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.autosaveBackstopPending = false
+                guard self.hasUnautosavedChanges, !self.isReadOnly, let first = self.firstUnsavedChange else {
+                    self.firstUnsavedChange = nil
+                    return
+                }
+                // An autosave since then made the file current and the clock restarted: not due yet.
+                if case .saving = self.saveState {
+                    self.scheduleAutosaveBackstop()
+                    return
+                }
+                if Date().timeIntervalSince(first) < Self.autosaveBackstopDelay - 0.05 {
+                    self.scheduleAutosaveBackstop()
+                    return
+                }
+                Self.log.notice("The scheduled autosave hasn't run; autosaving now")
+                self.autosave(withImplicitCancellability: false) { _ in }
+            }
+        }
     }
 
     // MARK: Styles and lists (M2)

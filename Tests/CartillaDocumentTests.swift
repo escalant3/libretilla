@@ -29,6 +29,29 @@ final class CartillaDocumentTests: XCTestCase {
         if let failure { throw failure }
     }
 
+    /// NSDocument's scheduled autosave didn't always run (GitHub runners, after Find and Replace ▸ All); the
+    /// backstop must get edits to the file anyway.
+    func testEditsReachTheFileEvenIfTheScheduledAutosaveNeverRuns() throws {
+        CartillaDocument.suppressesScheduledAutosaveForTesting = true
+        defer { CartillaDocument.suppressesScheduledAutosaveForTesting = false }
+        let (doc, url, _) = try openDocument("01-plain.docx")
+        let tv = try XCTUnwrap(doc.editor?.textView)
+        tv.setSelectedRange(NSRange(location: 0, length: 0))
+        tv.insertText("Backstop. ", replacementRange: tv.selectedRange())
+        // With real typing, AppKit closes the undo group at the end of the event and NSDocument counts the change;
+        // a unit test has no events, so count it here.
+        doc.updateChangeCount(.changeDone)
+
+        func saved() -> Bool {
+            guard let data = try? Data(contentsOf: url), let back = try? OOXMLCodec().read(data) else { return false }
+            return back.body.plainText.hasPrefix("Backstop. ")
+        }
+        let deadline = Date().addingTimeInterval(CartillaDocument.autosaveBackstopDelay + 6)
+        while Date() < deadline, !saved() { RunLoop.current.run(until: Date().addingTimeInterval(0.25)) }
+        XCTAssertTrue(saved(), "the edit reached the file")
+        XCTAssertFalse(doc.hasUnautosavedChanges)
+    }
+
     func testAutosavesInPlace() {
         XCTAssertTrue(CartillaDocument.autosavesInPlace)
     }

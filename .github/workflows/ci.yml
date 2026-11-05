@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -49,7 +50,8 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build
-          xcodebuild test \
+          # TEST_RUNNER_ passes CARTILLA_CI to the test runners (see PolishUITests).
+          TEST_RUNNER_CARTILLA_CI=1 xcodebuild test \
             -project Cartilla.xcodeproj -scheme Cartilla \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build/DerivedData \
@@ -57,9 +59,20 @@ jobs:
             | tee build/xcodebuild.log | grep -E '^(Test Case|\*\*)|: error: ' || true
           grep -q '\*\* TEST SUCCEEDED \*\*' build/xcodebuild.log
 
+      - name: Collect crash reports on failure
+        if: failure()
+        run: |
+          mkdir -p build/crash-reports
+          for dir in ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports; do
+            find "$dir" -iname 'Cartilla*' -exec cp {} build/crash-reports/ \; 2>/dev/null || true
+          done
+          ls -l build/crash-reports
+
       - name: Upload test results on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: xcresult
-          path: build/DerivedData/Logs/Test/*.xcresult
+          path: |
+            build/DerivedData/Logs/Test/*.xcresult
+            build/crash-reports
