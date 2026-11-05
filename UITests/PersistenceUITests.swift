@@ -16,6 +16,32 @@ final class PersistenceUITests: CartillaUITestCase {
         XCTAssertTrue(try waitUntil(5) { window.staticTexts["saveStatus"].value as? String == "Saved" })
     }
 
+    /// The status must be visible in the title bar, not just present: on macOS 26 a trailing title-bar
+    /// accessory was laid out at zero width outside the window, and the test above still found it.
+    @MainActor
+    func testSaveStatusIsVisibleInTheTitleBar() throws {
+        let file = try copyFixture("01-plain.docx", as: "Status.docx")
+        app.launch()
+        let window = try open(file)
+        let status = window.staticTexts["saveStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        func assertVisible(_ when: String) {
+            let frame = status.frame, bounds = window.frame
+            XCTAssertGreaterThan(frame.width, 10, "\(when): status has width (\(frame))")
+            XCTAssertTrue(bounds.contains(frame), "\(when): status \(frame) lies inside the window \(bounds)")
+            XCTAssertLessThan(frame.minY - bounds.minY, 60, "\(when): status sits in the title bar")
+        }
+        assertVisible("opened")
+        typeAtStart("Visible status. ", in: window)
+        XCTAssertTrue(try waitUntil(15) { try text(of: file).hasPrefix("Visible status. ") })
+        XCTAssertTrue(try waitUntil(5) { status.value as? String == "Saved" })
+        assertVisible("after autosave")
+        let shot = XCTAttachment(screenshot: window.screenshot())
+        shot.name = "save-status"
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
+
     @MainActor
     func testOpeningAndClosingWithoutEditingLeavesTheFileUntouched() throws {
         let file = try copyFixture("10-word-features.docx", as: "Untouched.docx")

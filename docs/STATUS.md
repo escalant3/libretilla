@@ -234,6 +234,12 @@ print yet.
   Placeholder chips (Footnote, Text box, Page break, "Table, 3 × 4"…) are now translated too, through
   `AttributedStringBridge.localizeLabel`, which the app sets.
 - Fixed in passing: the save status accessory's conflicting constraints at window creation.
+- **The Saved / Saving… status shows on macOS 26** (fixed 2026-11-05). A trailing title-bar accessory takes
+  its width from its view's frame, not its constraints, and the zero frame left it 2 points wide outside the
+  window. The frame is now sized to the text. It's drawn in the primary label colour, because secondary
+  grey at 11 pt fails the audit's contrast check on the glass title bar.
+  `PersistenceUITests.testSaveStatusIsVisibleInTheTitleBar` checks that the label is inside the title bar,
+  not just present.
 - **Tests:**
   - 1 package test (`outlineLevelsFollowWordsHeadingNames`).
   - 18 app tests (`PolishTests`, `LocalizationTests`).
@@ -249,6 +255,10 @@ print yet.
 
 **Found, not fixed**
 
-- On macOS 26 the "Saved / Saving…" label beside the title doesn't show: the trailing title-bar accessory is
-  laid out at zero width, outside the window. AppKit's own subtitle ("Edited") shows instead.
+- AppKit's subtitle still says "Edited" under the title while Cartilla's status says "Saved". This is NSDocument's
+  Versions state (changed since the last explicit save, as in TextEdit), not the dirty flag: `DocumentWindow`'s
+  `isDocumentEdited` override and a `setDocumentEdited(false)` override on the window controller both leave it
+  showing. Setting `window.subtitle` doesn't replace it either; AppKit appends "— Edited". Bootstrap §6 asks
+  for no edited indicator, so it needs a decision: accept it as the system's own text, or look for another way
+  to hide it.
 
