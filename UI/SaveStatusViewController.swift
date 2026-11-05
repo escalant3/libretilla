@@ -14,22 +14,35 @@ final class SaveStatusViewController: NSTitlebarAccessoryViewController {
 
     override func loadView() {
         label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        label.textColor = .secondaryLabelColor
+        label.textColor = .labelColor
         label.lineBreakMode = .byTruncatingTail
         label.setAccessibilityIdentifier("saveStatus")
-        let container = NSView()
+        // A trailing title-bar accessory takes its width from the view's frame, not from constraints: with a
+        // zero frame macOS 26 lays it out 2 points wide, outside the window. `fitWidth()` sizes the frame to
+        // the text each time it changes.
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 80, height: 28))
         label.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(label)
-        // The accessory starts at zero width before the title bar lays it out: let the trailing edge give.
-        let trailing = label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12)
+        let trailing = label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -Self.trailingInset)
         trailing.priority = .defaultHigh
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Self.leadingInset),
             trailing,
             label.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            label.widthAnchor.constraint(lessThanOrEqualToConstant: 260),
+            label.widthAnchor.constraint(lessThanOrEqualToConstant: Self.maximumLabelWidth),
         ])
         view = container
+    }
+
+    private static let leadingInset: CGFloat = 8
+    private static let trailingInset: CGFloat = 12
+    private static let maximumLabelWidth: CGFloat = 260
+
+    private func fitWidth() {
+        let text = ceil(min(label.intrinsicContentSize.width, Self.maximumLabelWidth))
+        let width = Self.leadingInset + text + Self.trailingInset
+        guard view.frame.width != width else { return }
+        view.setFrameSize(NSSize(width: width, height: view.frame.height))
     }
 
     func show(_ state: CartillaDocument.SaveState, isDraft: Bool) {
@@ -50,7 +63,8 @@ final class SaveStatusViewController: NSTitlebarAccessoryViewController {
         }
         if case .failed = state {} else if case .readOnly = state {} else { label.toolTip = nil }
         label.stringValue = text
-        label.textColor = announce ? .systemRed : .secondaryLabelColor
+        label.textColor = announce ? .systemRed : .labelColor
+        fitWidth()
         if announce {
             // VoiceOver announces failures only, not routine saves.
             NSAccessibility.post(

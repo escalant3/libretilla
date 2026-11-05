@@ -194,8 +194,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         let margins = setup.margins
         canvas.pageWidth = setup.pageSize.width
         canvas.leftMargin = margins.left
+        canvas.columnWidth = column
         textView.textContainerInset = NSSize(width: 0, height: margins.top)
-        textView.minSize = NSSize(width: column, height: setup.pageSize.height)
+        // The canvas sets the width: the document's text width, or narrower when the window is (it rewraps).
+        textView.minSize = NSSize(width: PageCanvasView.minimumColumn, height: setup.pageSize.height)
         textView.maxSize = NSSize(width: column, height: .greatestFiniteMagnitude)
         textView.setFrameSize(NSSize(width: column, height: max(textView.frame.height, setup.pageSize.height)))
         canvas.needsLayout = true
@@ -517,12 +519,23 @@ final class PageCanvasView: NSView {
     var pageWidth: CGFloat = 612
     /// The left page margin: the page view (the text column) starts this far inside the page.
     var leftMargin: CGFloat = 72
+    /// The text column's width when the page fits: the document's text width.
+    var columnWidth: CGFloat = 468 {
+        didSet { needsLayout = true }
+    }
     /// Space around the page when its edges show.
-    private var padding: CGFloat { showsPageEdges ? 32 : 0 }
+    private var padding: CGFloat { showsPageEdges && !isNarrow ? 32 : 0 }
 
-    /// The white page behind the text column.
+    /// Narrower than the page, the text wraps to the window with this much room each side (like a note).
+    static let narrowInset: CGFloat = 20
+    static let minimumColumn: CGFloat = 120
+    /// The window is narrower than the page: the column follows the window, and there are no page edges.
+    private(set) var isNarrow = false
+
+    /// The white page behind the text column (all of it when narrow).
     var pageRect: NSRect {
         guard let page else { return .zero }
+        if isNarrow { return NSRect(x: 0, y: page.frame.minY, width: bounds.width, height: page.frame.height) }
         return NSRect(x: page.frame.minX - leftMargin, y: page.frame.minY, width: pageWidth, height: page.frame.height)
     }
 
@@ -598,12 +611,20 @@ final class PageCanvasView: NSView {
             (clip.superview as? NSScrollView).map {
                 ($0.contentInsets.top + $0.contentInsets.bottom) / $0.magnification
             } ?? 0
-        let width = max(clip.bounds.width.rounded(.down), pageWidth + 2 * padding)
+        let available = clip.bounds.width.rounded(.down)
+        let wasNarrow = isNarrow
+        isNarrow = available < pageWidth + 2 * (showsPageEdges ? 32 : 0)
+        if isNarrow != wasNarrow { needsDisplay = true }
+        let column = isNarrow ? max(Self.minimumColumn, available - 2 * Self.narrowInset) : columnWidth
+        if abs(page.frame.width - column) > 0.5 {
+            page.setFrameSize(NSSize(width: column, height: page.frame.height))
+        }
+        let width = isNarrow ? max(available, column + 2 * Self.narrowInset) : max(available, pageWidth + 2 * padding)
         let height = max((clip.bounds.height - insets).rounded(.down), page.frame.height + 2 * padding)
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }
-        let x = ((width - pageWidth) / 2).rounded() + leftMargin
+        let x = isNarrow ? Self.narrowInset : ((width - pageWidth) / 2).rounded() + leftMargin
         if page.frame.origin != NSPoint(x: x, y: padding) {
             page.setFrameOrigin(NSPoint(x: x, y: padding))
             needsDisplay = true

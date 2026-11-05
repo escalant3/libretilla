@@ -988,6 +988,16 @@
         }
       }
     },
+    "More formatting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más formato"
+          }
+        }
+      }
+    },
     "Move To…": {
       "localizations": {
         "es": {

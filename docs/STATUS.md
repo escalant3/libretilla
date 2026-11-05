@@ -234,6 +234,12 @@ print yet.
   Placeholder chips (Footnote, Text box, Page break, "Table, 3 × 4"…) are now translated too, through
   `AttributedStringBridge.localizeLabel`, which the app sets.
 - Fixed in passing: the save status accessory's conflicting constraints at window creation.
+- **The Saved / Saving… status shows on macOS 26** (fixed 2026-11-05). A trailing title-bar accessory takes
+  its width from its view's frame, not its constraints, and the zero frame left it 2 points wide outside the
+  window. The frame is now sized to the text. It's drawn in the primary label colour, because secondary
+  grey at 11 pt fails the audit's contrast check on the glass title bar.
+  `PersistenceUITests.testSaveStatusIsVisibleInTheTitleBar` checks that the label is inside the title bar,
+  not just present.
 - **Tests:**
   - 1 package test (`outlineLevelsFollowWordsHeadingNames`).
   - 18 app tests (`PolishTests`, `LocalizationTests`).
@@ -247,8 +253,9 @@ print yet.
 - A real VoiceOver session (the rotor is unit-tested, the audit passes).
 - Tables, chips and pictures on a dark page: the text drawn inside them isn't recoloured.
 
-**Found, not fixed**
+**Decided with the owner (2026-11-05)**
 
-- On macOS 26 the "Saved / Saving…" label beside the title doesn't show: the trailing title-bar accessory is
-  laid out at zero width, outside the window. AppKit's own subtitle ("Edited") shows instead.
+- AppKit's "Edited" subtitle under the title stays. It is NSDocument's Versions state (changed since the last
+  explicit save), which TextEdit shows too, so it's the Mac's own convention. Cartilla's status beside it says
+  whether the file on disk is current.
 
