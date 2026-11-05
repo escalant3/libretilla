@@ -50,7 +50,8 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build
-          xcodebuild test \
+          # TEST_RUNNER_ passes CARTILLA_CI to the test runners (see PolishUITests).
+          TEST_RUNNER_CARTILLA_CI=1 xcodebuild test \
             -project Cartilla.xcodeproj -scheme Cartilla \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build/DerivedData \

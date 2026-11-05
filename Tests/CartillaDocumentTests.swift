@@ -38,6 +38,9 @@ final class CartillaDocumentTests: XCTestCase {
         let tv = try XCTUnwrap(doc.editor?.textView)
         tv.setSelectedRange(NSRange(location: 0, length: 0))
         tv.insertText("Backstop. ", replacementRange: tv.selectedRange())
+        // With real typing, AppKit closes the undo group at the end of the event and NSDocument counts the change;
+        // a unit test has no events, so count it here.
+        doc.updateChangeCount(.changeDone)
 
         func saved() -> Bool {
             guard let data = try? Data(contentsOf: url), let back = try? OOXMLCodec().read(data) else { return false }

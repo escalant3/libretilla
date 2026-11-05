@@ -48,6 +48,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             window.setContentSize(NSSize(width: 900, height: 1000))
             window.center()
         }
+        Self.fitOnScreen(window)
         window.toolbar = MainToolbar.make()
         window.addTitlebarAccessoryViewController(status)
         formatBar.target = editor
@@ -96,6 +97,18 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    /// Keeps the whole window on the screen's visible area. AppKit only pulls a window's top edge back on
+    /// screen, so the default size plus the outline sidebar ran off the right of a 1024-point display.
+    static func fitOnScreen(_ window: NSWindow) {
+        guard let visible = (window.screen ?? NSScreen.main)?.visibleFrame, !visible.isEmpty else { return }
+        var frame = window.frame
+        frame.size.width = min(frame.width, visible.width)
+        frame.size.height = min(frame.height, visible.height)
+        frame.origin.x = min(max(frame.minX, visible.minX), visible.maxX - frame.width)
+        frame.origin.y = min(max(frame.minY, visible.minY), visible.maxY - frame.height)
+        if frame != window.frame { window.setFrame(frame, display: false) }
+    }
 
     deinit {
         if let defaultsObserver { NotificationCenter.default.removeObserver(defaultsObserver) }
