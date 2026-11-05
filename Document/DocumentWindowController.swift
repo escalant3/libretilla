@@ -207,6 +207,22 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     }
 
     /// View ▸ Show/Hide Outline (⌃⌘S); remembered for new windows.
+    /// The split view restores its saved state (sidebar width, and whether it was collapsed) when it first
+    /// appears, after `init` applied Cartilla's own setting: an outline hidden in View ▸ Show Outline could come
+    /// back open, with the menu still saying "Show Outline". Whether it shows is Cartilla's setting; apply it
+    /// again once the window is up.
+    override func showWindow(_ sender: Any?) {
+        applyOutlineSetting()
+        super.showWindow(sender)
+        DispatchQueue.main.async { [weak self] in self?.applyOutlineSetting() }
+    }
+
+    private func applyOutlineSetting() {
+        guard outlineItem.isCollapsed == outlineShown else { return }
+        outlineItem.isCollapsed = !outlineShown
+        if outlineShown { editor.updateOutline() }
+    }
+
     @objc func toggleOutline(_ sender: Any?) {
         outlineShown.toggle()
         if outlineShown { editor.updateOutline() }
