@@ -161,11 +161,6 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
 
     /// The window can grow after it's made (shown as a tab of a wider window, the outline sidebar opening);
     /// keep it on screen whenever it's shown or resized.
-    override func showWindow(_ sender: Any?) {
-        super.showWindow(sender)
-        scheduleFitOnScreen()
-    }
-
     func windowDidResize(_ notification: Notification) { scheduleFitOnScreen() }
 
     private var fitScheduled = false
@@ -215,6 +210,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         applyOutlineSetting()
         super.showWindow(sender)
         DispatchQueue.main.async { [weak self] in self?.applyOutlineSetting() }
+        scheduleFitOnScreen()
     }
 
     private func applyOutlineSetting() {
