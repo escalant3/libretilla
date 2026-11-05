@@ -12,6 +12,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     static let formatBarHiddenKey = "CartillaFormatBarHidden"
     static let showsPageEdgesKey = "CartillaShowsPageEdges"
     static let zoomKey = "CartillaZoom"
+    static let minimumWidth: CGFloat = 320
+
+    /// Wide enough for the whole format bar and a Letter or A4 page, within the screen's visible area.
+    static var defaultContentSize: NSSize {
+        let visible = NSScreen.main?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
+        // The title bar, toolbar and format bar sit above the content.
+        return NSSize(width: min(1040, visible.width), height: min(1000, max(240, visible.height - 120)))
+    }
 
     init(document: CartillaDocument) {
         let window = DocumentWindow(
@@ -26,8 +34,12 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         outlineItem.minimumThickness = 180
         outlineItem.maximumThickness = 360
         outlineItem.canCollapse = true
+        // In a narrow window the outline gets out of the text's way, as sidebars do in Mail and Notes.
+        outlineItem.canCollapseFromWindowResize = true
         split.addSplitViewItem(outlineItem)
-        split.addSplitViewItem(NSSplitViewItem(viewController: editor))
+        let editorItem = NSSplitViewItem(viewController: editor)
+        editorItem.minimumThickness = Self.minimumWidth
+        split.addSplitViewItem(editorItem)
         // The sidebar's width is remembered; whether it shows is Cartilla's own setting (set after the split
         // view restores its saved state).
         split.splitView.autosaveName = "CartillaOutlineSplit"
@@ -36,8 +48,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         window.contentViewController = split
         // Assigning a content view controller sizes the window to the view's fitting size, which is
         // zero for a scroll view: set the real size afterwards.
-        window.contentMinSize = NSSize(width: 480, height: 320)
-        window.setContentSize(NSSize(width: 900, height: 1000))
+        // Thin enough to sit beside a video call for notes: the format bar overflows, the text rewraps.
+        window.contentMinSize = NSSize(width: Self.minimumWidth, height: 240)
+        window.setContentSize(Self.defaultContentSize)
         // Setting the autosave name restores the saved frame, if any; reject frames that are too small.
         let restored =
             window.setFrameAutosaveName("CartillaDocumentWindow") && window.setFrameUsingName("CartillaDocumentWindow")
@@ -45,7 +58,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         if !restored || window.contentLayoutRect.width < minimum.width
             || window.contentLayoutRect.height < minimum.height
         {
-            window.setContentSize(NSSize(width: 900, height: 1000))
+            window.setContentSize(Self.defaultContentSize)
             window.center()
         }
         window.toolbar = MainToolbar.make()

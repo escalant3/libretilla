@@ -4,7 +4,14 @@ import CartillaDocx
 /// The formatting bar under the toolbar (bootstrap §6), Office 97 style, built from standard
 /// controls: Zoom · Style · Font · Size · B I U S · Text colour · Highlight · Alignment · Lists ·
 /// Indent · Line spacing. It reflects the selection and sends commands to the editor.
+///
+/// It fits any window width: groups that don't fit are hidden from the right, and a » button offers them
+/// as menus (the Format menu's own items), so a thin window works as a note-taking strip.
 final class FormatBarViewController: NSTitlebarAccessoryViewController {
+    /// The bar's groups, left to right; the rightmost go into the overflow menu first.
+    enum Group: CaseIterable {
+        case zoom, style, font, character, color, alignment, lists, spacing
+    }
     /// Receives the commands (the editor). Set before the bar is shown.
     weak var target: AnyObject? {
         didSet { if isViewLoaded { retarget() } }
@@ -24,6 +31,16 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
 
     private var styleSignature = ""
     private var installedFamilies = Set<String>()
+
+    private var groupViews: [(group: Group, view: NSView)] = []
+    /// Each group's width when shown (measured once, all groups visible).
+    private var groupWidths: [CGFloat] = []
+    private let overflow = NSPopUpButton(frame: .zero, pullsDown: true)
+    private let stackSpacing: CGFloat = 6
+    private let sideInsets: CGFloat = 20
+    private var fitScheduled = false
+    /// The groups currently in the overflow menu.
+    private(set) var hiddenGroups: [Group] = []
 
     override init(nibName: NSNib.Name?, bundle: Bundle?) {
         super.init(nibName: nil, bundle: nil)
@@ -133,17 +150,42 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
             accessibilityDescription: String(localized: "Line and paragraph spacing"))
         for item in MainMenu.spacingItems() { spacing.menu?.addItem(item) }
 
-        let stack = NSStackView(views: [
-            zoomPopup, Self.separator(), stylePopup, fontPopup, sizeBox, Self.separator(), traits, colorWell, highlight,
-            Self.separator(),
-            alignment, Self.separator(), lists, indent, spacing,
-        ])
+        overflow.isBordered = true
+        overflow.addItem(withTitle: "")
+        overflow.lastItem?.image = NSImage(
+            systemSymbolName: "chevron.right.2", accessibilityDescription: String(localized: "More formatting"))
+        overflow.setAccessibilityLabel(String(localized: "More formatting"))
+        overflow.toolTip = String(localized: "More formatting")
+        overflow.isHidden = true
+
+        // Each group carries the separator before it, so hiding a group hides its separator too.
+        func group(_ views: [NSView], separated: Bool = true) -> NSStackView {
+            let g = NSStackView(views: (separated ? [Self.separator()] : []) + views)
+            g.orientation = .horizontal
+            g.spacing = stackSpacing
+            g.alignment = .centerY
+            for v in g.arrangedSubviews { (v as? NSControl)?.controlSize = .small }
+            return g
+        }
+        groupViews = [
+            (.zoom, group([zoomPopup], separated: false)),
+            (.style, group([stylePopup])),
+            (.font, group([fontPopup, sizeBox], separated: false)),
+            (.character, group([traits])),
+            (.color, group([colorWell, highlight], separated: false)),
+            (.alignment, group([alignment])),
+            (.lists, group([lists, indent])),
+            (.spacing, group([spacing], separated: false)),
+        ]
+        let stack = NSStackView(views: groupViews.map(\.view) + [overflow])
         stack.orientation = .horizontal
-        stack.spacing = 6
+        stack.spacing = stackSpacing
         stack.alignment = .centerY
-        stack.edgeInsets = NSEdgeInsets(top: 4, left: 10, bottom: 6, right: 10)
+        stack.edgeInsets = NSEdgeInsets(top: 4, left: sideInsets / 2, bottom: 6, right: sideInsets / 2)
         stack.setHuggingPriority(.defaultHigh, for: .vertical)
-        for v in stack.arrangedSubviews { (v as? NSControl)?.controlSize = .small }
+        // The bar never sets the window's minimum width: groups that don't fit go into the overflow menu.
+        stack.setClippingResistancePriority(.defaultLow, for: .horizontal)
+        overflow.controlSize = .small
         sizeBox.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         stylePopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         fontPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
@@ -163,6 +205,91 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         container.setAccessibilityIdentifier("formatBar")
         view = container
         retarget()
+    }
+
+    // MARK: Fitting the width
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        scheduleFit()
+    }
+
+    /// Fits after layout, never during it: hiding views in a layout pass makes AppKit abort.
+    private func scheduleFit() {
+        guard !fitScheduled else { return }
+        fitScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.fitScheduled = false
+            self.fit(width: self.view.bounds.width)
+        }
+    }
+
+    /// Shows as many groups as fit in `width`, left to right, and puts the rest in the overflow menu.
+    func fit(width: CGFloat) {
+        loadViewIfNeeded()
+        if groupWidths.isEmpty {
+            groupWidths = groupViews.map { $0.view.fittingSize.width }
+        }
+        let available = width - sideInsets
+        let overflowWidth = overflow.fittingSize.width + stackSpacing
+        var shown = 0
+        var used: CGFloat = 0
+        for (i, w) in groupWidths.enumerated() {
+            let next = used + (i > 0 ? stackSpacing : 0) + w
+            let isLast = i == groupWidths.count - 1
+            guard next + (isLast ? 0 : overflowWidth) <= available else { break }
+            used = next
+            shown = i + 1
+        }
+        let hidden = groupViews[shown...].map(\.group)
+        guard hidden != hiddenGroups || overflow.isHidden != hidden.isEmpty else { return }
+        hiddenGroups = Array(hidden)
+        for (i, entry) in groupViews.enumerated() where entry.view.isHidden != (i >= shown) {
+            entry.view.isHidden = i >= shown
+        }
+        overflow.isHidden = hidden.isEmpty
+        rebuildOverflowMenu()
+    }
+
+    /// The hidden groups as the Format menu's own submenus (Style, Font, Text, List) plus zoom.
+    private func rebuildOverflowMenu() {
+        guard let menu = overflow.menu else { return }
+        while menu.items.count > 1 { menu.removeItem(at: 1) }
+        let hidden = Set(hiddenGroups)
+        func add(_ submenu: NSMenu) {
+            Self.stripKeyEquivalents(submenu)
+            let item = NSMenuItem(title: submenu.title, action: nil, keyEquivalent: "")
+            item.submenu = submenu
+            menu.addItem(item)
+        }
+        if hidden.contains(.zoom) {
+            let zoom = NSMenu(title: String(localized: "Zoom"))
+            zoom.addItem(
+                withTitle: String(localized: "Zoom In"), action: #selector(EditorViewController.zoomIn(_:)),
+                keyEquivalent: "")
+            zoom.addItem(
+                withTitle: String(localized: "Zoom Out"), action: #selector(EditorViewController.zoomOut(_:)),
+                keyEquivalent: "")
+            zoom.addItem(
+                withTitle: String(localized: "Actual Size"),
+                action: #selector(EditorViewController.zoomToActualSize(_:)), keyEquivalent: "")
+            add(zoom)
+        }
+        if hidden.contains(.style) { add(MainMenu.styleMenu()) }
+        if !hidden.isDisjoint(with: [.font, .character, .color]) { add(MainMenu.fontMenu()) }
+        if !hidden.isDisjoint(with: [.alignment, .lists, .spacing]) { add(MainMenu.textMenu()) }
+        if hidden.contains(.lists) { add(MainMenu.listMenu()) }
+    }
+
+    /// The overflow copies menu items that already have shortcuts in the menu bar; a pop-up button in the
+    /// window would answer them first, so the copies go without.
+    private static func stripKeyEquivalents(_ menu: NSMenu) {
+        for item in menu.items {
+            item.keyEquivalent = ""
+            item.keyEquivalentModifierMask = []
+            if let sub = item.submenu { stripKeyEquivalents(sub) }
+        }
     }
 
     private func configure(
