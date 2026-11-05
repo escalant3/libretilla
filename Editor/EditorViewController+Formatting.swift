@@ -449,6 +449,12 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         guard let action = item.action else { return true }
         if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
+        switch action {
+        case #selector(zoomIn(_:)): return zoom < Self.zoomLevels.last! - 0.001
+        case #selector(zoomOut(_:)): return zoom > Self.zoomLevels.first! + 0.001
+        case #selector(zoomToActualSize(_:)): return abs(zoom - 1) > 0.001
+        default: break
+        }
         let format = currentFormat
         switch action {
         case #selector(toggleBold(_:)): item.state = format.bold ? .on : .off

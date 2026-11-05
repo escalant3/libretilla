@@ -23,6 +23,15 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
             scrollView.backgroundColor = showsPageEdges ? .underPageBackgroundColor : .textBackgroundColor
         }
     }
+    /// View zoom, as in Google Docs: the page is magnified (⌘+ / ⌘− / ⌘0, the format bar, or a pinch);
+    /// the document's font sizes don't change. 1 is 100%.
+    var zoom: CGFloat {
+        get { scrollView?.magnification ?? 1 }
+        set { setZoom(newValue) }
+    }
+    /// Called after the zoom changes (commands, the format bar, or a pinch ending).
+    var onZoomChange: ((CGFloat) -> Void)?
+    static let zoomLevels: [CGFloat] = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2]
     /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
     weak var document: CartillaDocument?
     /// Called (coalesced) when the selection or its formatting changes, for the format bar.
@@ -44,6 +53,12 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     override func loadView() {
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
+        // Zoomed in, the page can be wider than the window.
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        scrollView.allowsMagnification = true
+        scrollView.minMagnification = Self.zoomLevels.first!
+        scrollView.maxMagnification = Self.zoomLevels.last!
         scrollView.drawsBackground = true
         scrollView.backgroundColor = .textBackgroundColor
         scrollView.automaticallyAdjustsContentInsets = true
@@ -89,8 +104,61 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
             // Something forced TextKit 1. Record it as a new gap in docs/TEXTKIT2_GAPS.md.
             Self.log.fault("NSTextView fell back to TextKit 1")
         }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(didEndLiveMagnify), name: NSScrollView.didEndLiveMagnifyNotification,
+            object: scrollView)
         view = scrollView
         apply(pageSetup)
+    }
+
+    // MARK: Zoom
+
+    @objc func zoomIn(_ sender: Any?) {
+        setZoom(Self.zoomLevels.first { $0 > zoom + 0.001 } ?? zoom)
+    }
+
+    @objc func zoomOut(_ sender: Any?) {
+        setZoom(Self.zoomLevels.last { $0 < zoom - 0.001 } ?? zoom)
+    }
+
+    @objc func zoomToActualSize(_ sender: Any?) { setZoom(1) }
+
+    /// The format bar's zoom menu (the item's represented object is the zoom).
+    @objc func applyZoom(_ sender: Any?) {
+        let item = (sender as? NSPopUpButton)?.selectedItem ?? sender as? NSMenuItem
+        if let value = item?.representedObject as? CGFloat { setZoom(value) }
+        view.window?.makeFirstResponder(textView)
+    }
+
+    private func setZoom(_ value: CGFloat) {
+        loadViewIfNeeded()
+        let clamped = min(max(value, scrollView.minMagnification), scrollView.maxMagnification)
+        // As in Google Docs: the line in the middle of the window stays there, and the page stays
+        // centred across (when it's wider than the window, the view shows its middle).
+        let anchor = scrollView.documentVisibleRect.midY
+        scrollView.magnification = clamped
+        fitCanvas()
+        let clip = scrollView.contentView
+        let visible = scrollView.documentVisibleRect.size
+        let x = (canvas.frame.width - clip.bounds.width) / 2
+        let wanted = NSRect(x: x, y: anchor - visible.height / 2, width: clip.bounds.width, height: clip.bounds.height)
+        clip.scroll(to: clip.constrainBoundsRect(wanted).origin)
+        scrollView.reflectScrolledClipView(clip)
+        onZoomChange?(scrollView.magnification)
+    }
+
+    /// Resizes the canvas for the zoom, then lets the scroll view show or hide its scrollers for the new
+    /// size (which changes the clip's size, so the canvas is fitted again).
+    private func fitCanvas() {
+        canvas.layoutSubtreeIfNeeded()
+        scrollView.tile()
+        canvas.needsLayout = true
+        canvas.layoutSubtreeIfNeeded()
+    }
+
+    @objc private func didEndLiveMagnify(_ note: Notification) {
+        fitCanvas()
+        onZoomChange?(scrollView.magnification)
     }
 
     // MARK: Page
@@ -317,6 +385,22 @@ final class PageCanvasView: NSView {
 
     override var isFlipped: Bool { true }
 
+    /// Zooming changes the clip view's bounds (not its frame): lay out again to keep the page centred.
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        guard let clip = superview else { return }
+        clip.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(clipBoundsChanged), name: NSView.boundsDidChangeNotification, object: clip)
+    }
+
+    private var clipWidth: CGFloat = 0
+    @objc private func clipBoundsChanged(_ note: Notification) {
+        guard let width = superview?.bounds.width, abs(width - clipWidth) > 0.5 else { return }
+        clipWidth = width
+        needsLayout = true
+    }
+
     @objc private func pageFrameChanged(_ note: Notification) {
         needsLayout = true
         needsDisplay = true
@@ -325,8 +409,16 @@ final class PageCanvasView: NSView {
     override func layout() {
         super.layout()
         guard let page, let clip = superview else { return }
-        let width = max(clip.bounds.width, pageWidth + 2 * padding)
-        let height = max(clip.bounds.height, page.frame.height + 2 * padding)
+        // Rounded down: zoomed, the clip's bounds are fractional, and a canvas a fraction wider than
+        // them would bring up a horizontal scroller.
+        // The clip's bounds include the space under the title bar and format bar (the scroll view's
+        // insets), which the canvas mustn't fill or a short document would scroll.
+        let insets =
+            (clip.superview as? NSScrollView).map {
+                ($0.contentInsets.top + $0.contentInsets.bottom) / $0.magnification
+            } ?? 0
+        let width = max(clip.bounds.width.rounded(.down), pageWidth + 2 * padding)
+        let height = max((clip.bounds.height - insets).rounded(.down), page.frame.height + 2 * padding)
         if frame.size != NSSize(width: width, height: height) {
             setFrameSize(NSSize(width: width, height: height))
         }

@@ -144,6 +144,15 @@ enum MainMenu {
         menu.addItem(
             item(String(localized: "Show Page Edges"), #selector(DocumentWindowController.togglePageEdges(_:))))
         menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Actual Size"), #selector(EditorViewController.zoomToActualSize(_:)), "0"))
+        menu.addItem(item(String(localized: "Zoom In"), #selector(EditorViewController.zoomIn(_:)), "+"))
+        // ⌘= zooms in too, without Shift (as in browsers).
+        let zoomInEquals = item(String(localized: "Zoom In"), #selector(EditorViewController.zoomIn(_:)), "=")
+        zoomInEquals.isHidden = true
+        zoomInEquals.allowsKeyEquivalentWhenHidden = true
+        menu.addItem(zoomInEquals)
+        menu.addItem(item(String(localized: "Zoom Out"), #selector(EditorViewController.zoomOut(_:)), "-"))
+        menu.addItem(.separator())
         menu.addItem(
             item(
                 String(localized: "Enter Full Screen"), #selector(NSWindow.toggleFullScreen(_:)), "f",
@@ -193,8 +202,9 @@ enum MainMenu {
                 String(localized: "Strikethrough"), #selector(EditorViewController.toggleStrikethrough(_:)), "x",
                 [.command, .shift]))
         menu.addItem(.separator())
-        menu.addItem(item(String(localized: "Bigger"), #selector(EditorViewController.increaseFontSize(_:)), "+"))
-        menu.addItem(item(String(localized: "Smaller"), #selector(EditorViewController.decreaseFontSize(_:)), "-"))
+        // ⇧⌘> / ⇧⌘<, as in Google Docs (⌘+ / ⌘− zoom: View menu).
+        menu.addItem(item(String(localized: "Bigger"), #selector(EditorViewController.increaseFontSize(_:)), ">"))
+        menu.addItem(item(String(localized: "Smaller"), #selector(EditorViewController.decreaseFontSize(_:)), "<"))
         menu.addItem(.separator())
         menu.addItem(
             item(

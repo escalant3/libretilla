@@ -6,6 +6,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     private let formatBar = FormatBarViewController()
     static let formatBarHiddenKey = "CartillaFormatBarHidden"
     static let showsPageEdgesKey = "CartillaShowsPageEdges"
+    static let zoomKey = "CartillaZoom"
 
     init(document: CartillaDocument) {
         let window = DocumentWindow(
@@ -46,6 +47,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             self.formatBar.update(format, bridge: bridge, editable: self.editor.textView.isEditable)
         }
         editor.showsPageEdges = UserDefaults.standard.bool(forKey: Self.showsPageEdgesKey)
+        // The zoom is remembered for every window, like page edges.
+        let savedZoom = UserDefaults.standard.double(forKey: Self.zoomKey)
+        editor.zoom = savedZoom > 0 ? savedZoom : 1
+        formatBar.showZoom(editor.zoom)
+        editor.onZoomChange = { [weak self] zoom in
+            UserDefaults.standard.set(Double(zoom), forKey: Self.zoomKey)
+            self?.formatBar.showZoom(zoom)
+        }
         editor.apply(document.pageSetup)
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)

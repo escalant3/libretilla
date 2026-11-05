@@ -2,7 +2,7 @@ import AppKit
 import CartillaDocx
 
 /// The formatting bar under the toolbar (bootstrap §6), Office 97 style, built from standard
-/// controls: Style · Font · Size · B I U S · Text colour · Highlight · Alignment · Lists ·
+/// controls: Zoom · Style · Font · Size · B I U S · Text colour · Highlight · Alignment · Lists ·
 /// Indent · Line spacing. It reflects the selection and sends commands to the editor.
 final class FormatBarViewController: NSTitlebarAccessoryViewController {
     /// Receives the commands (the editor). Set before the bar is shown.
@@ -10,6 +10,7 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         didSet { if isViewLoaded { retarget() } }
     }
 
+    private let zoomPopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private let stylePopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private let fontPopup = NSPopUpButton(frame: .zero, pullsDown: false)
     private let sizeBox = NSComboBox()
@@ -35,6 +36,15 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     // MARK: Building
 
     override func loadView() {
+        for level in EditorViewController.zoomLevels {
+            zoomPopup.addItem(withTitle: Self.zoomText(level))
+            zoomPopup.lastItem?.representedObject = level
+        }
+        zoomPopup.setAccessibilityLabel(String(localized: "Zoom"))
+        zoomPopup.toolTip = String(localized: "Zoom")
+        zoomPopup.action = #selector(EditorViewController.applyZoom(_:))
+        zoomPopup.widthAnchor.constraint(equalToConstant: 68).isActive = true
+
         stylePopup.setAccessibilityLabel(String(localized: "Paragraph style"))
         stylePopup.toolTip = String(localized: "Paragraph style")
         stylePopup.action = #selector(EditorViewController.applyParagraphStyle(_:))
@@ -120,7 +130,8 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         for item in MainMenu.spacingItems() { spacing.menu?.addItem(item) }
 
         let stack = NSStackView(views: [
-            stylePopup, fontPopup, sizeBox, Self.separator(), traits, colorWell, highlight, Self.separator(),
+            zoomPopup, Self.separator(), stylePopup, fontPopup, sizeBox, Self.separator(), traits, colorWell, highlight,
+            Self.separator(),
             alignment, Self.separator(), lists, indent, spacing,
         ])
         stack.orientation = .horizontal
@@ -132,6 +143,7 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         sizeBox.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         stylePopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         fontPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        zoomPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
 
         let container = NSView()
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -165,7 +177,9 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     }
 
     private func retarget() {
-        for control in [stylePopup, fontPopup, sizeBox, traits, colorWell, alignment, lists, indent] as [NSControl] {
+        for control in [zoomPopup, stylePopup, fontPopup, sizeBox, traits, colorWell, alignment, lists, indent]
+            as [NSControl]
+        {
             control.target = target
         }
         for item in (highlight.menu?.items ?? []) + (spacing.menu?.items ?? []) where item.action != nil {
@@ -179,6 +193,28 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         box.heightAnchor.constraint(equalToConstant: 16).isActive = true
         return box
     }
+
+    static func zoomText(_ zoom: CGFloat) -> String { "\(Int((zoom * 100).rounded()))%" }
+
+    /// Shows the zoom; a level from a pinch that isn't in the list is shown while it lasts.
+    func showZoom(_ zoom: CGFloat) {
+        loadViewIfNeeded()
+        while let extra = zoomPopup.itemArray.firstIndex(where: { $0.tag == Self.pinchZoomTag }) {
+            zoomPopup.removeItem(at: extra)
+        }
+        if let item = zoomPopup.itemArray.first(where: { abs(($0.representedObject as? CGFloat ?? 0) - zoom) < 0.005 })
+        {
+            zoomPopup.select(item)
+            return
+        }
+        let index = EditorViewController.zoomLevels.firstIndex { $0 > zoom } ?? EditorViewController.zoomLevels.count
+        zoomPopup.insertItem(withTitle: Self.zoomText(zoom), at: index)
+        let item = zoomPopup.item(at: index)!
+        item.tag = Self.pinchZoomTag
+        item.representedObject = zoom
+        zoomPopup.select(item)
+    }
+    private static let pinchZoomTag = -1
 
     static func sizeText(_ size: Double) -> String {
         size.rounded() == size ? String(Int(size)) : String(format: "%.1f", size)
