@@ -22,6 +22,16 @@
         }
       }
     },
+    "Actual Size": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño real"
+          }
+        }
+      }
+    },
     "Add Column": {
       "localizations": {
         "es": {
@@ -202,6 +212,26 @@
         }
       }
     },
+    "Centimeters": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centímetros"
+          }
+        }
+      }
+    },
+    "Character style": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estilo de carácter"
+          }
+        }
+      }
+    },
     "Clear Formatting": {
       "localizations": {
         "es": {
@@ -242,12 +272,45 @@
         }
       }
     },
+    "Column break": {
+      "comment": "Chip shown for a column break",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salto de columna"
+          }
+        }
+      }
+    },
     "Columns": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Columnas"
+          }
+        }
+      }
+    },
+    "Comment": {
+      "comment": "Placeholder for a comment reference",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comentario"
+          }
+        }
+      }
+    },
+    "Content control": {
+      "comment": "Placeholder for a Word content control",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control de contenido"
           }
         }
       }
@@ -278,6 +341,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cortar"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscura"
           }
         }
       }
@@ -382,12 +455,34 @@
         }
       }
     },
+    "Endnote": {
+      "comment": "Placeholder for an endnote reference",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota al final"
+          }
+        }
+      }
+    },
     "Enter Full Screen": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Entrar en pantalla completa"
+          }
+        }
+      }
+    },
+    "Equation": {
+      "comment": "Placeholder for an equation",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ecuación"
           }
         }
       }
@@ -492,6 +587,17 @@
         }
       }
     },
+    "Footnote": {
+      "comment": "Placeholder for a footnote reference",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota al pie"
+          }
+        }
+      }
+    },
     "Format": {
       "localizations": {
         "es": {
@@ -592,6 +698,26 @@
         }
       }
     },
+    "Heading level %lld": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Título de nivel %lld"
+          }
+        }
+      }
+    },
+    "Headings you add to the document appear here.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los títulos que añadas al documento aparecen aquí."
+          }
+        }
+      }
+    },
     "Help": {
       "localizations": {
         "es": {
@@ -628,6 +754,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ocultar otros"
+          }
+        }
+      }
+    },
+    "Hide Outline": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar esquema"
           }
         }
       }
@@ -678,6 +814,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Imagen…"
+          }
+        }
+      }
+    },
+    "Inches": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulgadas"
           }
         }
       }
@@ -752,6 +898,16 @@
         }
       }
     },
+    "Light, as printed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clara, como impresa"
+          }
+        }
+      }
+    },
     "Line Spacing": {
       "localizations": {
         "es": {
@@ -808,6 +964,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lista"
+          }
+        }
+      }
+    },
+    "Lists": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listas"
           }
         }
       }
@@ -872,6 +1038,17 @@
         }
       }
     },
+    "Object": {
+      "comment": "Placeholder for an embedded object",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objeto"
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "es": {
@@ -902,6 +1079,16 @@
         }
       }
     },
+    "Outline": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esquema"
+          }
+        }
+      }
+    },
     "Page Break": {
       "localizations": {
         "es": {
@@ -928,6 +1115,27 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ajustar página…"
+          }
+        }
+      }
+    },
+    "Page break": {
+      "comment": "Chip shown for a page break",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salto de página"
+          }
+        }
+      }
+    },
+    "Page in Dark Mode": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página en modo oscuro"
           }
         }
       }
@@ -978,6 +1186,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rosa"
+          }
+        }
+      }
+    },
+    "Points": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puntos"
           }
         }
       }
@@ -1152,6 +1370,16 @@
         }
       }
     },
+    "Ruler units": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidades de la regla"
+          }
+        }
+      }
+    },
     "Save": {
       "localizations": {
         "es": {
@@ -1182,6 +1410,17 @@
         }
       }
     },
+    "Section": {
+      "comment": "Placeholder for a section break",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sección"
+          }
+        }
+      }
+    },
     "Select All": {
       "localizations": {
         "es": {
@@ -1198,6 +1437,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Servicios"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes…"
           }
         }
       }
@@ -1242,6 +1501,16 @@
         }
       }
     },
+    "Show Outline": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar esquema"
+          }
+        }
+      }
+    },
     "Show Page Edges": {
       "localizations": {
         "es": {
@@ -1258,6 +1527,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrar regla"
+          }
+        }
+      }
+    },
+    "Show format bar": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar barra de formato"
+          }
+        }
+      }
+    },
+    "Show page edges": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar bordes de página"
           }
         }
       }
@@ -1332,6 +1621,28 @@
         }
       }
     },
+    "Symbol": {
+      "comment": "Placeholder for a symbol character",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Símbolo"
+          }
+        }
+      }
+    },
+    "Table, %lld × %lld": {
+      "comment": "Placeholder for a table: rows × columns",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabla, %lld × %lld"
+          }
+        }
+      }
+    },
     "Table…": {
       "localizations": {
         "es": {
@@ -1358,6 +1669,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Color del texto"
+          }
+        }
+      }
+    },
+    "Text box": {
+      "comment": "Placeholder for a text box in the document",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuadro de texto"
           }
         }
       }
@@ -1518,6 +1840,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zoom"
+          }
+        }
+      }
+    },
+    "Zoom In": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ampliar"
+          }
+        }
+      }
+    },
+    "Zoom Out": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reducir"
           }
         }
       }

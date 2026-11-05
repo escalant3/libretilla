@@ -27,6 +27,9 @@ changed: re-check the gap, update its status, and remove any workaround that's n
 - `.superscript` is honoured by TK2 (raised, full size, as in TextEdit).
 - Marked text (dead keys, input methods) doesn't leave formatting behind (`testDeadKeysAndInputMethodsDoNotLeaveFormatting`).
 - Find and Replace through the find bar (`testFindAndReplaceAll`).
+- Rendering attributes (`NSTextLayoutManager.renderingAttributesValidator`) recolour text for display without
+  touching the storage: the dark page draws dark Word colours lighter (M4, `testDarkModeDoesNotChangeTheDocument`).
+- A custom heading rotor (`NSAccessibilityCustomRotor`) on the TK2 text view reaches each heading by its range (M4).
 
 ## To verify (unknown, check when the feature is built)
 
@@ -34,4 +37,7 @@ changed: re-check the gap, update its status, and remove any workaround that's n
 - Page-break rendering in the continuous view, and in print/PDF (M3)
 - Find bar, spell check and autocorrect speed on large documents (bridge work per keystroke is under 0.1 ms on
   `09-large.docx`; the text view itself hasn't been profiled)
-- VoiceOver navigation and the heading rotor (M4)
+- VoiceOver navigation with a real VoiceOver session: the heading rotor is unit-tested and the window passes
+  XCTest's accessibility audit, but nobody has driven it with VoiceOver yet (M4)
+- Tables, chips and pictures on a dark page: they're attachments, so the rendering-attribute recolouring doesn't
+  reach the text drawn inside them (M4)

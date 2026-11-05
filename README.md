@@ -4,10 +4,10 @@
 is `.docx`**: you open a Word document, write, and it's saved back to that same file automatically, with no Save
 dialogs. You can export to PDF. There's no ribbon, no AI and no cloud.
 
-> **Status: Milestone 2.** Opens `.docx`, autosaves edits back to the same file losslessly, and has the
-> everyday formatting tools: a format bar, Word styles and headings, bulleted and numbered lists, alignment,
-> spacing, a ruler, and Find and Replace. Tables, images and links arrive in Milestone 3. See
-> [`docs/STATUS.md`](docs/STATUS.md).
+> **Status: Milestone 4.** Opens `.docx` and autosaves edits back to the same file, losslessly. It has the
+> everyday formatting tools, plus tables, images, links, page setup and PDF export. M4 adds an outline sidebar,
+> a Dark Mode page, VoiceOver headings, Settings, and English and Spanish throughout. Release work (signing,
+> DMG) is next. See [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Requirements
 

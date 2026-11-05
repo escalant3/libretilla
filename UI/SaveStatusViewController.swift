@@ -20,9 +20,12 @@ final class SaveStatusViewController: NSTitlebarAccessoryViewController {
         let container = NSView()
         label.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(label)
+        // The accessory starts at zero width before the title bar lays it out: let the trailing edge give.
+        let trailing = label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12)
+        trailing.priority = .defaultHigh
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
-            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+            trailing,
             label.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             label.widthAnchor.constraint(lessThanOrEqualToConstant: 260),
         ])

@@ -9,6 +9,8 @@ final class PrintTextView: NSTextView {
 
     convenience init(text: NSAttributedString, width: CGFloat) {
         self.init(usingTextLayoutManager: true)
+        // Paper is white: automatic text colour prints black even when the app is in Dark Mode.
+        appearance = NSAppearance(named: .aqua)
         frame = NSRect(x: 0, y: 0, width: width, height: 100)
         isVerticallyResizable = true
         textContainerInset = .zero

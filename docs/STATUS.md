@@ -132,7 +132,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - Copy and paste inside Cartilla goes through RTF, so pasted runs get formats derived from their look. Links
   and other objects paste as plain text.
 - Superscript and subscript display at full size (TextKit 2 default), not reduced as in Word.
-- Text colours are written as chosen; a black run stays black on the dark page in Dark Mode (M4 dark-mode pass).
+- Text colours are written as chosen. (Since M4, a dark page draws dark colours lighter, for display only.)
 - No Paragraph… dialog yet for exact spacing and indent values; use the ruler, the spacing menu or the indent
   buttons.
 
@@ -200,3 +200,55 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 
 **Milestone 3 features are all in.** Still open: `w:pageBreakBefore` doesn't break pages in print yet. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
 print yet.
+
+## Milestone 4: Polish (2026-11-05)
+
+**Done**
+
+- **Outline sidebar** (View ▸ Show Outline ⌃⌘S, or the toolbar's sidebar button). It lists the Title and
+  Heading 1–9 paragraphs, found by Word's canonical style names (so localized Word files work) and by `basedOn`
+  (`StyleSheet.outlineLevel`). It updates 0.3 s after typing stops, and clicking a heading (or Return) moves the
+  caret there and scrolls it to the top. The row for the heading the caret is under is selected. Whether it
+  shows is remembered; it's hidden by default.
+- **Dark Mode pass.**
+  - The page follows the appearance: automatic text is white on a dark page. Dark colours Word chose for a
+    white page (black, navy headings, link blue) are drawn lighter until they reach 4.5:1, keeping their hue.
+    Text on a highlight is drawn dark.
+  - This is display only (TextKit 2 rendering attributes): the document's colours, undo and autosave are untouched.
+  - **Printing and PDF export are always on white paper.** Before M4, automatic text exported in Dark Mode came
+    out white on white.
+  - Settings ▸ Page in Dark Mode ▸ "Light, as printed" keeps a white page with its real colours; the canvas and
+    chrome stay dark.
+- **Accessibility.**
+  - VoiceOver's rotor lists headings (`NSAccessibilityCustomRotor`).
+  - The format bar's segmented groups (Character style, Alignment, Lists, Indent), the outline and Settings are
+    labelled.
+  - The outline keeps full-contrast text, including its selected row.
+  - `PolishUITests.testAccessibilityAudit` runs XCTest's audit on a document window (outline shown) and on
+    Settings. It fails on any issue except, documented in the test: the document's own text colours, AppKit's
+    window title, window tab and window buttons, and NSTextView's off-screen Touch Bar.
+- **Settings** (Cartilla ▸ Settings… ⌘,): page in Dark Mode, page edges, format bar, and ruler units
+  (centimetres, inches or points; the default follows the locale). Changes apply to open windows at once.
+  Settings opens on the screen of the window you're working in.
+- **Localization.** Every string the code localizes has Spanish; `LocalizationTests` fails if one doesn't.
+  Placeholder chips (Footnote, Text box, Page break, "Table, 3 × 4"…) are now translated too, through
+  `AttributedStringBridge.localizeLabel`, which the app sets.
+- Fixed in passing: the save status accessory's conflicting constraints at window creation.
+- **Tests:**
+  - 1 package test (`outlineLevelsFollowWordsHeadingNames`).
+  - 18 app tests (`PolishTests`, `LocalizationTests`).
+  - 4 UI tests (`PolishUITests`: outline with real keys and clicks, Settings changing an open window, Dark
+    Mode screenshots, the accessibility audit).
+- UI tests only: `-CartillaUITestFreshDefaults YES` clears Cartilla's settings at launch, and
+  `-CartillaUITestAppearance Dark|Light` forces an appearance.
+
+**Not yet verified**
+
+- A real VoiceOver session (the rotor is unit-tested, the audit passes).
+- Tables, chips and pictures on a dark page: the text drawn inside them isn't recoloured.
+
+**Found, not fixed**
+
+- On macOS 26 the "Saved / Saving…" label beside the title doesn't show: the trailing title-bar accessory is
+  laid out at zero width, outside the window. AppKit's own subtitle ("Edited") shows instead.
+

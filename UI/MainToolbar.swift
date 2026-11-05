@@ -1,6 +1,6 @@
 import AppKit
 
-/// Compact, unlabeled SF Symbols toolbar (bootstrap §6). M1 stub: New, Open, Print | Undo, Redo.
+/// Compact, unlabeled SF Symbols toolbar (bootstrap §6): Outline | New, Open, Print | Undo, Redo.
 /// No Save button: documents autosave.
 @MainActor
 enum MainToolbar {
@@ -22,6 +22,9 @@ enum MainToolbar {
 
     static let items: [Item] = [
         Item(
+            id: .init("outline"), label: String(localized: "Outline"), symbol: "sidebar.left",
+            action: #selector(DocumentWindowController.toggleOutline(_:))),
+        Item(
             id: .init("new"), label: String(localized: "New"), symbol: "square.and.pencil",
             action: #selector(NSDocumentController.newDocument(_:))),
         Item(
@@ -42,7 +45,7 @@ enum MainToolbar {
         static let shared = Delegate()
 
         func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-            [items[0].id, items[1].id, items[2].id, .space, items[3].id, items[4].id]
+            [items[0].id, .space, items[1].id, items[2].id, items[3].id, .space, items[4].id, items[5].id]
         }
 
         func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {

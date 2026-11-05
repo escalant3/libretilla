@@ -44,6 +44,8 @@ enum MainMenu {
                 String(localized: "About Cartilla"),
                 #selector(NSApplication.orderFrontStandardAboutPanel(_:))))
         menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Settings…"), #selector(AppDelegate.showSettings(_:)), ","))
+        menu.addItem(.separator())
         let services = NSMenu(title: String(localized: "Services"))
         let servicesItem = NSMenuItem(title: services.title, action: nil, keyEquivalent: "")
         servicesItem.submenu = services
@@ -136,6 +138,10 @@ enum MainMenu {
 
     private static func viewMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "View"))
+        menu.addItem(
+            item(
+                String(localized: "Show Outline"), #selector(DocumentWindowController.toggleOutline(_:)), "s",
+                [.command, .control]))
         menu.addItem(
             item(
                 String(localized: "Hide Format Bar"), #selector(DocumentWindowController.toggleFormatBar(_:)), "b",

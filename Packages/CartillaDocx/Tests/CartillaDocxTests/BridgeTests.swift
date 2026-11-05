@@ -178,4 +178,17 @@ import Testing
         #expect(font.pointSize == 16)
         #expect(NSFontManager.shared.traits(of: font).contains(.boldFontMask))
     }
+
+    @Test func outlineLevelsFollowWordsHeadingNames() throws {
+        let (doc, _, _) = try load("02-headings.docx")
+        let styles = doc.styles
+        let heading1 = try #require(styles.styleId(named: "heading 1"))
+        let heading2 = try #require(styles.styleId(named: "heading 2"))
+        #expect(styles.outlineLevel(ofParagraphStyle: heading1) == 1)
+        #expect(styles.outlineLevel(ofParagraphStyle: heading2) == 2)
+        #expect(styles.outlineLevel(ofParagraphStyle: nil) == nil, "Normal is body text")
+        if let title = styles.styleId(named: "Title") { #expect(styles.outlineLevel(ofParagraphStyle: title) == 0) }
+        #expect(StyleSheet.outlineLevel(name: "Heading 10") == nil)
+        #expect(StyleSheet.outlineLevel(name: "heading") == nil)
+    }
 }

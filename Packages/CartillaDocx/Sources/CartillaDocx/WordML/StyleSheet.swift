@@ -112,6 +112,24 @@ public struct StyleSheet: Sendable {
 
     /// Display name of a style, e.g. "heading 1".
     public func name(of id: String?) -> String? { id.flatMap { styles[$0]?.name } }
+
+    /// The outline level of a paragraph style, for the outline sidebar and VoiceOver's heading rotor:
+    /// 0 for Title, 1–9 for "heading 1"…"heading 9" (Word's canonical names, which localized Word keeps),
+    /// nil for body text. A style based on a heading is a heading of that level, as in Word.
+    public func outlineLevel(ofParagraphStyle id: String?) -> Int? {
+        for style in chain(id ?? defaultParagraphStyleId).reversed() where style.type == "paragraph" {
+            if let level = Self.outlineLevel(name: style.name) { return level }
+        }
+        return nil
+    }
+
+    static func outlineLevel(name: String) -> Int? {
+        let n = name.lowercased()
+        if n == "title" { return 0 }
+        guard n.hasPrefix("heading "), let level = Int(n.dropFirst("heading ".count)), (1...9).contains(level)
+        else { return nil }
+        return level
+    }
 }
 
 extension RunProperties {

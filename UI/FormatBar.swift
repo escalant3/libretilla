@@ -72,7 +72,8 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         sizeBox.widthAnchor.constraint(equalToConstant: 58).isActive = true
 
         configure(
-            traits, mode: .selectAny, action: #selector(EditorViewController.formatBarToggleTrait(_:)),
+            traits, label: String(localized: "Character style"), mode: .selectAny,
+            action: #selector(EditorViewController.formatBarToggleTrait(_:)),
             segments: [
                 ("bold", String(localized: "Bold")), ("italic", String(localized: "Italic")),
                 ("underline", String(localized: "Underline")), ("strikethrough", String(localized: "Strikethrough")),
@@ -100,7 +101,8 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         }
 
         configure(
-            alignment, mode: .selectOne, action: #selector(EditorViewController.applyAlignment(_:)),
+            alignment, label: String(localized: "Alignment"), mode: .selectOne,
+            action: #selector(EditorViewController.applyAlignment(_:)),
             segments: [
                 ("text.alignleft", String(localized: "Align Left")),
                 ("text.aligncenter", String(localized: "Center")),
@@ -108,13 +110,15 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
                 ("text.justify", String(localized: "Justify")),
             ])
         configure(
-            lists, mode: .selectAny, action: #selector(EditorViewController.formatBarToggleList(_:)),
+            lists, label: String(localized: "Lists"), mode: .selectAny,
+            action: #selector(EditorViewController.formatBarToggleList(_:)),
             segments: [
                 ("list.bullet", String(localized: "Bulleted List")),
                 ("list.number", String(localized: "Numbered List")),
             ])
         configure(
-            indent, mode: .momentary, action: #selector(EditorViewController.formatBarIndent(_:)),
+            indent, label: String(localized: "Indent"), mode: .momentary,
+            action: #selector(EditorViewController.formatBarIndent(_:)),
             segments: [
                 ("decrease.indent", String(localized: "Decrease Indent")),
                 ("increase.indent", String(localized: "Increase Indent")),
@@ -162,9 +166,11 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     }
 
     private func configure(
-        _ control: NSSegmentedControl, mode: NSSegmentedControl.SwitchTracking, action: Selector,
+        _ control: NSSegmentedControl, label: String, mode: NSSegmentedControl.SwitchTracking, action: Selector,
         segments: [(symbol: String, label: String)]
     ) {
+        // VoiceOver names the group as well as each segment (accessibility audit).
+        control.setAccessibilityLabel(label)
         control.segmentCount = segments.count
         control.trackingMode = mode
         control.action = action

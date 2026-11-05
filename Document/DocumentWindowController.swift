@@ -4,6 +4,11 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     private let editor = EditorViewController()
     private let status = SaveStatusViewController()
     private let formatBar = FormatBarViewController()
+    private let outline = OutlineViewController()
+    private let split = NSSplitViewController()
+    private var outlineItem: NSSplitViewItem!
+    private var outlineShown = false
+    nonisolated(unsafe) private var defaultsObserver: (any NSObjectProtocol)?
     static let formatBarHiddenKey = "CartillaFormatBarHidden"
     static let showsPageEdgesKey = "CartillaShowsPageEdges"
     static let zoomKey = "CartillaZoom"
@@ -16,7 +21,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         window.tabbingMode = .preferred
         window.titlebarSeparatorStyle = .automatic
         window.toolbarStyle = .unified
-        window.contentViewController = editor
+        // The outline is a sidebar beside the editor (View ▸ Show Outline ⌃⌘S), hidden by default.
+        let outlineItem = NSSplitViewItem(sidebarWithViewController: outline)
+        outlineItem.minimumThickness = 180
+        outlineItem.maximumThickness = 360
+        outlineItem.canCollapse = true
+        split.addSplitViewItem(outlineItem)
+        split.addSplitViewItem(NSSplitViewItem(viewController: editor))
+        // The sidebar's width is remembered; whether it shows is Cartilla's own setting (set after the split
+        // view restores its saved state).
+        split.splitView.autosaveName = "CartillaOutlineSplit"
+        outlineShown = UserDefaults.standard.bool(forKey: Preferences.outlineShownKey)
+        outlineItem.isCollapsed = !outlineShown
+        window.contentViewController = split
         // Assigning a content view controller sizes the window to the view's fitting size, which is
         // zero for a scroll view: set the real size afterwards.
         window.contentMinSize = NSSize(width: 480, height: 320)
@@ -36,6 +53,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         formatBar.target = editor
         window.addTitlebarAccessoryViewController(formatBar)
         formatBar.isHidden = UserDefaults.standard.bool(forKey: Self.formatBarHiddenKey)
+        self.outlineItem = outlineItem
         super.init(window: window)
         window.delegate = self
         shouldCascadeWindows = true
@@ -55,6 +73,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             UserDefaults.standard.set(Double(zoom), forKey: Self.zoomKey)
             self?.formatBar.showZoom(zoom)
         }
+        outline.onSelect = { [weak self] heading in self?.editor.go(to: heading) }
+        editor.onHeadingsChange = { [weak self] headings in
+            guard let self else { return }
+            self.outline.show(headings)
+            self.outline.followCaret(at: self.editor.textView.selectedRange().location)
+        }
+        editor.onCaretMove = { [weak self] location in self?.outline.followCaret(at: location) }
+        applyPreferences()
+        defaultsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applyPreferences() }
+        }
         editor.apply(document.pageSetup)
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)
@@ -65,6 +96,24 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+
+    deinit {
+        if let defaultsObserver { NotificationCenter.default.removeObserver(defaultsObserver) }
+    }
+
+    /// Applies Settings (and the View menu's remembered choices) to this window. Called for every defaults
+    /// change, so it only touches what differs.
+    func applyPreferences() {
+        editor.loadViewIfNeeded()
+        let defaults = UserDefaults.standard
+        let light = Preferences.keepsPageLight
+        if editor.keepsPageLight != light { editor.keepsPageLight = light }
+        let edges = defaults.bool(forKey: Self.showsPageEdgesKey)
+        if editor.showsPageEdges != edges { editor.showsPageEdges = edges }
+        let barHidden = defaults.bool(forKey: Self.formatBarHiddenKey)
+        if formatBar.isHidden != barHidden { formatBar.isHidden = barHidden }
+        editor.textView.applyRulerUnits()
+    }
 
     override var document: AnyObject? {
         didSet {
@@ -96,7 +145,20 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         UserDefaults.standard.set(editor.showsPageEdges, forKey: Self.showsPageEdgesKey)
     }
 
+    /// View ▸ Show/Hide Outline (⌃⌘S); remembered for new windows.
+    @objc func toggleOutline(_ sender: Any?) {
+        outlineShown.toggle()
+        if outlineShown { editor.updateOutline() }
+        outlineItem.animator().isCollapsed = !outlineShown
+        UserDefaults.standard.set(outlineShown, forKey: Preferences.outlineShownKey)
+    }
+
+    var isOutlineShown: Bool { outlineShown }
+
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
+        if item.action == #selector(toggleOutline(_:)) {
+            item.title = isOutlineShown ? String(localized: "Hide Outline") : String(localized: "Show Outline")
+        }
         if item.action == #selector(togglePageEdges(_:)) {
             item.title =
                 editor.showsPageEdges ? String(localized: "Hide Page Edges") : String(localized: "Show Page Edges")

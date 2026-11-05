@@ -150,7 +150,7 @@ public struct AttributedStringBridge: Sendable {
 
     func blockText(_ o: OpaqueBlock, leadingBlocks: [OpaqueBlock]) -> NSAttributedString {
         if let table = tableText(o, leadingBlocks: leadingBlocks) { return table }
-        var label = o.summary
+        var label = Self.localizeLabel(o.summary)
         let preview = o.visibleText.replacingOccurrences(of: "\n", with: " · ").trimmingCharacters(in: .whitespaces)
         if !preview.isEmpty { label += ": " + String(preview.prefix(80)) + (preview.count > 80 ? "…" : "") }
         let (_, run) = styles.resolveParagraphStyle(nil)
@@ -586,8 +586,13 @@ extension AttributedStringBridge {
         return NSAttributedString(string: pageBreakCharacter, attributes: pageBreakAttributes(attrs))
     }
 
+    /// Translates a chip's English label ("Footnote", "Table, 3 × 4") for display. The model keeps the English
+    /// labels; the app, which has the string catalog, sets this.
+    nonisolated(unsafe) public static var localizeLabel: (String) -> String = { $0 }
+
     /// A small rounded "chip" standing in for content the editor can't show yet.
-    static func placeholderAttachment(_ label: String, font: NSFont?) -> NSTextAttachment {
+    static func placeholderAttachment(_ english: String, font: NSFont?) -> NSTextAttachment {
+        let label = localizeLabel(english)
         let font = NSFont.systemFont(ofSize: max(9, (font?.pointSize ?? 11) * 0.85))
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.secondaryLabelColor]
         let textSize = (label as NSString).size(withAttributes: attrs)

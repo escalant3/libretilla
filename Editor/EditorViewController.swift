@@ -20,7 +20,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         didSet {
             loadViewIfNeeded()
             canvas.showsPageEdges = showsPageEdges
-            scrollView.backgroundColor = showsPageEdges ? .underPageBackgroundColor : .textBackgroundColor
+            applyPageAppearance()
         }
     }
     /// View zoom, as in Google Docs: the page is magnified (⌘+ / ⌘− / ⌘0, the format bar, or a pinch);
@@ -36,6 +36,22 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     weak var document: CartillaDocument?
     /// Called (coalesced) when the selection or its formatting changes, for the format bar.
     var onSelectionFormatChange: ((SelectionFormat, AttributedStringBridge) -> Void)?
+    /// Called (debounced) with the document's headings after the text changes, for the outline sidebar.
+    var onHeadingsChange: (([OutlineHeading]) -> Void)? {
+        didSet { scheduleOutlineUpdate(delay: 0) }
+    }
+    /// The headings as of the last outline update (VoiceOver's rotor reads them too).
+    private(set) var headings: [OutlineHeading] = []
+    private var outlineUpdate: DispatchWorkItem?
+
+    /// Settings ▸ "Page in Dark Mode": false (the default) shows a dark page in Dark Mode; true keeps the page
+    /// white with dark text, as it prints.
+    var keepsPageLight = false {
+        didSet {
+            loadViewIfNeeded()
+            applyPageAppearance()
+        }
+    }
 
     /// While loading, storage edits are the bridge's own and need no reconciling.
     private var isLoading = false
@@ -93,6 +109,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         textView.linkTextAttributes = [:]
         textView.delegate = self
         textView.structureDelegate = self
+        textView.headingsProvider = { [weak self] in self?.currentHeadings() ?? [] }
+        textView.onEffectiveAppearanceChange = { [weak self] in self?.invalidateReadableColors() }
+        textView.textLayoutManager?.renderingAttributesValidator = { [weak self] layout, fragment in
+            MainActor.assumeIsolated { self?.validateReadableColors(layout, fragment) }
+        }
         textView.textStorage?.delegate = self
         canvas.page = textView
         self.textView = textView
@@ -190,6 +211,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         isLoading = true
         textView.textStorage?.setAttributedString(text)
         isLoading = false
+        scheduleOutlineUpdate(delay: 0)
         textView.isEditable = editable
         textView.setSelectedRange(NSRange(location: 0, length: 0))
         textView.undoManager?.removeAllActions()
@@ -236,7 +258,17 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         range editedRange: NSRange,
         changeInLength delta: Int
     ) {
-        guard !isLoading, editedRange.location != NSNotFound else { return }
+        guard editedRange.location != NSNotFound else { return }
+        // Restyling (Undo of a style change, Update Style) changes headings too.
+        scheduleOutlineUpdate()
+        if pageIsDark, let layout = textView.textLayoutManager, let content = layout.textContentManager,
+            let from = content.location(content.documentRange.location, offsetBy: editedRange.location),
+            let to = content.location(from, offsetBy: editedRange.length),
+            let range = NSTextRange(location: from, end: to)
+        {
+            layout.invalidateRenderingAttributes(for: range)
+        }
+        guard !isLoading else { return }
         if editedMask.contains(.editedCharacters) { fitNewPictures(in: textStorage, range: editedRange) }
         bridge.reconcile(textStorage, range: editedRange)
         // Splitting, joining or reformatting paragraphs can change list numbers further down.
@@ -290,7 +322,13 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         return Self.editIsAllowed(affectedCharRange, in: storage)
     }
 
-    func textViewDidChangeSelection(_ notification: Notification) { scheduleSelectionUpdate() }
+    func textViewDidChangeSelection(_ notification: Notification) {
+        scheduleSelectionUpdate()
+        onCaretMove?(textView.selectedRange().location)
+    }
+
+    /// Called when the caret moves, so the outline can select the heading it's under.
+    var onCaretMove: ((Int) -> Void)?
 
     func textDidChange(_ notification: Notification) { scheduleSelectionUpdate() }
 
@@ -332,6 +370,141 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     }
 }
 
+// MARK: - Outline
+
+extension EditorViewController {
+    /// Recomputes the headings after typing stops for a moment (immediately when `delay` is 0).
+    func scheduleOutlineUpdate(delay: TimeInterval = 0.3) {
+        outlineUpdate?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.updateOutline() }
+        }
+        outlineUpdate = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    func updateOutline() {
+        outlineUpdate?.cancel()
+        outlineUpdate = nil
+        guard let storage = textView?.textStorage else { return }
+        headings = DocumentOutline.headings(in: storage, styles: bridge.styles)
+        onHeadingsChange?(headings)
+    }
+
+    /// Up-to-date headings (VoiceOver may ask before a pending update has run).
+    func currentHeadings() -> [OutlineHeading] {
+        if outlineUpdate != nil { updateOutline() }
+        return headings
+    }
+
+    /// Puts the caret at the start of `heading` and scrolls it to the top of the window.
+    func go(to heading: OutlineHeading) {
+        guard let storage = textView.textStorage, NSMaxRange(heading.range) <= storage.length else { return }
+        view.window?.makeFirstResponder(textView)
+        textView.setSelectedRange(NSRange(location: heading.range.location, length: 0))
+        guard let layout = textView.textLayoutManager, let content = layout.textContentManager,
+            let location = content.location(content.documentRange.location, offsetBy: heading.range.location)
+        else {
+            textView.scrollRangeToVisible(heading.range)
+            return
+        }
+        // TextKit 2 estimates the height of text it hasn't laid out: lay out everything up to the heading so
+        // its position is exact, and size the view for it, before scrolling.
+        layout.ensureLayout(
+            for: NSTextRange(location: content.documentRange.location, end: location) ?? NSTextRange(location: location)
+        )
+        textView.sizeToFit()
+        canvas.layoutSubtreeIfNeeded()
+        guard let fragment = layout.textLayoutFragment(for: location) else { return }
+        // The heading's first line, not its space before.
+        let lineTop = fragment.textLineFragments.first?.typographicBounds.minY ?? 0
+        let top = fragment.layoutFragmentFrame.minY + lineTop + textView.textContainerOrigin.y
+        let inCanvas = canvas.convert(NSPoint(x: 0, y: top), from: textView)
+        // A little air above the heading. The clip's bounds may start under the title bar and format bar:
+        // measure how far above the visible area they start.
+        let clip = scrollView.contentView
+        let hidden = scrollView.documentVisibleRect.minY - clip.bounds.minY
+        let y = inCanvas.y - 12 - hidden
+        let wanted = NSRect(origin: NSPoint(x: clip.bounds.minX, y: y), size: clip.bounds.size)
+        clip.scroll(to: clip.constrainBoundsRect(wanted).origin)
+        scrollView.reflectScrolledClipView(clip)
+    }
+}
+
+// MARK: - Dark Mode
+
+extension EditorViewController {
+    /// A light page has the light appearance, so its paper, text colour, caret and selection are as printed.
+    /// The canvas around it and the scrollers follow the window.
+    func applyPageAppearance() {
+        let light = keepsPageLight ? NSAppearance(named: .aqua) : nil
+        textView.appearance = light
+        canvas.pageAppearance = light
+        scrollView.backgroundColor =
+            showsPageEdges ? .underPageBackgroundColor : (keepsPageLight ? .white : .textBackgroundColor)
+        invalidateReadableColors()
+    }
+
+    var pageIsDark: Bool {
+        textView.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+    }
+
+    func invalidateReadableColors() {
+        guard let layout = textView?.textLayoutManager else { return }
+        layout.invalidateRenderingAttributes(for: layout.documentRange)
+        textView.needsDisplay = true
+    }
+
+    /// On a dark page, text in a dark colour Word chose for a white page (black, navy headings, link blue) is
+    /// drawn lighter, and text on a highlight is drawn dark. Display only: these are TextKit rendering
+    /// attributes, so the document's colours are untouched.
+    func validateReadableColors(_ layout: NSTextLayoutManager, _ fragment: NSTextLayoutFragment) {
+        guard pageIsDark, let storage = textView.textStorage, let content = layout.textContentManager else { return }
+        let fragmentRange = fragment.rangeInElement
+        let start = content.offset(from: content.documentRange.location, to: fragmentRange.location)
+        let end = content.offset(from: content.documentRange.location, to: fragmentRange.endLocation)
+        guard start >= 0, end <= storage.length, end > start else { return }
+        layout.removeRenderingAttribute(.foregroundColor, for: fragmentRange)
+        storage.enumerateAttributes(in: NSRange(location: start, length: end - start)) { attrs, range, _ in
+            let color = attrs[.foregroundColor] as? NSColor
+            let highlighted = attrs[.backgroundColor] != nil
+            guard let shown = Self.readableColor(color, onHighlight: highlighted),
+                let from = content.location(content.documentRange.location, offsetBy: range.location),
+                let to = content.location(from, offsetBy: range.length),
+                let textRange = NSTextRange(location: from, end: to)
+            else { return }
+            layout.setRenderingAttributes([.foregroundColor: shown], for: textRange)
+        }
+    }
+
+    /// The colour to draw `color` in on a dark page, or nil to draw it as it is.
+    nonisolated static func readableColor(_ color: NSColor?, onHighlight: Bool) -> NSColor? {
+        // Highlights keep their light colours, so the text on them is drawn dark, as in Word's Dark Mode.
+        if onHighlight {
+            guard let rgb = color?.usingColorSpace(.sRGB), color?.type != .catalog else { return .black }
+            return luminance(rgb) > 0.4 ? .black : nil
+        }
+        // Automatic colour (a system colour) already adapts.
+        guard let color, color.type != .catalog, let rgb = color.usingColorSpace(.sRGB) else { return nil }
+        // 4.5:1 against the dark page (luminance ≈ 0.015) needs a luminance of about 0.25.
+        let wanted: CGFloat = 0.25
+        guard luminance(rgb) < wanted else { return nil }
+        if rgb.saturationComponent < 0.15 { return .textColor }
+        var t: CGFloat = 0.1
+        while t < 1 {
+            if let mixed = rgb.blended(withFraction: t, of: .white), luminance(mixed) >= wanted { return mixed }
+            t += 0.1
+        }
+        return .textColor
+    }
+
+    /// WCAG relative luminance of an sRGB colour.
+    nonisolated static func luminance(_ c: NSColor) -> CGFloat {
+        func linear(_ v: CGFloat) -> CGFloat { v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
+        return 0.2126 * linear(c.redComponent) + 0.7152 * linear(c.greenComponent) + 0.0722 * linear(c.blueComponent)
+    }
+}
+
 /// Document view that keeps the page horizontally centred and grows with it. Without page edges the whole
 /// view is paper; with them, a page sits on the gray canvas with some space above and around it.
 final class PageCanvasView: NSView {
@@ -353,9 +526,17 @@ final class PageCanvasView: NSView {
         return NSRect(x: page.frame.minX - leftMargin, y: page.frame.minY, width: pageWidth, height: page.frame.height)
     }
 
+    /// The page's appearance when it differs from the window's (Settings: a light page in Dark Mode).
+    var pageAppearance: NSAppearance? {
+        didSet { needsDisplay = true }
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        NSColor.textBackgroundColor.setFill()
-        (showsPageEdges ? pageRect.intersection(dirtyRect) : dirtyRect).fill()
+        let paper = showsPageEdges ? pageRect.intersection(dirtyRect) : dirtyRect
+        (pageAppearance ?? effectiveAppearance).performAsCurrentDrawingAppearance {
+            NSColor.textBackgroundColor.setFill()
+            paper.fill()
+        }
     }
 
     /// Clicks in the page's side margins go to the text.
