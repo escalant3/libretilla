@@ -141,7 +141,19 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         (document as? NSDocument)?.undoManager
     }
 
+    /// The window can grow after it's made (shown as a tab of a wider window, the outline sidebar opening);
+    /// keep it on screen whenever it's shown or resized.
+    override func showWindow(_ sender: Any?) {
+        super.showWindow(sender)
+        if let window { Self.fitOnScreen(window) }
+    }
+
+    func windowDidResize(_ notification: Notification) {
+        if let window { Self.fitOnScreen(window) }
+    }
+
     func windowDidBecomeMain(_ notification: Notification) {
+        if let window { Self.fitOnScreen(window) }
         window?.makeFirstResponder(editor.textView)
     }
 
