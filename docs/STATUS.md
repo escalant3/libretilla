@@ -253,12 +253,9 @@ print yet.
 - A real VoiceOver session (the rotor is unit-tested, the audit passes).
 - Tables, chips and pictures on a dark page: the text drawn inside them isn't recoloured.
 
-**Found, not fixed**
+**Decided with the owner (2026-11-05)**
 
-- AppKit's subtitle still says "Edited" under the title while Cartilla's status says "Saved". This is NSDocument's
-  Versions state (changed since the last explicit save, as in TextEdit), not the dirty flag: `DocumentWindow`'s
-  `isDocumentEdited` override and a `setDocumentEdited(false)` override on the window controller both leave it
-  showing. Setting `window.subtitle` doesn't replace it either; AppKit appends "— Edited". Bootstrap §6 asks
-  for no edited indicator, so it needs a decision: accept it as the system's own text, or look for another way
-  to hide it.
+- AppKit's "Edited" subtitle under the title stays. It is NSDocument's Versions state (changed since the last
+  explicit save), which TextEdit shows too, so it's the Mac's own convention. Cartilla's status beside it says
+  whether the file on disk is current.
 

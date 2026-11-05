@@ -171,8 +171,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     }
 }
 
-/// Autosave makes the "edited" dot and "— Edited" title noise; the status label says it instead
-/// (bootstrap §6: no edited dot, no Save button).
+/// Autosave makes the "edited" dot noise; the status label says whether the file is current instead
+/// (bootstrap §6: no edited dot, no Save button). AppKit's "Edited" subtitle is NSDocument's Versions state
+/// and doesn't come from this flag; it stays, as in TextEdit (owner's decision, 2026-11-05).
 final class DocumentWindow: NSWindow {
     override var isDocumentEdited: Bool {
         get { false }
