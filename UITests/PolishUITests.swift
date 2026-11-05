@@ -103,7 +103,14 @@ final class PolishUITests: CartillaUITestCase {
         window.typeKey("s", modifierFlags: [.command, .control])
         XCTAssertTrue(window.tables["outline"].waitForExistence(timeout: 5))
         let body = window.textViews["Document body"].frame
+        // On GitHub's runners the contrast audit flags plainly readable labels: Settings' "Page in Dark Mode" and
+        // "Show format bar", the title bar's "Saved". Its own crops of them show black text on white or light
+        // gray, waiting doesn't change it, and it marks the windows "Disabled". A false positive there: skip the
+        // contrast check on CI only (CARTILLA_CI, set by the workflow through TEST_RUNNER_CARTILLA_CI). Every
+        // other check runs on CI, and the whole audit runs everywhere else.
+        let onCI = ProcessInfo.processInfo.environment["CARTILLA_CI"] != nil
         func exempt(_ issue: XCUIAccessibilityAuditIssue, in audited: XCUIElement) -> Bool {
+            if onCI, issue.auditType == .contrast { return true }
             // A tooltip AppKit happens to show under the pointer isn't Cartilla's.
             if issue.element?.elementType == .helpTag { return true }
             // AppKit's window tab is labelled with the file name ("Audit.docx"), which the audit doesn't
@@ -136,15 +143,9 @@ final class PolishUITests: CartillaUITestCase {
         // measured dimmed or half-transparent.
         settings.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).click()
         RunLoop.current.run(until: Date().addingTimeInterval(1))
-        // On GitHub's runners the audit reports Settings' labels ("Page in Dark Mode", "Show format bar") as low
-        // contrast, though its own crop of them shows black text on light gray, and it marks the window
-        // "Disabled". A false positive there: skip only Settings' contrast check on CI (CARTILLA_CI, set by the
-        // workflow through TEST_RUNNER_CARTILLA_CI). Everywhere else, and every other check, stays.
-        let onCI = ProcessInfo.processInfo.environment["CARTILLA_CI"] != nil
         // Only Settings itself: behind it, the document window is inactive and AppKit dims its title.
         try app.performAccessibilityAudit(for: .all) { issue in
             guard let frame = issue.element?.frame, settings.frame.contains(frame) else { return true }
-            if onCI, issue.auditType == .contrast { return true }
             return exempt(issue, in: settings)
         }
         settings.typeKey("w", modifierFlags: .command)
