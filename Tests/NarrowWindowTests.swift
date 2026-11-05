@@ -50,6 +50,7 @@ final class NarrowWindowTests: XCTestCase {
         let canvas = try XCTUnwrap(scroll.documentView as? PageCanvasView)
 
         scroll.frame = NSRect(x: 0, y: 0, width: 360, height: 600)
+        scroll.tile()
         canvas.layoutSubtreeIfNeeded()
         XCTAssertTrue(canvas.isNarrow)
         XCTAssertEqual(editor.textView.frame.width, 360 - 2 * PageCanvasView.narrowInset, accuracy: 1)
@@ -57,6 +58,7 @@ final class NarrowWindowTests: XCTestCase {
         XCTAssertLessThanOrEqual(canvas.frame.width, 360.5, "no horizontal scrolling")
 
         scroll.frame = NSRect(x: 0, y: 0, width: 1200, height: 600)
+        scroll.tile()
         canvas.layoutSubtreeIfNeeded()
         XCTAssertFalse(canvas.isNarrow)
         XCTAssertEqual(editor.textView.frame.width, editor.pageSetup.textWidth, accuracy: 0.5)
