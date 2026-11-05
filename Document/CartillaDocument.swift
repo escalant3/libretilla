@@ -160,8 +160,46 @@ final class CartillaDocument: NSDocument {
 
     override func updateChangeCount(_ change: NSDocument.ChangeType) {
         super.updateChangeCount(change)
+        scheduleAutosaveBackstop()
         if case .saving = saveState { return }
         if !isReadOnly { saveState = isDocumentEdited ? .edited : .saved }
+    }
+
+    // MARK: Autosave backstop
+
+    /// How long after a change the file must have caught up. NSDocument normally autosaves about 3 s after it.
+    static let autosaveBackstopDelay: TimeInterval = 5
+    /// Tests only: drop NSDocument's own scheduled autosave, to check the backstop alone keeps the file current.
+    nonisolated(unsafe) static var suppressesScheduledAutosaveForTesting = false
+    private var autosaveBackstopPending = false
+
+    override func scheduleAutosaving() {
+        if Self.suppressesScheduledAutosaveForTesting { return }
+        super.scheduleAutosaving()
+    }
+
+    /// The file on disk is the document (bootstrap §5.4), so an edit must reach it within seconds. NSDocument
+    /// schedules an autosave after each change, but that autosave doesn't always run: on GitHub's macOS
+    /// runners it never did after Find and Replace ▸ All, whatever happened next. If changes are still
+    /// unautosaved this long after the first one, autosave now. Measured from the first change, not the last,
+    /// so continuous typing can't postpone it.
+    private func scheduleAutosaveBackstop() {
+        guard !autosaveBackstopPending, hasUnautosavedChanges, !isReadOnly else { return }
+        autosaveBackstopPending = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.autosaveBackstopDelay) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.autosaveBackstopPending = false
+                guard self.hasUnautosavedChanges, !self.isReadOnly else { return }
+                if case .saving = self.saveState {
+                    // A save is under way; check again once it's had time to finish.
+                    self.scheduleAutosaveBackstop()
+                    return
+                }
+                Self.log.notice("The scheduled autosave hasn't run; autosaving now")
+                self.autosave(withImplicitCancellability: false) { _ in }
+            }
+        }
     }
 
     // MARK: Styles and lists (M2)

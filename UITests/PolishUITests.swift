@@ -135,12 +135,23 @@ final class PolishUITests: CartillaUITestCase {
         // Make sure Settings is the key window (its title bar) and has finished fading in, or its contrast is
         // measured dimmed or half-transparent.
         settings.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).click()
-        RunLoop.current.run(until: Date().addingTimeInterval(1))
-        // Only Settings itself: behind it, the document window is inactive and AppKit dims its title.
-        try app.performAccessibilityAudit(for: .all) { issue in
-            guard let frame = issue.element?.frame, settings.frame.contains(frame) else { return true }
-            return exempt(issue, in: settings)
+        // Only Settings itself: behind it, the document window is inactive and AppKit dims its title. On a slow
+        // machine (GitHub's runners) Settings can still be fading in after a second, so its labels measure
+        // half-transparent: audit up to three times, a second apart, and fail on what's still there.
+        var remaining: [String] = []
+        for attempt in 0..<3 {
+            RunLoop.current.run(until: Date().addingTimeInterval(attempt == 0 ? 1 : 1.5))
+            remaining = []
+            try app.performAccessibilityAudit(for: .all) { issue in
+                guard let frame = issue.element?.frame, settings.frame.contains(frame) else { return true }
+                if !exempt(issue, in: settings) {
+                    remaining.append("\(issue.compactDescription): \(String(describing: issue.element))")
+                }
+                return true
+            }
+            if remaining.isEmpty { break }
         }
+        XCTAssertEqual(remaining, [], "accessibility issues in Settings")
         settings.typeKey("w", modifierFlags: .command)
         window.typeKey("s", modifierFlags: [.command, .control])
     }
