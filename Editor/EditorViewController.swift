@@ -584,8 +584,12 @@ final class PageCanvasView: NSView {
         super.viewDidMoveToSuperview()
         guard let clip = superview else { return }
         clip.postsBoundsChangedNotifications = true
+        clip.postsFrameChangedNotifications = true
         NotificationCenter.default.addObserver(
             self, selector: #selector(clipBoundsChanged), name: NSView.boundsDidChangeNotification, object: clip)
+        // A resized window changes the clip's frame: narrow or not may change with it.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(clipBoundsChanged), name: NSView.frameDidChangeNotification, object: clip)
     }
 
     private var clipWidth: CGFloat = 0
@@ -613,7 +617,9 @@ final class PageCanvasView: NSView {
             } ?? 0
         let available = clip.bounds.width.rounded(.down)
         let wasNarrow = isNarrow
-        isNarrow = available < pageWidth + 2 * (showsPageEdges ? 32 : 0)
+        // Narrow means the window itself (its width on screen, whatever the zoom) is narrower than the page:
+        // zooming a wide window still magnifies the page and scrolls, as in Google Docs.
+        isNarrow = clip.frame.width.rounded(.down) < pageWidth + 2 * (showsPageEdges ? 32 : 0)
         if isNarrow != wasNarrow { needsDisplay = true }
         let column = isNarrow ? max(Self.minimumColumn, available - 2 * Self.narrowInset) : columnWidth
         if abs(page.frame.width - column) > 0.5 {
