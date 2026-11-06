@@ -2,10 +2,14 @@ import AppKit
 import LibretillaDocx
 
 /// The view printing and PDF export lay the document out in (TextKit 2, like the editor). It starts a
-/// new page after every page break and doesn't draw the editor's page break chips.
+/// new page after every page break and before every paragraph marked `w:pageBreakBefore`, and doesn't draw
+/// the editor's page break chips.
 final class PrintTextView: NSTextView {
     /// Bottom edges (view coordinates) of the lines that end in a page break, top to bottom.
     private var breakLineBottoms: [CGFloat] = []
+    /// For each paragraph that starts a new page, top to bottom: the top edge of its layout fragment (above its
+    /// first line and its space before) and the bottom edge of the line before it (view coordinates).
+    private var breakBeforeLines: [(top: CGFloat, previousBottom: CGFloat)] = []
 
     convenience init(text: NSAttributedString, width: CGFloat) {
         self.init(usingTextLayoutManager: true)
@@ -18,6 +22,14 @@ final class PrintTextView: NSTextView {
         textStorage?.setAttributedString(Self.printable(text))
         sizeToFit()
         breakLineBottoms = pageBreakOffsets().compactMap(lineBottom(containing:)).sorted()
+        breakBeforeLines = pageBreakBeforeOffsets().compactMap { start in
+            guard let top = line(containing: start).map({ $0.frame.minY + textContainerOrigin.y }),
+                let previous = lineBottom(containing: start - 1)
+            else {
+                return nil
+            }
+            return (top, previous)
+        }
     }
 
     /// `text` with each page break chip replaced by a zero-width space: nothing is drawn, nothing odd ends up
@@ -44,8 +56,27 @@ final class PrintTextView: NSTextView {
         return offsets
     }
 
+    /// The start of each paragraph marked `.libretillaPageBreakBefore` (on any of its characters, so text
+    /// typed at its start still counts), except the document's first paragraph, which starts page 1 anyway.
+    private func pageBreakBeforeOffsets() -> [Int] {
+        guard let storage = textStorage else { return [] }
+        let ns = storage.string as NSString
+        var starts: Set<Int> = []
+        storage.enumerateAttribute(.libretillaPageBreakBefore, in: NSRange(location: 0, length: storage.length)) {
+            v, r, _ in
+            if v != nil { starts.insert(ns.paragraphRange(for: NSRange(location: r.location, length: 0)).location) }
+        }
+        starts.remove(0)
+        return starts.sorted()
+    }
+
     /// The bottom of the laid-out line holding the character at `offset`.
     private func lineBottom(containing offset: Int) -> CGFloat? {
+        line(containing: offset).map { $0.frame.minY + $0.line.typographicBounds.maxY + textContainerOrigin.y }
+    }
+
+    /// The laid-out line holding the character at `offset`, and the frame of its layout fragment.
+    private func line(containing offset: Int) -> (line: NSTextLineFragment, frame: CGRect)? {
         guard let layout = textLayoutManager, let content = layout.textContentManager,
             let location = content.location(content.documentRange.location, offsetBy: offset)
         else { return nil }
@@ -58,17 +89,21 @@ final class PrintTextView: NSTextView {
             lines.first { NSLocationInRange(inFragment, $0.characterRange) || inFragment < $0.characterRange.location }
             ?? lines.last
         guard let line else { return nil }
-        return fragment.layoutFragmentFrame.minY + line.typographicBounds.maxY + textContainerOrigin.y
+        return (line, fragment.layoutFragmentFrame)
     }
 
-    /// Ends a page early at the first page break on it.
+    /// Ends a page early at the first page break on it, or above the first paragraph on it that starts a new
+    /// page. A paragraph with nothing above it on the page (it follows a page break, or the page just broke
+    /// before it) already starts one. The page ends at the top of the paragraph's layout fragment, so the
+    /// paragraph keeps its space before at the top of the new page, as in Word.
     override func adjustPageHeightNew(
         _ newBottom: UnsafeMutablePointer<CGFloat>, top oldTop: CGFloat, bottom oldBottom: CGFloat,
         limit bottomLimit: CGFloat
     ) {
         super.adjustPageHeightNew(newBottom, top: oldTop, bottom: oldBottom, limit: bottomLimit)
-        if let bottom = breakLineBottoms.first(where: { $0 > oldTop + 0.5 && $0 < newBottom.pointee - 0.5 }) {
-            newBottom.pointee = bottom
-        }
+        let limit = newBottom.pointee - 0.5
+        let afterBreak = breakLineBottoms.first { $0 > oldTop + 0.5 && $0 < limit }
+        let beforeParagraph = breakBeforeLines.first { $0.previousBottom > oldTop + 0.5 && $0.top < limit }?.top
+        if let bottom = [afterBreak, beforeParagraph].compactMap({ $0 }).min() { newBottom.pointee = bottom }
     }
 }

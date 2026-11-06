@@ -201,4 +201,54 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertNil(tv.textStorage?.attribute(.libretillaPageBreak, at: at, effectiveRange: nil))
         XCTAssertFalse(try self.saved(doc).body.plainText.contains("\u{000C}"))
     }
+
+    // MARK: Page break before
+
+    /// The first line of text on a PDF page (0-based).
+    func firstLine(of page: Int, in pdf: PDFDocument) -> String? {
+        pdf.page(at: page)?.string?.split(whereSeparator: \.isNewline).first.map(String.init)
+    }
+
+    func testPageBreakBeforeStartsNewPagesInThePDF() throws {
+        let pdf = try pdfPages(try open("13-page-break-before.docx"))
+        XCTAssertEqual(pdf.pageCount, 4)
+        XCTAssertEqual(
+            (0..<pdf.pageCount).map { firstLine(of: $0, in: pdf) },
+            [
+                "Page break before", "Direct: starts page 2.", "Chapter style: starts page 3.",
+                "Part style (based on Chapter): starts page 4.",
+            ],
+            "no blank page before the first paragraph")
+        let third = try XCTUnwrap(pdf.page(at: 2)?.string)
+        for text in ["Chapter style, turned off directly", "Interlude style", "Direct, turned off with false"] {
+            XCTAssertTrue(third.contains(text), "\(text) stays on page 3")
+        }
+    }
+
+    /// Marks the paragraph holding `text` in the editor as starting a new page.
+    func markPageBreakBefore(_ text: String, in doc: LibretillaDocument) throws {
+        let storage = try XCTUnwrap(doc.editor?.textView.textStorage)
+        let ns = storage.string as NSString
+        let found = ns.range(of: text)
+        XCTAssertNotEqual(found.location, NSNotFound)
+        storage.addAttribute(.libretillaPageBreakBefore, value: true, range: ns.paragraphRange(for: found))
+    }
+
+    func testPageBreakBeforeMidPageAddsAPage() throws {
+        let doc = try open("01-plain.docx")
+        XCTAssertEqual(try pdfPages(doc).pageCount, 1)
+        try markPageBreakBefore("Centered paragraph.", in: doc)
+        let pdf = try pdfPages(doc)
+        XCTAssertEqual(pdf.pageCount, 2)
+        XCTAssertEqual(firstLine(of: 1, in: pdf), "Centered paragraph.")
+    }
+
+    func testPageBreakBeforeAfterAPageBreakAddsNoBlankPage() throws {
+        // "Last page." follows a Word page break, so it already starts page 4.
+        let doc = try open("07-header-footer.docx")
+        try markPageBreakBefore("Last page.", in: doc)
+        let pdf = try pdfPages(doc)
+        XCTAssertEqual(pdf.pageCount, 4)
+        XCTAssertEqual(firstLine(of: 3, in: pdf), "Last page.")
+    }
 }
