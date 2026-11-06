@@ -146,6 +146,7 @@ public struct AttributedStringBridge: Sendable {
         let all = NSRange(location: 0, length: text.length)
         text.addAttribute(.libretillaParagraph, value: origin, range: all)
         text.addAttribute(.libretillaParagraphFormat, value: format, range: all)
+        if effective.pageBreakBefore == true { text.addAttribute(.libretillaPageBreakBefore, value: true, range: all) }
         return text
     }
 

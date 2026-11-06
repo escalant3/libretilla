@@ -25,11 +25,15 @@ extension NSAttributedString.Key {
     /// `true` on the object character standing for a page break (`U+000C` in a run). Printing starts a new
     /// page after it and doesn't draw its chip.
     public static let libretillaPageBreak = NSAttributedString.Key("libretilla.pageBreak")
+    /// `true` on every character of a paragraph whose resolved properties (direct or from its style chain)
+    /// turn on `w:pageBreakBefore`. Printing starts the paragraph on a new page; the editor shows nothing and
+    /// a save ignores it (the `w:pPr` bytes already say it).
+    public static let libretillaPageBreakBefore = NSAttributedString.Key("libretilla.pageBreakBefore")
 
     /// Attributes that must not be inherited by newly typed text (`NSTextView.typingAttributes`).
     public static let libretillaNonInheritable: [NSAttributedString.Key] = [
         .libretillaOpaque, .libretillaMarkers, .libretillaBlock, .libretillaPageBreak, .libretillaHyperlink,
-        .attachment, .link,
+        .libretillaPageBreakBefore, .attachment, .link,
     ]
 }
 

@@ -98,4 +98,61 @@ import Testing
         #expect(attrs[.libretillaPageBreak] == nil && attrs[.attachment] == nil)
         #expect(attrs[.font] != nil)
     }
+
+    /// The paragraphs of `text` (by their text) marked as starting a new page.
+    func pageBreakBeforeParagraphs(in text: NSAttributedString) -> [String] {
+        let ns = text.string as NSString
+        var out: [String] = []
+        var location = 0
+        while location < ns.length {
+            let range = ns.paragraphRange(for: NSRange(location: location, length: 0))
+            let marked = text.attribute(.libretillaPageBreakBefore, at: range.location, effectiveRange: nil) as? Bool
+            if marked == true { out.append(ns.substring(with: range).trimmingCharacters(in: .newlines)) }
+            location = NSMaxRange(range)
+        }
+        return out
+    }
+
+    @Test func pageBreakBeforeIsMarkedFromDirectFormattingAndStyles() throws {
+        let (_, _, text) = try load(try Corpus.data("13-page-break-before.docx"))
+        #expect(
+            pageBreakBeforeParagraphs(in: text) == [
+                "Page break before", "Direct: starts page 2.", "Chapter style: starts page 3.",
+                "Part style (based on Chapter): starts page 4.",
+            ])
+    }
+
+    @Test func pageBreakBeforeMarksTheWholeParagraph() throws {
+        let (_, _, text) = try load(try Corpus.data("13-page-break-before.docx"))
+        let ns = text.string as NSString
+        let range = ns.paragraphRange(for: ns.range(of: "Direct: starts page 2."))
+        var ranges: [NSRange] = []
+        text.enumerateAttribute(.libretillaPageBreakBefore, in: range) { v, r, _ in if v != nil { ranges.append(r) } }
+        #expect(ranges == [range])
+    }
+
+    @Test func pageBreakBeforeSavesUnchanged() throws {
+        let data = try Corpus.data("13-page-break-before.docx")
+        let (doc, bridge, text) = try load(data)
+        let back = try save(doc, bridge, text)
+        #expect(documentXML(back) == documentXML(doc))
+        #expect(documentXML(back).components(separatedBy: "<w:pageBreakBefore").count - 1 == 4)
+    }
+
+    @Test func pageBreakBeforeIsNotInheritedByTypedText() {
+        #expect(NSAttributedString.Key.libretillaNonInheritable.contains(.libretillaPageBreakBefore))
+    }
+
+    @Test func pageBreakBeforeHonoursOffValues() throws {
+        for (markup, on) in [
+            ("<w:pageBreakBefore/>", true), (#"<w:pageBreakBefore w:val="1"/>"#, true),
+            (#"<w:pageBreakBefore w:val="0"/>"#, false), (#"<w:pageBreakBefore w:val="false"/>"#, false),
+            (#"<w:pageBreakBefore w:val="off"/>"#, false),
+        ] {
+            let data = try document(
+                "<w:p><w:r><w:t>One</w:t></w:r></w:p><w:p><w:pPr>\(markup)</w:pPr><w:r><w:t>Two</w:t></w:r></w:p>")
+            let (_, _, text) = try load(data)
+            #expect(pageBreakBeforeParagraphs(in: text) == (on ? ["Two"] : []), "\(markup)")
+        }
+    }
 }

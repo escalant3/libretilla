@@ -90,6 +90,8 @@ public struct ParagraphProperties: Sendable, Equatable {
     /// Custom tab stops (`w:tabs`), in points; nil means inherit.
     public var tabs: [TabStop]?
     public var hasSectionBreak = false
+    /// `w:pageBreakBefore`: the paragraph starts a new page. Nil means inherit.
+    public var pageBreakBefore: Bool?
 
     /// The paragraph is a list item.
     public var hasNumbering: Bool { (numId ?? 0) != 0 }
@@ -124,6 +126,7 @@ public struct ParagraphProperties: Sendable, Equatable {
             case "w:tabs":
                 tabs = e.childElements(named: "w:tab").compactMap(TabStop.init)
             case "w:sectPr": hasSectionBreak = true
+            case "w:pageBreakBefore": pageBreakBefore = RunProperties.toggle(e)
             default: break
             }
         }
@@ -145,6 +148,7 @@ public struct ParagraphProperties: Sendable, Equatable {
         p.numId = numId ?? base.numId
         p.ilvl = ilvl ?? base.ilvl
         p.tabs = tabs ?? base.tabs
+        p.pageBreakBefore = pageBreakBefore ?? base.pageBreakBefore
         return p
     }
 }
