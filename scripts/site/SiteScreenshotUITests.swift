@@ -10,7 +10,8 @@ final class SiteScreenshotUITests: LibretillaUITestCase {
             let url = work.appendingPathComponent("A small notebook.docx")
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: URL(fileURLWithPath: sample), to: url)
-            app.launchArguments += ["-LibretillaUITestAppearance", mode, "-LibretillaZoom", "1"]
+            // Zoom 0 is Fit, the default: the page fills the window's width, so the text reads at a glance.
+            app.launchArguments += ["-LibretillaUITestAppearance", mode, "-LibretillaZoom", "0"]
             app.launch()
             // Close the untitled window opened at launch, so the document doesn't open as its second tab.
             let untitled = app.windows.firstMatch
