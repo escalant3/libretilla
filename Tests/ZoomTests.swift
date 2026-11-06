@@ -143,6 +143,25 @@ final class ZoomTests: XCTestCase {
             UserDefaults.standard.double(forKey: DocumentWindowController.zoomKey), 0, "Fit is remembered as 0")
     }
 
+    func testFitKeepsAJustOpenedDocumentAtItsTop() throws {
+        // Fit zooms in after the window opens; the zoom keeps the middle line in place, which used to push the
+        // title up out of sight (behind the toolbar). A view at the top of the page stays at the top.
+        UserDefaults.standard.removeObject(forKey: DocumentWindowController.zoomKey)
+        let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/generated/07-header-footer.docx")
+        let doc = try LibretillaDocument(contentsOf: fixture, ofType: LibretillaDocument.docxType)
+        doc.makeWindowControllers()
+        defer { doc.close() }
+        let editor = try XCTUnwrap(doc.editor)
+        let window = try XCTUnwrap(editor.view.window)
+        settle(window, editor)
+        XCTAssertTrue(editor.fitsWidth)
+        XCTAssertGreaterThan(editor.zoom, 1.05, "the window is wider than the page")
+        let clip = try XCTUnwrap(editor.textView.enclosingScrollView).contentView
+        XCTAssertGreaterThan(clip.documentRect.height, clip.bounds.height, "the document scrolls")
+        XCTAssertEqual(clip.bounds.minY, -clip.contentInsets.top, accuracy: 1, "the top of the page shows")
+    }
+
     func testFitFollowsTheWindow() throws {
         let (doc, editor, window) = try fitWindow(width: 900)
         defer { doc.close() }

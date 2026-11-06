@@ -212,14 +212,17 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         loadViewIfNeeded()
         let clamped = min(max(value, scrollView.minMagnification), scrollView.maxMagnification)
         // As in Google Docs: the line in the middle of the window stays there, and the page stays
-        // centred across (when it's wider than the window, the view shows its middle).
+        // centred across (when it's wider than the window, the view shows its middle). A view at the top of
+        // the page stays at the top, so a document opened at Fit shows its first line.
+        let clip = scrollView.contentView
+        let atTop = clip.bounds.minY <= -clip.contentInsets.top + 1
         let anchor = scrollView.documentVisibleRect.midY
         scrollView.magnification = clamped
         fitCanvas()
-        let clip = scrollView.contentView
         let visible = scrollView.documentVisibleRect.size
         let x = (canvas.frame.width - clip.bounds.width) / 2
-        let wanted = NSRect(x: x, y: anchor - visible.height / 2, width: clip.bounds.width, height: clip.bounds.height)
+        let y = atTop ? -clip.contentInsets.top : anchor - visible.height / 2
+        let wanted = NSRect(x: x, y: y, width: clip.bounds.width, height: clip.bounds.height)
         clip.scroll(to: clip.constrainBoundsRect(wanted).origin)
         scrollView.reflectScrolledClipView(clip)
         onZoomChange?(scrollView.magnification, fitsWidth)
