@@ -1,5 +1,5 @@
-import LibretillaDocx
 import Foundation
+import LibretillaDocx
 
 /// Spanish (and any other) names for the placeholder chips LibretillaDocx draws for content the editor can't show
 /// yet. The package names them in English; `install()` hands it this translation.

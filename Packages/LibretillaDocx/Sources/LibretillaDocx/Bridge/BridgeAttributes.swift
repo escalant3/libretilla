@@ -28,7 +28,8 @@ extension NSAttributedString.Key {
 
     /// Attributes that must not be inherited by newly typed text (`NSTextView.typingAttributes`).
     public static let libretillaNonInheritable: [NSAttributedString.Key] = [
-        .libretillaOpaque, .libretillaMarkers, .libretillaBlock, .libretillaPageBreak, .libretillaHyperlink, .attachment, .link,
+        .libretillaOpaque, .libretillaMarkers, .libretillaBlock, .libretillaPageBreak, .libretillaHyperlink,
+        .attachment, .link,
     ]
 }
 

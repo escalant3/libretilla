@@ -50,7 +50,8 @@ extension AttributedStringBridge {
             attachment.image = Self.rowImage(row, width: layout.width)
             attachment.bounds = NSRect(x: 0, y: font.descender, width: layout.width, height: row.height)
             let attrs: [NSAttributedString.Key: Any] = [
-                .attachment: attachment, .libretillaBlock: box, .libretillaTableRow: i, .font: font, .paragraphStyle: style,
+                .attachment: attachment, .libretillaBlock: box, .libretillaTableRow: i, .font: font,
+                .paragraphStyle: style,
             ]
             out.append(NSAttributedString(string: "\u{FFFC}", attributes: attrs))
             var newline = attrs

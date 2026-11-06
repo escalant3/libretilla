@@ -128,7 +128,8 @@ final class PolishTests: XCTestCase {
         XCTAssertEqual(
             LibretillaTextView.headingSearch(headings, from: nil, direction: .previous, filter: "")?.title, "Heading 6")
         XCTAssertEqual(
-            LibretillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "ing 4")?.title, "Heading 4")
+            LibretillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "ing 4")?.title, "Heading 4"
+        )
     }
 
     // MARK: Dark Mode

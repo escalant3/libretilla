@@ -65,7 +65,8 @@ import Testing
         #expect((l.text.string as NSString).substring(with: found.range) == "example.com")
         // Bookmark links are modelled too, without a URL.
         let bookmark = try range(of: "bookmark", in: l.text).location
-        let box = try #require(l.text.attribute(.libretillaHyperlink, at: bookmark, effectiveRange: nil) as? HyperlinkBox)
+        let box = try #require(
+            l.text.attribute(.libretillaHyperlink, at: bookmark, effectiveRange: nil) as? HyperlinkBox)
         #expect(box.link.anchor == "target" && box.url == nil)
     }
 

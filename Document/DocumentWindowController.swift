@@ -53,7 +53,8 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         window.setContentSize(Self.defaultContentSize)
         // Setting the autosave name restores the saved frame, if any; reject frames that are too small.
         let restored =
-            window.setFrameAutosaveName("LibretillaDocumentWindow") && window.setFrameUsingName("LibretillaDocumentWindow")
+            window.setFrameAutosaveName("LibretillaDocumentWindow")
+            && window.setFrameUsingName("LibretillaDocumentWindow")
         let minimum = window.contentMinSize
         if !restored || window.contentLayoutRect.width < minimum.width
             || window.contentLayoutRect.height < minimum.height

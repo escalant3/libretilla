@@ -121,7 +121,8 @@ import Testing
         let attachment = try location(of: "\u{FFFC}", in: text)
         var whole = NSRange()
         _ = text.attribute(
-            .libretillaBlock, at: attachment, longestEffectiveRange: &whole, in: NSRange(location: 0, length: text.length)
+            .libretillaBlock, at: attachment, longestEffectiveRange: &whole,
+            in: NSRange(location: 0, length: text.length)
         )
         text.deleteCharacters(in: NSRange(location: whole.location, length: whole.length + 1))
         let (fewer, _) = try save(doc, bridge, text)

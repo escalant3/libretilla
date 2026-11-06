@@ -82,7 +82,8 @@ public struct AttributedStringBridge: Sendable {
             attrs[.paragraphStyle] = paragraphStyle
             if !pendingMarkers.isEmpty {
                 let first = NSMutableAttributedString(string: String(string.prefix(1)), attributes: attrs)
-                first.addAttribute(.libretillaMarkers, value: MarkerBox(pendingMarkers), range: NSRange(0..<first.length))
+                first.addAttribute(
+                    .libretillaMarkers, value: MarkerBox(pendingMarkers), range: NSRange(0..<first.length))
                 pendingMarkers = []
                 text.append(first)
                 text.append(NSAttributedString(string: String(string.dropFirst()), attributes: attrs))
@@ -202,7 +203,8 @@ public struct AttributedStringBridge: Sendable {
 
         for (i, full) in paragraphs.enumerated() {
             let content = Self.contentRange(full, in: ns)
-            let origin = text.attribute(.libretillaParagraph, at: full.location, effectiveRange: nil) as? ParagraphOrigin
+            let origin =
+                text.attribute(.libretillaParagraph, at: full.location, effectiveRange: nil) as? ParagraphOrigin
             let isFirst = origin.map { firstIndex[ObjectIdentifier($0)] == i } ?? false
             let isLast = origin.map { lastIndex[ObjectIdentifier($0)] == i } ?? true
 
@@ -295,9 +297,9 @@ public struct AttributedStringBridge: Sendable {
     /// The paragraph's format: its first character's, else its terminator's (pasted text may lack one).
     static func paragraphFormat(_ text: NSAttributedString, _ paragraph: NSRange) -> ParagraphFormat? {
         guard paragraph.length > 0 else { return nil }
-        return text.attribute(.libretillaParagraphFormat, at: paragraph.location, effectiveRange: nil) as? ParagraphFormat
-            ?? text.attribute(.libretillaParagraphFormat, at: NSMaxRange(paragraph) - 1, effectiveRange: nil)
-            as? ParagraphFormat
+        let key = NSAttributedString.Key.libretillaParagraphFormat
+        return text.attribute(key, at: paragraph.location, effectiveRange: nil) as? ParagraphFormat
+            ?? text.attribute(key, at: NSMaxRange(paragraph) - 1, effectiveRange: nil) as? ParagraphFormat
     }
 
     func editedParagraph(
@@ -321,7 +323,9 @@ public struct AttributedStringBridge: Sendable {
         let ns = text.string as NSString
 
         text.enumerateAttributes(in: range, options: []) { attrs, r, _ in
-            if let markers = attrs[.libretillaMarkers] as? MarkerBox, emitted.insert(ObjectIdentifier(markers)).inserted {
+            if let markers = attrs[.libretillaMarkers] as? MarkerBox,
+                emitted.insert(ObjectIdentifier(markers)).inserted
+            {
                 inlines += markers.markers.map(Inline.opaque)
             }
             let string = ns.substring(with: r)
