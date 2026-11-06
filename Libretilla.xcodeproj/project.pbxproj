@@ -48,6 +48,7 @@
 		C245499065D9F55D52053F4E /* TableCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E938312476816FC5636CC08B /* TableCommandTests.swift */; };
 		C9B3D570E3849A02E154A4E2 /* LibretillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */; };
 		CC4DDAEEE2EAA046AE9802B0 /* LocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD086425A16E674FF83850C /* LocalizationTests.swift */; };
+		D3C09A8A50D5DD26C0B54C1C /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 00FEAD00FE14DEAC2B647921 /* Credits.rtf */; };
 		D4850E42B00B800124198887 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697B3326EEE48C402ABE0847 /* main.swift */; };
 		DD0977FCDDFC8846BF85F941 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 142C68A49BF5037C951AE6E3 /* AppIcon.svg */; };
 		E25AB5A5AFB4AE56BA388FDA /* ChipLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0EF28C05B4D50BBC5D2F52 /* ChipLabels.swift */; };
@@ -74,6 +75,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		00FEAD00FE14DEAC2B647921 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		048A78A99D2D86EE864C12D7 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
 		04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Links.swift"; sourceTree = "<group>"; };
 		076C34620687B5EF853F523F /* DocumentWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowController.swift; sourceTree = "<group>"; };
@@ -233,6 +235,7 @@
 				4A71F60EC9196D6054C3A45F /* Icon */,
 				D732D08D256C51C1D5415580 /* Assets.xcassets */,
 				C3995CF0646BC821F5D8E314 /* Blank.docx */,
+				00FEAD00FE14DEAC2B647921 /* Credits.rtf */,
 				3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */,
 			);
 			path = Resources;
@@ -399,6 +402,7 @@
 				DD0977FCDDFC8846BF85F941 /* AppIcon.svg in Resources */,
 				6DF2FA824B48D2552205EC8A /* Assets.xcassets in Resources */,
 				AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */,
+				D3C09A8A50D5DD26C0B54C1C /* Credits.rtf in Resources */,
 				03405776FDB00090F1A997A7 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -629,6 +633,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -643,6 +648,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;
@@ -692,6 +698,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -712,6 +719,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.9;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;

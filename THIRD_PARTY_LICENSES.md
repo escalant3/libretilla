@@ -7,10 +7,11 @@ Keep this file in sync with `Package.resolved` / `project.yml`.
 
 | Package | Version | License | Used by | Added |
 |---|---|---|---|---|
-| [weichsel/ZIPFoundation](https://github.com/weichsel/ZIPFoundation) | 0.9.20 (`upToNextMinor`) | MIT, © 2017–2026 Thomas Zoechling | `Packages/LibretillaDocx`: zip read/write of `.docx` packages (ADR 0002) | 2026-11-04 |
+| [weichsel/ZIPFoundation](https://github.com/weichsel/ZIPFoundation) | 0.9.20 (`upToNextMinor`) | MIT, © 2017–2025 Thomas Zoechling | `Packages/LibretillaDocx`: zip read/write of `.docx` packages (ADR 0002) | 2026-11-04 |
 
-The MIT license requires including its copyright notice with the app. Bundle the notice text in the app's
-acknowledgements before the first release (M5).
+The MIT license requires including each copyright notice with the app. The notices are bundled in
+`Resources/Credits.rtf`, which the standard About panel shows (Libretilla ▸ About Libretilla). Add a new
+dependency's notice there in the same commit that adds the dependency.
 
 ## Development / evaluation only (not linked into Libretilla.app)
 

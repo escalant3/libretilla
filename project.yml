@@ -17,6 +17,10 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "-"
+    # Bump both for every release (docs/RELEASING.md). The build number must always grow:
+    # Sparkle compares CURRENT_PROJECT_VERSION.
+    MARKETING_VERSION: "0.9"
+    CURRENT_PROJECT_VERSION: "1"
 packages:
   LibretillaDocx:
     path: Packages/LibretillaDocx
@@ -45,8 +49,8 @@ targets:
         CFBundleDisplayName: Libretilla
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, es]
-        CFBundleShortVersionString: "0.0.1"
-        CFBundleVersion: "1"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "26.0"
         NSHumanReadableCopyright: "© 2026 Diego Escalante. MIT License."
