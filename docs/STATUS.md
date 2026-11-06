@@ -198,8 +198,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   nested tables show as one line of text per row; a vertically merged cell's text sits in its first row; tables
   drawn at open keep their width if the page setup changes until the document is reopened.
 
-**Milestone 3 features are all in.** Still open: `w:pageBreakBefore` doesn't break pages in print yet. Also `w:pageBreakBefore` (a paragraph property) doesn't break pages in
-print yet.
+**Milestone 3 features are all in.** (`w:pageBreakBefore`, still open here at the time, landed in Milestone 5.)
 
 ## Milestone 4: Polish (2026-11-05)
 
@@ -259,3 +258,22 @@ print yet.
   explicit save), which TextEdit shows too, so it's the Mac's own convention. Libretilla's status beside it says
   whether the file on disk is current.
 
+## Milestone 5: Release (in progress)
+
+**Done**
+
+- **`w:pageBreakBefore` starts a new page in print and PDF export.** The bridge marks every character of a
+  paragraph whose resolved properties (direct `w:pPr`, or the `w:pStyle` / `basedOn` chain; `w:val="0"`,
+  `"false"` and `"off"` turn it off) say so with `.libretillaPageBreakBefore`. `PrintTextView` ends the page
+  at the top of that paragraph's layout fragment, unless nothing is above it on the page already (it follows a
+  page break, or it's the document's first paragraph). The editor shows nothing new and a save writes nothing
+  new. Fixture `13-page-break-before.docx` (direct, through a style chain, turned off three ways; prints on 4
+  pages). Tests: 5 package tests (`PageBreakTests`), 3 app tests (`PageSetupDocumentTests`).
+
+**Known issues**
+
+- When a page ends early at a paragraph that starts a new page, TextKit still draws that paragraph on the page
+  before, clipped out of sight: the paper is right, but the paragraph's text is also in that page's PDF text
+  (search, copy, accessibility). The tests read each page's first line, which is right.
+- The page-break-before mark is set when the document opens: giving a paragraph another style in the editor
+  doesn't change whether it starts a page in print until the document is reopened (the saved file is right).
