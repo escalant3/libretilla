@@ -21,16 +21,29 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
             loadViewIfNeeded()
             canvas.showsPageEdges = showsPageEdges
             applyPageAppearance()
+            scheduleFit()
         }
     }
     /// View zoom, as in Google Docs: the page is magnified (⌘+ / ⌘− / ⌘0, the format bar, or a pinch);
-    /// the document's font sizes don't change. 1 is 100%.
+    /// the document's font sizes don't change. 1 is 100%. Setting it leaves Fit.
     var zoom: CGFloat {
         get { scrollView?.magnification ?? 1 }
-        set { setZoom(newValue) }
+        set {
+            fitsWidth = false
+            setZoom(newValue)
+        }
     }
-    /// Called after the zoom changes (commands, the format bar, or a pinch ending).
-    var onZoomChange: ((CGFloat) -> Void)?
+    /// Fit, as in Google Docs: the zoom follows the window so the page takes its whole width (between the
+    /// least and the most zoom). A set zoom, a step or a pinch leaves it.
+    private(set) var fitsWidth = false {
+        didSet {
+            loadViewIfNeeded()
+            canvas.fitsWidth = fitsWidth
+        }
+    }
+    /// Called after the zoom changes (commands, the format bar, a pinch ending, or Fit following the window),
+    /// with whether it's Fit.
+    var onZoomChange: ((_ zoom: CGFloat, _ fits: Bool) -> Void)?
     static let zoomLevels: [CGFloat] = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2]
     /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
     weak var document: LibretillaDocument?
@@ -128,6 +141,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         NotificationCenter.default.addObserver(
             self, selector: #selector(didEndLiveMagnify), name: NSScrollView.didEndLiveMagnifyNotification,
             object: scrollView)
+        // The window (or the space beside the outline) changed width: Fit follows it.
+        scrollView.contentView.postsFrameChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(clipFrameChanged), name: NSView.frameDidChangeNotification,
+            object: scrollView.contentView)
         view = scrollView
         apply(pageSetup)
     }
@@ -135,21 +153,59 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     // MARK: Zoom
 
     @objc func zoomIn(_ sender: Any?) {
-        setZoom(Self.zoomLevels.first { $0 > zoom + 0.001 } ?? zoom)
+        zoom = Self.zoomLevels.first { $0 > zoom + 0.001 } ?? zoom
     }
 
     @objc func zoomOut(_ sender: Any?) {
-        setZoom(Self.zoomLevels.last { $0 < zoom - 0.001 } ?? zoom)
+        zoom = Self.zoomLevels.last { $0 < zoom - 0.001 } ?? zoom
     }
 
-    @objc func zoomToActualSize(_ sender: Any?) { setZoom(1) }
+    @objc func zoomToActualSize(_ sender: Any?) { zoom = 1 }
 
-    /// The format bar's zoom menu (the item's represented object is the zoom).
+    @objc func zoomToFit(_ sender: Any?) {
+        fitsWidth = true
+        applyFit(force: true)
+    }
+
+    /// The format bar's zoom menu's Fit item (its represented object).
+    static let fitZoomItem: CGFloat = 0
+
+    /// The format bar's zoom menu (the item's represented object is the zoom, or `fitZoomItem`).
     @objc func applyZoom(_ sender: Any?) {
         let item = (sender as? NSPopUpButton)?.selectedItem ?? sender as? NSMenuItem
-        if let value = item?.representedObject as? CGFloat { setZoom(value) }
+        if let value = item?.representedObject as? CGFloat {
+            if value == Self.fitZoomItem { zoomToFit(sender) } else { zoom = value }
+        }
         view.window?.makeFirstResponder(textView)
     }
+
+    /// The zoom at which the page (with its edges' margin, when they show) takes the window's width.
+    var fitWidthZoom: CGFloat {
+        loadViewIfNeeded()
+        let needed = pageSetup.pageSize.width + 2 * (showsPageEdges ? PageCanvasView.edgePadding : 0)
+        let fit = scrollView.contentView.frame.width / needed
+        return min(max(fit, scrollView.minMagnification), scrollView.maxMagnification)
+    }
+
+    private func applyFit(force: Bool = false) {
+        guard fitsWidth else { return }
+        let fit = fitWidthZoom
+        if force || abs(fit - zoom) > 0.001 { setZoom(fit) }
+    }
+
+    private var fitScheduled = false
+    /// Fits on the next turn of the run loop, not in the middle of the layout that changed the width.
+    private func scheduleFit() {
+        guard fitsWidth, !fitScheduled else { return }
+        fitScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.fitScheduled = false
+            self.applyFit()
+        }
+    }
+
+    @objc private func clipFrameChanged(_ note: Notification) { scheduleFit() }
 
     private func setZoom(_ value: CGFloat) {
         loadViewIfNeeded()
@@ -165,7 +221,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         let wanted = NSRect(x: x, y: anchor - visible.height / 2, width: clip.bounds.width, height: clip.bounds.height)
         clip.scroll(to: clip.constrainBoundsRect(wanted).origin)
         scrollView.reflectScrolledClipView(clip)
-        onZoomChange?(scrollView.magnification)
+        onZoomChange?(scrollView.magnification, fitsWidth)
     }
 
     /// Resizes the canvas for the zoom, then lets the scroll view show or hide its scrollers for the new
@@ -178,8 +234,9 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     }
 
     @objc private func didEndLiveMagnify(_ note: Notification) {
+        fitsWidth = false
         fitCanvas()
-        onZoomChange?(scrollView.magnification)
+        onZoomChange?(scrollView.magnification, false)
     }
 
     // MARK: Page
@@ -202,6 +259,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         textView.setFrameSize(NSSize(width: column, height: max(textView.frame.height, setup.pageSize.height)))
         canvas.needsLayout = true
         canvas.needsDisplay = true
+        applyFit()
     }
 
     // MARK: Content
@@ -524,7 +582,14 @@ final class PageCanvasView: NSView {
         didSet { needsLayout = true }
     }
     /// Space around the page when its edges show.
-    private var padding: CGFloat { showsPageEdges && !isNarrow ? 32 : 0 }
+    private var padding: CGFloat { showsPageEdges && !isNarrow ? Self.edgePadding : 0 }
+    /// Space each side of the page when its edges show (and the page isn't narrow).
+    static let edgePadding: CGFloat = 32
+    /// The zoom fits the page to the window's width (View ▸ Zoom to Fit): narrow then means the page
+    /// doesn't fit even at the least zoom.
+    var fitsWidth = false {
+        didSet { needsLayout = true }
+    }
 
     /// Narrower than the page, the text wraps to the window with this much room each side (like a note).
     static let narrowInset: CGFloat = 20
@@ -617,9 +682,12 @@ final class PageCanvasView: NSView {
             } ?? 0
         let available = clip.bounds.width.rounded(.down)
         let wasNarrow = isNarrow
-        // Narrow means the window itself (its width on screen, whatever the zoom) is narrower than the page:
-        // zooming a wide window still magnifies the page and scrolls, as in Google Docs.
-        isNarrow = clip.frame.width.rounded(.down) < pageWidth + 2 * (showsPageEdges ? 32 : 0)
+        // At a set zoom, narrow means the window itself (its width on screen, whatever the zoom) is narrower
+        // than the page: zooming a wide window still magnifies the page and scrolls, as in Google Docs.
+        // Fitting the width, the page is magnified to the window, so it's narrow only once the least zoom
+        // can't shrink it enough (the clip's bounds are in page points).
+        let needed = pageWidth + 2 * (showsPageEdges ? Self.edgePadding : 0)
+        isNarrow = fitsWidth ? clip.bounds.width + 1 < needed : clip.frame.width.rounded(.down) < needed
         if isNarrow != wasNarrow { needsDisplay = true }
         let column = isNarrow ? max(Self.minimumColumn, available - 2 * Self.narrowInset) : columnWidth
         if abs(page.frame.width - column) > 0.5 {

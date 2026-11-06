@@ -80,13 +80,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             self.formatBar.update(format, bridge: bridge, editable: self.editor.textView.isEditable)
         }
         editor.showsPageEdges = UserDefaults.standard.bool(forKey: Self.showsPageEdgesKey)
-        // The zoom is remembered for every window, like page edges.
-        let savedZoom = UserDefaults.standard.double(forKey: Self.zoomKey)
-        editor.zoom = savedZoom > 0 ? savedZoom : 1
-        formatBar.showZoom(editor.zoom)
-        editor.onZoomChange = { [weak self] zoom in
-            UserDefaults.standard.set(Double(zoom), forKey: Self.zoomKey)
-            self?.formatBar.showZoom(zoom)
+        // The zoom is remembered for every window, like page edges. 0 (or nothing saved) is Fit, the default.
+        editor.onZoomChange = { [weak self] zoom, fits in
+            // Fit follows every resize: only write when the setting changes (each write refreshes every window).
+            let saved = fits ? 0 : Double(zoom)
+            if UserDefaults.standard.object(forKey: Self.zoomKey) as? Double != saved {
+                UserDefaults.standard.set(saved, forKey: Self.zoomKey)
+            }
+            self?.formatBar.showZoom(zoom, fits: fits)
         }
         outline.onSelect = { [weak self] heading in self?.editor.go(to: heading) }
         editor.onHeadingsChange = { [weak self] headings in
@@ -102,6 +103,8 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             MainActor.assumeIsolated { self?.applyPreferences() }
         }
         editor.apply(document.pageSetup)
+        let savedZoom = UserDefaults.standard.double(forKey: Self.zoomKey)
+        if savedZoom > 0 { editor.zoom = savedZoom } else { editor.zoomToFit(nil) }
         editor.show(document.initialText, editable: !document.isReadOnly)
         status.show(document.saveState, isDraft: document.fileURL == nil)
         document.onSaveStateChange = { [weak self, weak document] state in

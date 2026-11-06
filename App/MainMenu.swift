@@ -150,6 +150,7 @@ enum MainMenu {
         menu.addItem(
             item(String(localized: "Show Page Edges"), #selector(DocumentWindowController.togglePageEdges(_:))))
         menu.addItem(.separator())
+        menu.addItem(item(String(localized: "Zoom to Fit"), #selector(EditorViewController.zoomToFit(_:))))
         menu.addItem(item(String(localized: "Actual Size"), #selector(EditorViewController.zoomToActualSize(_:)), "0"))
         menu.addItem(item(String(localized: "Zoom In"), #selector(EditorViewController.zoomIn(_:)), "+"))
         // ⌘= zooms in too, without Shift (as in browsers).

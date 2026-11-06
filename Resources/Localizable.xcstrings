@@ -192,6 +192,16 @@
         }
       }
     },
+    "Fit": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar"
+          }
+        }
+      }
+    },
     "Libretilla can’t safely save this document: %@.": {
       "localizations": {
         "es": {
@@ -1870,6 +1880,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reducir"
+          }
+        }
+      }
+    },
+    "Zoom to Fit": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustar al ancho"
           }
         }
       }

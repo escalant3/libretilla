@@ -59,6 +59,14 @@ final class ZoomUITests: LibretillaUITestCase {
         shoot(window, "5-zoom-150-menu")
         body.typeKey("0", modifierFlags: .command)
         XCTAssertTrue(waitUntil(3) { zoomValue() == "100%" })
+
+        // Fit, from the format bar's menu: the page takes the window's width; a step leaves it.
+        zoom.click()
+        window.menuItems["Fit"].click()
+        XCTAssertTrue(waitUntil(3) { zoomValue() == "Fit" }, "got \(zoomValue())")
+        shoot(window, "6-zoom-fit")
+        body.typeKey("0", modifierFlags: .command)
+        XCTAssertTrue(waitUntil(3) { zoomValue() == "100%" }, "⌘0 leaves Fit; got \(zoomValue())")
     }
 
     @MainActor

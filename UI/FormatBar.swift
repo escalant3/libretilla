@@ -53,6 +53,9 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     // MARK: Building
 
     override func loadView() {
+        zoomPopup.addItem(withTitle: String(localized: "Fit"))
+        zoomPopup.lastItem?.representedObject = EditorViewController.fitZoomItem
+        zoomPopup.menu?.addItem(.separator())
         for level in EditorViewController.zoomLevels {
             zoomPopup.addItem(withTitle: Self.zoomText(level))
             zoomPopup.lastItem?.representedObject = level
@@ -329,18 +332,27 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
 
     static func zoomText(_ zoom: CGFloat) -> String { "\(Int((zoom * 100).rounded()))%" }
 
-    /// Shows the zoom; a level from a pinch that isn't in the list is shown while it lasts.
-    func showZoom(_ zoom: CGFloat) {
+    /// Shows the zoom (or Fit); a level from a pinch that isn't in the list is shown while it lasts.
+    func showZoom(_ zoom: CGFloat, fits: Bool = false) {
         loadViewIfNeeded()
         while let extra = zoomPopup.itemArray.firstIndex(where: { $0.tag == Self.pinchZoomTag }) {
             zoomPopup.removeItem(at: extra)
         }
-        if let item = zoomPopup.itemArray.first(where: { abs(($0.representedObject as? CGFloat ?? 0) - zoom) < 0.005 })
-        {
+        if fits {
+            zoomPopup.selectItem(at: 0)
+            return
+        }
+        let levels = zoomPopup.itemArray.filter {
+            ($0.representedObject as? CGFloat).map { $0 != EditorViewController.fitZoomItem } ?? false
+        }
+        if let item = levels.first(where: { abs(($0.representedObject as? CGFloat ?? 0) - zoom) < 0.005 }) {
             zoomPopup.select(item)
             return
         }
-        let index = EditorViewController.zoomLevels.firstIndex { $0 > zoom } ?? EditorViewController.zoomLevels.count
+        // After Fit and its separator.
+        let index =
+            2
+            + (EditorViewController.zoomLevels.firstIndex { $0 > zoom } ?? EditorViewController.zoomLevels.count)
         zoomPopup.insertItem(withTitle: Self.zoomText(zoom), at: index)
         let item = zoomPopup.item(at: index)!
         item.tag = Self.pinchZoomTag

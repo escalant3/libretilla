@@ -7,7 +7,8 @@ import XCTest
 @MainActor
 final class ZoomTests: XCTestCase {
     override func setUp() {
-        UserDefaults.standard.removeObject(forKey: DocumentWindowController.zoomKey)
+        // These start at 100%; the Fit tests below start with nothing saved (Fit, the default).
+        UserDefaults.standard.set(1.0, forKey: DocumentWindowController.zoomKey)
     }
 
     override func tearDown() {
@@ -95,7 +96,129 @@ final class ZoomTests: XCTestCase {
             Set(items(#selector(EditorViewController.zoomIn(_:))).map(\.keyEquivalent)), ["+", "="])
         XCTAssertEqual(items(#selector(EditorViewController.zoomOut(_:))).map(\.keyEquivalent), ["-"])
         XCTAssertEqual(items(#selector(EditorViewController.zoomToActualSize(_:))).map(\.keyEquivalent), ["0"])
+        XCTAssertEqual(items(#selector(EditorViewController.zoomToFit(_:))).map(\.keyEquivalent), [""], "as in Docs")
         XCTAssertEqual(items(#selector(EditorViewController.increaseFontSize(_:))).map(\.keyEquivalent), [">"])
         XCTAssertEqual(items(#selector(EditorViewController.decreaseFontSize(_:))).map(\.keyEquivalent), ["<"])
+    }
+
+    // MARK: Fit
+
+    /// A new window with nothing saved, laid out (Fit follows the window on the next turn of the run loop).
+    private func fitWindow(width: CGFloat? = nil) throws -> (LibretillaDocument, EditorViewController, NSWindow) {
+        UserDefaults.standard.removeObject(forKey: DocumentWindowController.zoomKey)
+        let doc = LibretillaDocument()
+        doc.makeWindowControllers()
+        let editor = try XCTUnwrap(doc.editor)
+        let window = try XCTUnwrap(editor.view.window)
+        if let width { window.setContentSize(NSSize(width: width, height: window.contentLayoutRect.height)) }
+        settle(window, editor)
+        return (doc, editor, window)
+    }
+
+    /// Lets the window finish laying out (its controller adjusts the frame on the next turns of the run loop,
+    /// and Fit follows), until the clip's width holds still.
+    private func settle(_ window: NSWindow, _ editor: EditorViewController) {
+        var last: CGFloat = -1
+        for _ in 0..<20 {
+            window.layoutIfNeeded()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            let width = editor.view.frame.width
+            if width == last, !editor.fitsWidth || abs(editor.zoom - editor.fitWidthZoom) < 0.001 { break }
+            last = width
+        }
+    }
+
+    private func clipWidth(_ editor: EditorViewController) throws -> CGFloat {
+        try XCTUnwrap(editor.textView.enclosingScrollView).contentView.frame.width
+    }
+
+    func testFitIsTheDefaultAndThePageTakesTheWindowsWidth() throws {
+        let (doc, editor, _) = try fitWindow()
+        defer { doc.close() }
+        XCTAssertTrue(editor.fitsWidth)
+        let canvas = try XCTUnwrap(editor.textView.superview as? PageCanvasView)
+        XCTAssertFalse(canvas.isNarrow)
+        XCTAssertEqual(canvas.pageRect.width * editor.zoom, try clipWidth(editor), accuracy: 1)
+        XCTAssertEqual(
+            UserDefaults.standard.double(forKey: DocumentWindowController.zoomKey), 0, "Fit is remembered as 0")
+    }
+
+    func testFitFollowsTheWindow() throws {
+        let (doc, editor, window) = try fitWindow(width: 900)
+        defer { doc.close() }
+        let before = editor.zoom
+        window.setContentSize(NSSize(width: 1100, height: window.contentLayoutRect.height))
+        settle(window, editor)
+        XCTAssertGreaterThan(editor.zoom, before)
+        XCTAssertEqual(editor.pageSetup.pageSize.width * editor.zoom, try clipWidth(editor), accuracy: 1)
+    }
+
+    func testFitShrinksAPageWiderThanTheWindow() throws {
+        let (doc, editor, _) = try fitWindow(width: 500)
+        defer { doc.close() }
+        let canvas = try XCTUnwrap(editor.textView.superview as? PageCanvasView)
+        XCTAssertLessThan(editor.zoom, 1)
+        XCTAssertFalse(canvas.isNarrow, "shrunk, the whole page shows")
+        XCTAssertEqual(editor.pageSetup.pageSize.width * editor.zoom, try clipWidth(editor), accuracy: 1)
+    }
+
+    func testFitRewrapsOncePastTheLeastZoom() throws {
+        let editor = EditorViewController()
+        editor.loadView()
+        let scroll = try XCTUnwrap(editor.view as? NSScrollView)
+        let canvas = try XCTUnwrap(scroll.documentView as? PageCanvasView)
+        scroll.frame = NSRect(x: 0, y: 0, width: 280, height: 600)
+        scroll.tile()
+        editor.zoomToFit(nil)
+        canvas.layoutSubtreeIfNeeded()
+        XCTAssertEqual(editor.zoom, 0.5, accuracy: 0.001, "50% is the least")
+        XCTAssertTrue(canvas.isNarrow, "past the least zoom, the text rewraps")
+    }
+
+    func testFitStopsAtTheMostZoom() throws {
+        let (doc, editor, window) = try fitWindow()
+        defer { doc.close() }
+        window.setFrame(NSRect(x: 0, y: 0, width: 3000, height: 800), display: false)
+        settle(window, editor)
+        if try clipWidth(editor) > 2 * editor.pageSetup.pageSize.width + 1 {
+            XCTAssertEqual(editor.zoom, 2, accuracy: 0.001, "200% is the most")
+        }
+        XCTAssertLessThanOrEqual(editor.zoom, 2.0001)
+    }
+
+    func testFitLeavesRoomForPageEdges() throws {
+        let (doc, editor, window) = try fitWindow(width: 900)
+        defer { doc.close() }
+        let controller = try XCTUnwrap(window.windowController as? DocumentWindowController)
+        let edgesWere = UserDefaults.standard.object(forKey: DocumentWindowController.showsPageEdgesKey)
+        defer { UserDefaults.standard.set(edgesWere, forKey: DocumentWindowController.showsPageEdgesKey) }
+        if !editor.showsPageEdges { controller.togglePageEdges(nil) }
+        settle(window, editor)
+        let needed = editor.pageSetup.pageSize.width + 2 * PageCanvasView.edgePadding
+        XCTAssertEqual(needed * editor.zoom, try clipWidth(editor), accuracy: 1)
+    }
+
+    func testZoomingLeavesFitAndZoomToFitReturns() throws {
+        let (doc, editor, window) = try fitWindow(width: 900)
+        defer { doc.close() }
+        let fit = editor.zoom
+        editor.zoomIn(nil)
+        XCTAssertFalse(editor.fitsWidth)
+        XCTAssertEqual(editor.zoom, EditorViewController.zoomLevels.first { $0 > fit + 0.001 } ?? 0, accuracy: 0.001)
+        XCTAssertEqual(
+            UserDefaults.standard.double(forKey: DocumentWindowController.zoomKey), Double(editor.zoom),
+            accuracy: 0.001)
+        let zoomed = editor.zoom
+        window.setContentSize(NSSize(width: 1000, height: window.contentLayoutRect.height))
+        settle(window, editor)
+        XCTAssertEqual(editor.zoom, zoomed, accuracy: 0.001, "a set zoom doesn't follow the window")
+
+        editor.zoomToFit(nil)
+        XCTAssertTrue(editor.fitsWidth)
+        XCTAssertEqual(editor.zoom, editor.fitWidthZoom, accuracy: 0.001)
+        XCTAssertEqual(UserDefaults.standard.double(forKey: DocumentWindowController.zoomKey), 0)
+        editor.zoomToActualSize(nil)
+        XCTAssertFalse(editor.fitsWidth)
+        XCTAssertEqual(editor.zoom, 1, accuracy: 0.001)
     }
 }

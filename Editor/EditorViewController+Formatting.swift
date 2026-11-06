@@ -452,7 +452,10 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         switch action {
         case #selector(zoomIn(_:)): return zoom < Self.zoomLevels.last! - 0.001
         case #selector(zoomOut(_:)): return zoom > Self.zoomLevels.first! + 0.001
-        case #selector(zoomToActualSize(_:)): return abs(zoom - 1) > 0.001
+        case #selector(zoomToActualSize(_:)): return fitsWidth || abs(zoom - 1) > 0.001
+        case #selector(zoomToFit(_:)):
+            item.state = fitsWidth ? .on : .off
+            return true
         default: break
         }
         let format = currentFormat
