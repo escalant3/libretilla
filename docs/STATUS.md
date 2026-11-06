@@ -18,7 +18,7 @@
   [0002 own lossless OOXML codec, built incrementally](decisions/0002-docx-library.md).
 - Editor uses an explicit TextKit 2 `NSTextView` and logs a fault if anything forces a TextKit 1 fallback.
   `Tests/TextKit2CompatibilityTests.swift` pins the known gaps.
-- Repo on GitHub: [escalant3/libretilla](https://github.com/escalant3/libretilla) (private). CI is green on the `macos-26`
+- Repo on GitHub: [escalant3/libretilla](https://github.com/escalant3/libretilla). CI is green on the `macos-26`
   runner (Xcode 26.6, arm64); a full run takes about 1.5 minutes.
 
 **Decided with the human:** minimum macOS 26; sandboxed; generated corpus with real-app slots left as TODOs;

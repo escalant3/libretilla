@@ -4,7 +4,7 @@
 
 ## 1. What we are building
 
-**Libretilla** (Spanish for "notebook") is a minimalist, native macOS word processor whose **native file format is `.docx`**. It lets you write documents without distractions and export them to PDF. It is a small, independent app: no ribbon, no AI, no cloud, no database integration.
+**Libretilla** (Spanish for "small notebook") is a minimalist, native macOS word processor whose **native file format is `.docx`**. It lets you write documents without distractions and export them to PDF. It is a small, independent app: no ribbon, no AI, no cloud, no database integration.
 
 Design touchstones: Office 97 / WordPad for structure (a menu bar, one compact toolbar, a formatting bar, an optional ruler) and **Google Docs for polish and behaviour** (editable title at the top, a "Saved" status, a clean page on a quiet canvas, an outline panel, no save ritual). Everything is built from **native macOS controls**. Dark mode and standard Apple conventions come for free and must never be fought. Beauty is in minimalism.
 
