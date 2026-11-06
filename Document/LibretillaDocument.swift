@@ -363,6 +363,11 @@ final class LibretillaDocument: NSDocument {
         let info = Self.printInfo(for: pageSetup, basedOn: printInfo)
         info.dictionary().addEntries(from: printSettings)
         let view = PrintTextView(text: editor?.textSnapshot() ?? initialText, width: pageSetup.textWidth)
+        if let base, !base.headersFooters.stories.isEmpty {
+            view.decorations = PrintTextView.Decorations(
+                headersFooters: base.headersFooters, differentFirstPage: base.body.differentFirstPage, bridge: bridge,
+                setup: pageSetup)
+        }
         return NSPrintOperation(view: view, printInfo: info)
     }
 

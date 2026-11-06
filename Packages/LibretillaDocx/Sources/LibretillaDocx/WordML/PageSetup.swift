@@ -13,6 +13,10 @@ public struct PageSetup: Sendable, Equatable {
     public var bottom: Int
     public var left: Int
     public var isLandscape: Bool
+    /// From the top edge to the header, and from the bottom edge to the footer (`w:pgMar`'s `w:header` and
+    /// `w:footer`), in twips. Read only: changing the page setup keeps the section's own values.
+    public var header = 720
+    public var footer = 720
 
     public init(width: Int, height: Int, top: Int, right: Int, bottom: Int, left: Int, isLandscape: Bool = false) {
         self.width = width
@@ -45,6 +49,11 @@ public struct PageSetup: Sendable, Equatable {
             CGFloat(abs(top)) / Self.twipsPerPoint, CGFloat(right) / Self.twipsPerPoint,
             CGFloat(abs(bottom)) / Self.twipsPerPoint, CGFloat(left) / Self.twipsPerPoint
         )
+    }
+
+    /// The header and footer distances in points.
+    public var headerFooterDistances: (header: CGFloat, footer: CGFloat) {
+        (CGFloat(header) / Self.twipsPerPoint, CGFloat(footer) / Self.twipsPerPoint)
     }
 
     /// The width of the text column, in points.
@@ -103,6 +112,8 @@ public struct PageSetup: Sendable, Equatable {
         setup.right = int(margins, "w:right") ?? setup.right
         setup.bottom = int(margins, "w:bottom") ?? setup.bottom
         setup.left = int(margins, "w:left") ?? setup.left
+        setup.header = int(margins, "w:header").map(abs) ?? setup.header
+        setup.footer = int(margins, "w:footer").map(abs) ?? setup.footer
         self = setup
     }
 }

@@ -41,6 +41,7 @@
 		A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA4329D6F3940D15193509 /* MainToolbar.swift */; };
 		AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = C3995CF0646BC821F5D8E314 /* Blank.docx */; };
 		AA89D58D874D6599DE634DA5 /* DocumentOutline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */; };
+		B0C5C645CFB2571CC72C824F /* HeaderFooterDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CADCFF3C7359CBF29DD03E3 /* HeaderFooterDocumentTests.swift */; };
 		B57597D9D9547766175906C5 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6866795AD37DA6D40AA724 /* Preferences.swift */; };
 		B88C0619A4ECD174472EBD10 /* PersistenceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC9E479FE7EB5741F385EAC /* PersistenceUITests.swift */; };
 		BAAA2736C9FD7E41FB7F9A49 /* FormatBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7177A30E8F421E0EE6AF44D /* FormatBar.swift */; };
@@ -103,6 +104,7 @@
 		7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Formatting.swift"; sourceTree = "<group>"; };
 		80B5D15043E73883EF1C49BA /* PolishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishTests.swift; sourceTree = "<group>"; };
 		8B423A9C2D611D5DD9824546 /* ZoomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomTests.swift; sourceTree = "<group>"; };
+		8CADCFF3C7359CBF29DD03E3 /* HeaderFooterDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderFooterDocumentTests.swift; sourceTree = "<group>"; };
 		8D595AD1849A99513505DA43 /* FormattingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingUITests.swift; sourceTree = "<group>"; };
 		90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingCommandTests.swift; sourceTree = "<group>"; };
 		96A3ADE5C01027AF83420172 /* PolishUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishUITests.swift; sourceTree = "<group>"; };
@@ -187,6 +189,7 @@
 			isa = PBXGroup;
 			children = (
 				90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */,
+				8CADCFF3C7359CBF29DD03E3 /* HeaderFooterDocumentTests.swift */,
 				168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */,
 				1220F34C98BB80B1BFC3C436 /* LinkCommandTests.swift */,
 				DCD086425A16E674FF83850C /* LocalizationTests.swift */,
@@ -453,6 +456,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				463078BF6947DBDB3F3F94B3 /* FormattingCommandTests.swift in Sources */,
+				B0C5C645CFB2571CC72C824F /* HeaderFooterDocumentTests.swift in Sources */,
 				C9B3D570E3849A02E154A4E2 /* LibretillaDocumentTests.swift in Sources */,
 				2F4ECEE091A2983EC1993FF3 /* LinkCommandTests.swift in Sources */,
 				CC4DDAEEE2EAA046AE9802B0 /* LocalizationTests.swift in Sources */,

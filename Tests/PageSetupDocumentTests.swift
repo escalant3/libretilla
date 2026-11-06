@@ -204,9 +204,9 @@ final class PageSetupDocumentTests: XCTestCase {
 
     // MARK: Page break before
 
-    /// The first line of text on a PDF page (0-based).
-    func firstLine(of page: Int, in pdf: PDFDocument) -> String? {
-        pdf.page(at: page)?.string?.split(whereSeparator: \.isNewline).first.map(String.init)
+    /// The first line of text on a PDF page (0-based), not counting the page's header.
+    func firstLine(of page: Int, in pdf: PDFDocument, header: String? = nil) -> String? {
+        pdf.page(at: page)?.string?.split(whereSeparator: \.isNewline).map(String.init).first { $0 != header }
     }
 
     func testPageBreakBeforeStartsNewPagesInThePDF() throws {
@@ -249,6 +249,6 @@ final class PageSetupDocumentTests: XCTestCase {
         try markPageBreakBefore("Last page.", in: doc)
         let pdf = try pdfPages(doc)
         XCTAssertEqual(pdf.pageCount, 4)
-        XCTAssertEqual(firstLine(of: 3, in: pdf), "Last page.")
+        XCTAssertEqual(firstLine(of: 3, in: pdf, header: "Libretilla fixture — running header"), "Last page.")
     }
 }

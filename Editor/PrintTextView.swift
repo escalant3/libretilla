@@ -2,9 +2,19 @@ import AppKit
 import LibretillaDocx
 
 /// The view printing and PDF export lay the document out in (TextKit 2, like the editor). It starts a
-/// new page after every page break and before every paragraph marked `w:pageBreakBefore`, and doesn't draw
-/// the editor's page break chips.
+/// new page after every page break and before every paragraph marked `w:pageBreakBefore`, doesn't draw
+/// the editor's page break chips, and draws each page's header and footer.
 final class PrintTextView: NSTextView {
+    /// The headers and footers to draw in the page margins, and how.
+    struct Decorations {
+        var headersFooters: HeadersFooters
+        var differentFirstPage: Bool
+        var bridge: AttributedStringBridge
+        var setup: PageSetup
+    }
+
+    var decorations: Decorations?
+
     /// Bottom edges (view coordinates) of the lines that end in a page break, top to bottom.
     private var breakLineBottoms: [CGFloat] = []
     /// For each paragraph that starts a new page, top to bottom: the top edge of its layout fragment (above its
@@ -21,6 +31,8 @@ final class PrintTextView: NSTextView {
         textContainer?.lineFragmentPadding = 0
         textStorage?.setAttributedString(Self.printable(text))
         sizeToFit()
+        // Drawing headers and footers changes the frame for a moment; the text must not reflow.
+        textContainer?.widthTracksTextView = false
         breakLineBottoms = pageBreakOffsets().compactMap(lineBottom(containing:)).sorted()
         breakBeforeLines = pageBreakBeforeOffsets().compactMap { start in
             guard let top = line(containing: start).map({ $0.frame.minY + textContainerOrigin.y }),
@@ -105,5 +117,57 @@ final class PrintTextView: NSTextView {
         let afterBreak = breakLineBottoms.first { $0 > oldTop + 0.5 && $0 < limit }
         let beforeParagraph = breakBeforeLines.first { $0.previousBottom > oldTop + 0.5 && $0.top < limit }?.top
         if let bottom = [afterBreak, beforeParagraph].compactMap({ $0 }).min() { newBottom.pointee = bottom }
+    }
+
+    // MARK: Headers and footers
+
+    /// Draws the page's header and footer: the header's top `w:header` below the page's top edge, the footer's
+    /// bottom `w:footer` above its bottom edge, both across the text column. Page fields show this page's
+    /// number and the page count.
+    override func drawPageBorder(with borderSize: NSSize) {
+        guard let decorations, let op = NSPrintOperation.current else { return }
+        let page = op.currentPage
+        let pages = NSMaxRange(op.pageRange) - 1
+        let saved = frame
+        // As AppKit's documentation says: the page border is drawn in a frame the size of the paper.
+        frame = NSRect(origin: .zero, size: borderSize)
+        defer { frame = saved }
+        let flipped = NSGraphicsContext.current?.isFlipped ?? isFlipped
+        NSAppearance(named: .aqua)?.performAsCurrentDrawingAppearance {
+            for kind in HeadersFooters.Kind.allCases {
+                guard
+                    let text = Self.decorationText(
+                        kind, page: page, of: pages, decorations: decorations)
+                else { continue }
+                let setup = decorations.setup
+                let size = NSSize(width: setup.textWidth, height: .greatestFiniteMagnitude)
+                let options: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
+                let height = ceil(text.boundingRect(with: size, options: options).height)
+                let distances = setup.headerFooterDistances
+                // From the top of the page.
+                let top = kind == .header ? distances.header : borderSize.height - distances.footer - height
+                let rect = NSRect(
+                    x: setup.margins.left, y: flipped ? top : borderSize.height - top - height,
+                    width: setup.textWidth, height: height)
+                text.draw(with: rect, options: options)
+            }
+        }
+    }
+
+    /// The header or footer text for page `page` of `pages`, or nil if the page has none.
+    static func decorationText(_ kind: HeadersFooters.Kind, page: Int, of pages: Int, decorations: Decorations)
+        -> NSAttributedString?
+    {
+        guard
+            let story = decorations.headersFooters.story(
+                kind, page: page, differentFirstPage: decorations.differentFirstPage), !story.isEmpty
+        else { return nil }
+        let text = NSMutableAttributedString(
+            attributedString: printable(
+                decorations.bridge.forStory(story).attributedString(
+                    for: story.printableBody(page: page, pages: pages))))
+        // The last paragraph's terminator would add an empty line.
+        if text.string.hasSuffix("\n") { text.deleteCharacters(in: NSRange(location: text.length - 1, length: 1)) }
+        return text
     }
 }
