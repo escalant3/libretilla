@@ -21,9 +21,16 @@ settings:
     # Sparkle compares CURRENT_PROJECT_VERSION.
     MARKETING_VERSION: "0.9"
     CURRENT_PROJECT_VERSION: "1"
+    # Sparkle's update feed and the EdDSA public key it checks updates with (docs/RELEASING.md).
+    # Without a key the updater refuses to check, and scripts/make-dmg.sh refuses to build.
+    SPARKLE_FEED_URL: https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml
+    SPARKLE_PUBLIC_KEY: ""
 packages:
   LibretillaDocx:
     path: Packages/LibretillaDocx
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
 targets:
   Libretilla:
     type: application
@@ -37,12 +44,18 @@ targets:
       - Resources
     dependencies:
       - package: LibretillaDocx
+      - package: Sparkle
     entitlements:
       path: App/Libretilla.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-write: true
         com.apple.security.files.bookmarks.app-scope: true
+        # Sparkle's installer XPC service, which a sandboxed app must reach (Sparkle's sandboxing guide).
+        # There is no network entitlement: Sparkle's Downloader XPC service fetches updates.
+        com.apple.security.temporary-exception.mach-lookup.global-name:
+          - $(PRODUCT_BUNDLE_IDENTIFIER)-spks
+          - $(PRODUCT_BUNDLE_IDENTIFIER)-spki
     info:
       path: App/Info.plist
       properties:
@@ -55,6 +68,11 @@ targets:
         LSMinimumSystemVersion: "26.0"
         NSHumanReadableCopyright: "© 2026 Diego Escalante. MIT License."
         NSPrincipalClass: NSApplication
+        SUFeedURL: $(SPARKLE_FEED_URL)
+        SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
+        SUEnableInstallerLauncherService: true
+        SUEnableDownloaderService: true
+        SUEnableSystemProfiling: false
         CFBundleDocumentTypes:
           - CFBundleTypeName: Word Document
             CFBundleTypeRole: Editor

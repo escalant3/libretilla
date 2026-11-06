@@ -25,6 +25,7 @@
 		3A0886376ABB989EC5FEF5C7 /* LibretillaDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD76665BBD77320FA1284F2 /* LibretillaDocument.swift */; };
 		3B1EB0AE1326C5A07E0BE6D7 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048A78A99D2D86EE864C12D7 /* UITestSupport.swift */; };
 		3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7396DA2CEF648E1376E074 /* EditorViewController.swift */; };
+		4585E143CD274D8142094E69 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = D68B841A8AADEC4B87EF5D0E /* Updater.swift */; };
 		463078BF6947DBDB3F3F94B3 /* FormattingCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */; };
 		550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */; };
 		5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */; };
@@ -36,6 +37,7 @@
 		972F462E0FDE8A5FF6FF43A3 /* OutlineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A9DA01A9C521B6E50E1564 /* OutlineViewController.swift */; };
 		A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */; };
 		A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A3ADE5C01027AF83420172 /* PolishUITests.swift */; };
+		A32E9DA737A9F369A379DC2A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DDAC94F106BD02A44A365D23 /* Sparkle */; };
 		A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA4329D6F3940D15193509 /* MainToolbar.swift */; };
 		AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = C3995CF0646BC821F5D8E314 /* Blank.docx */; };
 		AA89D58D874D6599DE634DA5 /* DocumentOutline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */; };
@@ -111,6 +113,7 @@
 		C265588B8F5CD56D46001C1F /* Libretilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Libretilla.entitlements; sourceTree = "<group>"; };
 		C3995CF0646BC821F5D8E314 /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
 		D2F9A5D4C6563A3A0C46E03C /* TableEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorController.swift; sourceTree = "<group>"; };
+		D68B841A8AADEC4B87EF5D0E /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		D732D08D256C51C1D5415580 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		D8431395F3D0E153A51C2342 /* LibretillaDocx */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LibretillaDocx; path = Packages/LibretillaDocx; sourceTree = SOURCE_ROOT; };
@@ -143,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				37D7467E379D6DE571E2CC02 /* LibretillaDocx in Frameworks */,
+				A32E9DA737A9F369A379DC2A /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,6 +264,7 @@
 				697B3326EEE48C402ABE0847 /* main.swift */,
 				D89EB5B7C58456AB37D41C38 /* MainMenu.swift */,
 				DA6866795AD37DA6D40AA724 /* Preferences.swift */,
+				D68B841A8AADEC4B87EF5D0E /* Updater.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -305,6 +310,7 @@
 			name = Libretilla;
 			packageProductDependencies = (
 				FF1A720BE765563C98BCD694 /* LibretillaDocx */,
+				DDAC94F106BD02A44A365D23 /* Sparkle */,
 			);
 			productName = Libretilla;
 			productReference = 636A9243E06738157D24E3DC /* Libretilla.app */;
@@ -380,6 +386,7 @@
 			mainGroup = D2E9E82A56727D6B52811B96;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				5BEA2923A0B9843589B2C36C /* XCRemoteSwiftPackageReference "Sparkle" */,
 				F0AD96E99A40DD46E1EAD9DE /* XCLocalSwiftPackageReference "Packages/LibretillaDocx" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -436,6 +443,7 @@
 				1FFCDC6AEFD4CEF605D9F5CD /* SaveStatusViewController.swift in Sources */,
 				631CDE59FC31D21774FAFC51 /* SettingsWindowController.swift in Sources */,
 				BC1014D208A08C2D7F841DD0 /* TableEditorController.swift in Sources */,
+				4585E143CD274D8142094E69 /* Updater.swift in Sources */,
 				D4850E42B00B800124198887 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -654,6 +662,8 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SPARKLE_FEED_URL = "https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml";
+				SPARKLE_PUBLIC_KEY = "";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -725,6 +735,8 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SPARKLE_FEED_URL = "https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml";
+				SPARKLE_PUBLIC_KEY = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -780,10 +792,26 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		5BEA2923A0B9843589B2C36C /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		689B55E6DD8C56E7C9C2EB0C /* LibretillaDocx */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LibretillaDocx;
+		};
+		DDAC94F106BD02A44A365D23 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5BEA2923A0B9843589B2C36C /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 		FF1A720BE765563C98BCD694 /* LibretillaDocx */ = {
 			isa = XCSwiftPackageProductDependency;

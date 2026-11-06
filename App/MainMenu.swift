@@ -43,6 +43,7 @@ enum MainMenu {
             item(
                 String(localized: "About Libretilla"),
                 #selector(NSApplication.orderFrontStandardAboutPanel(_:))))
+        menu.addItem(Updater.menuItem())
         menu.addItem(.separator())
         menu.addItem(item(String(localized: "Settings…"), #selector(AppDelegate.showSettings(_:)), ","))
         menu.addItem(.separator())

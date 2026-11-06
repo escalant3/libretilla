@@ -12,7 +12,8 @@ automatically. There are no Save dialogs. When you're done, export to PDF.
 ## Principles
 
 - **Minimal.** A menu bar, one compact toolbar, a formatting bar and an optional ruler. No ribbon.
-- **Small.** One focused app with one dependency. No AI, no cloud, no accounts, no telemetry.
+- **Small.** One focused app with two dependencies (ZIPFoundation and Sparkle). No AI, no cloud, no accounts, no
+  telemetry.
 - **Distraction-free.** A clean page on a quiet canvas. You never have to think about saving.
 - **Word-compatible.** Files open and save without losing data. Parts of a document that Libretilla doesn't edit,
   including Word features it has no UI for, are written back byte for byte.
@@ -30,7 +31,8 @@ and never fights them:
 - **The system's writing tools:** spell and grammar checking, autocorrect, and the native find & replace bar.
 - **Window tabs, full screen, Open Recent, Print** and the standard keyboard shortcuts.
 - **Accessibility.** VoiceOver labels throughout, with a headings rotor for moving around a document.
-- **Sandboxed, with no network access.** Libretilla only sees the files you open with it.
+- **Sandboxed, with no network access.** Libretilla only sees the files you open with it. The one connection is
+  the update check, made by Sparkle's sandboxed helper; it sends nothing about you or your documents.
 
 ## Requirements
 
