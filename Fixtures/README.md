@@ -19,6 +19,7 @@ Test inputs for the DOCX codec and the round-trip suite (bootstrap §7).
 | `10-word-features.docx` | `make_corpus.py` | Content Libretilla doesn't author but must preserve: footnotes/endnotes, comments, tracked insert/delete, complex and simple fields, inline and block `w:sdt` bound to a custom XML part, floating text box (`mc:AlternateContent` with a VML fallback), OMML equation, continuous section break into 2 columns |
 | `11-pandoc.docx` | `make_pandoc.sh` (pandoc 3.12) | Markdown → DOCX in pandoc's own markup style: lists, table, image, code, footnote, link |
 | `12-pages.docx` | Pages 14.5 export of `11-pandoc.docx` (`pages_roundtrip.applescript`) | Apple Pages' DOCX writer output. **Not** reproducible byte-for-byte, so regenerate it only on purpose |
+| `13-page-break-before.docx` | `make_corpus.py` | `w:pageBreakBefore` set directly and through a `basedOn` style chain, and turned off (`w:val="0"`, `"false"`, a derived style); prints on 4 pages |
 
 Regenerate: `python3 scripts/fixtures/make_corpus.py && scripts/fixtures/make_pandoc.sh`.
 The output is deterministic, so a rerun must leave `git status` clean.

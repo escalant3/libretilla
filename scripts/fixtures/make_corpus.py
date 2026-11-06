@@ -89,11 +89,16 @@ def r(text: str, **props) -> str:
 
 
 def p(*content: str, style: str | None = None, jc: str | None = None, num: tuple[int, int] | None = None,
-      spacing: str | None = None, ind: str | None = None, sect: str | None = None) -> str:
-    """content items are raw run XML or plain strings (wrapped in a plain run)."""
+      spacing: str | None = None, ind: str | None = None, sect: str | None = None,
+      page_break_before: str | None = None) -> str:
+    """content items are raw run XML or plain strings (wrapped in a plain run). page_break_before is
+    `w:pageBreakBefore`'s markup: "" for the bare element, or a `w:val` such as "0"."""
     ppr = []
     if style:
         ppr.append(f'<w:pStyle w:val="{style}"/>')
+    if page_break_before is not None:
+        val = f' w:val="{page_break_before}"' if page_break_before else ""
+        ppr.append(f"<w:pageBreakBefore{val}/>")
     if num:
         ppr.append(f'<w:numPr><w:ilvl w:val="{num[1]}"/><w:numId w:val="{num[0]}"/></w:numPr>')
     if spacing:
@@ -663,8 +668,34 @@ def f10_word_features(out: Path):
               extra_pkg_rels="")
 
 
+def f13_page_break_before(out: Path):
+    """`w:pageBreakBefore` set directly and through a style chain, turned off both ways. Prints on 4 pages."""
+    pkg = Package("Page break before")
+    pkg.styles = pkg.styles.replace(
+        "</w:styles>",
+        style_p("Chapter", "Chapter", based="Heading1", ppr="<w:pageBreakBefore/>")
+        + style_p("Part", "Part", based="Chapter")
+        + style_p("Interlude", "Interlude", based="Chapter", ppr='<w:pageBreakBefore w:val="0"/>')
+        + "</w:styles>")
+    body = [
+        # The document's first paragraph is on page 1 already: no blank page before it.
+        p("Page break before", style="Title", page_break_before=""),
+        p(sentence(1, 30)),
+        p("Direct: starts page 2.", page_break_before=""),
+        p(sentence(2, 30)),
+        p("Chapter style: starts page 3.", style="Chapter"),
+        p(sentence(3, 30)),
+        p("Chapter style, turned off directly: stays on page 3.", style="Chapter", page_break_before="0"),
+        p("Interlude style (based on Chapter, turned off): stays on page 3.", style="Interlude"),
+        p("Direct, turned off with false: stays on page 3.", page_break_before="false"),
+        p("Part style (based on Chapter): starts page 4.", style="Part"),
+        p(sentence(4, 30)),
+    ]
+    pkg.write(out / "13-page-break-before.docx", document("".join(body)))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
-            f08_spanish, f09_large, f10_word_features]
+            f08_spanish, f09_large, f10_word_features, f13_page_break_before]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a
