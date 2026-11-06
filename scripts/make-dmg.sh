@@ -64,11 +64,20 @@ for key in com.apple.security.app-sandbox com.apple.security.files.user-selected
 done
 [[ $entitlements != *get-task-allow* ]] || { echo "Signed app has get-task-allow: not a Release build?" >&2; exit 1 }
 
-# Drag-to-install image: the app and a link to /Applications.
+# Drag-to-install image: the app and a link to /Applications, in a small window with large icons
+# (scripts/dmg/DS_Store, made by scripts/dmg/make-layout.sh), and the app's icon as the disk's.
 ln -s /Applications $out/stage/Applications
+cp scripts/dmg/DS_Store $out/stage/.DS_Store
+cp $app/Contents/Resources/AppIcon.icns $out/stage/.VolumeIcon.icns
 dmg=$out/Libretilla-$version.dmg
-rm -f $dmg
-hdiutil create -quiet -volname "Libretilla $version" -srcfolder $out/stage -fs APFS -format UDZO $dmg
+rm -f $dmg $out/rw.dmg
+hdiutil create -quiet -volname "Libretilla $version" -srcfolder $out/stage -fs APFS -format UDRW $out/rw.dmg
+# The volume shows its .VolumeIcon.icns only with the custom-icon flag on its root, which the image must carry.
+mount=$(hdiutil attach -nobrowse -noverify -noautoopen $out/rw.dmg | awk -F'\t' '/\/Volumes\// { print $NF }')
+SetFile -a C "$mount"
+hdiutil detach -quiet "$mount"
+hdiutil convert -quiet $out/rw.dmg -format UDZO -o $dmg
+rm -f $out/rw.dmg
 [[ $identity != - ]] && codesign --force --sign $identity --timestamp $dmg
 rm -rf $out/stage
 

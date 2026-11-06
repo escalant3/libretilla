@@ -103,6 +103,13 @@ Set the version once, the same value as `MARKETING_VERSION`:
 6. Check: an installed older copy finds the update under Libretilla ▸ Check for Updates…, installs it and
    relaunches as the new version with its documents and settings intact.
 
+## The DMG window
+
+The image opens in a small Finder window with large icons, the app on the left and Applications on the right, and
+shows the app's icon as the disk's. The layout is `scripts/dmg/DS_Store`, which `make-dmg.sh` copies into every
+image as `.DS_Store`. To change it, edit and run `scripts/dmg/make-layout.sh` (it scripts Finder, which asks for
+permission the first time) and commit the new file.
+
 ## Checking a release on a clean Mac
 
 Before 1.0, and whenever the signing or the Sparkle setup changes: on a fresh macOS 26 VM or a second Mac,
