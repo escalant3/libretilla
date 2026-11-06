@@ -2,11 +2,12 @@ import Foundation
 
 public let wordprocessingMLNamespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
-/// The body of the main document part (`word/document.xml`), split into blocks.
+/// The body of the main document part (`word/document.xml`), split into blocks; or the content of a
+/// header or footer part (`w:hdr`, `w:ftr`), which holds the same block content.
 ///
 /// Lossless by construction (ADR 0002): `prefix` holds every byte up to and including the
-/// `<w:body>` start tag, `suffix` everything from `</w:body>` on, and each block keeps its
-/// source bytes. A block whose `original` is still set is written back verbatim.
+/// `<w:body>` (or `<w:hdr>`/`<w:ftr>`) start tag, `suffix` everything from its end tag on, and each
+/// block keeps its source bytes. A block whose `original` is still set is written back verbatim.
 public struct DocumentBody: Sendable {
     public var prefix: Data
     public var blocks: [Block]
@@ -19,18 +20,32 @@ public struct DocumentBody: Sendable {
     public init(data: Data, part: String = "word/document.xml") throws {
         let doc = try RawXML.Document(data: data, part: part)
         let root = doc.root
-        guard root.name.hasSuffix("document"), let body = root.firstChild(named: "w:body") ?? Self.anyBody(root)
-        else { throw DocxCodecError.missingPart("\(part): <w:body>") }
+        let body: RawXML.Element
+        let expected: String
+        if root.name.hasSuffix(":hdr") || root.name.hasSuffix(":ftr") {
+            body = root
+            expected = root.name.hasSuffix(":hdr") ? "w:hdr" : "w:ftr"
+        } else {
+            guard root.name.hasSuffix("document"),
+                let b = root.firstChild(named: "w:body") ?? Self.anyBody(root)
+            else { throw DocxCodecError.missingPart("\(part): <w:body>") }
+            body = b
+            expected = "w:body"
+        }
 
-        if root.attribute("xmlns:w") != wordprocessingMLNamespace || body.name != "w:body" {
+        if root.attribute("xmlns:w") != wordprocessingMLNamespace || body.name != expected {
             readOnlyReason = "it uses Strict Open XML or a non-standard namespace prefix"
         }
         prefix = doc.slice(0..<body.startTagRange.upperBound)
         suffix = doc.slice(body.endTagRange.lowerBound..<doc.bytes.count)
         if body.endTagRange.isEmpty {
-            // `<w:body/>`: no content. Synthesize an open/close pair so blocks can be added.
-            prefix = doc.slice(0..<body.range.lowerBound) + Data("<w:body>".utf8)
-            suffix = Data("</w:body>".utf8) + doc.slice(body.range.upperBound..<doc.bytes.count)
+            // `<w:body/>` or `<w:hdr …/>`: no content. Synthesize an open/close pair so blocks can be added.
+            var open = doc.slice(body.startTagRange)
+            while let last = open.last, last == UInt8(ascii: ">") || last == UInt8(ascii: "/") || last == 0x20 {
+                open.removeLast()
+            }
+            prefix = doc.slice(0..<body.range.lowerBound) + open + Data(">".utf8)
+            suffix = Data("</\(body.name)>".utf8) + doc.slice(body.range.upperBound..<doc.bytes.count)
         }
 
         var blocks: [Block] = []
@@ -289,6 +304,8 @@ public struct OpaqueInline: Sendable {
     public var image: ImageReference?
     /// A picture inserted in Libretilla, written as a new media part when saving (see `OOXMLCodec`).
     public var newMedia: NewMedia?
+    /// The page number or page count this field shows, in headers and footers (see `HeadersFooters`).
+    public var pageField: PageField?
 
     init(parsing e: RawXML.Element, in doc: RawXML.Document) {
         kind = e.name
@@ -297,6 +314,7 @@ public struct OpaqueInline: Sendable {
         displayProperties = RunProperties(e.descendants(named: "w:rPr").first)
         image = ImageReference(drawing: e)
         newMedia = nil
+        pageField = nil
         if let label = Self.objectLabel(e) {
             display = .object(label: label)
         } else {

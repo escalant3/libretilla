@@ -13,6 +13,9 @@ public struct DocxDocument: Sendable {
     public var hyperlinkTargets: [String: String] = [:]
     /// Image bytes the main part embeds, by relationship id (as read).
     public var images: [String: Data] = [:]
+    /// The headers and footers the last section uses. Edited stories are written back to their parts; new ones
+    /// get a part and a reference in the final `w:sectPr` when saving.
+    public var headersFooters = HeadersFooters()
 
     /// Why the document must open read-only, if it must.
     public var readOnlyReason: String? { body.readOnlyReason }
@@ -50,6 +53,7 @@ public struct OOXMLCodec: DocxCodec {
         for rel in rels where rel.type == Self.imageType && !rel.isExternal {
             if let name = rel.resolvedPartName, let data = package[name] { doc.images[rel.id] = data }
         }
+        doc.headersFooters = Self.readHeadersFooters(package: package, main: main, rels: rels, body: body)
         return doc
     }
 
@@ -59,6 +63,8 @@ public struct OOXMLCodec: DocxCodec {
         var body = document.body
         try Self.resolveNewHyperlinks(in: &body, package: &package, part: document.mainPartName)
         try Self.resolveNewPictures(in: &body, package: &package, part: document.mainPartName)
+        try Self.writeHeadersFooters(
+            document.headersFooters, body: &body, package: &package, main: document.mainPartName)
         package.setPart(document.mainPartName, data: body.serialized())
         if let xml = document.styles.stylesXML {
             try package.setRelatedPart(

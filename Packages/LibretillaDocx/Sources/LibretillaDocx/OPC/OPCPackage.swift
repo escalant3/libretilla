@@ -131,25 +131,26 @@ public struct OPCPackage: Sendable, Equatable {
             let ext = (defaultName as NSString).pathExtension
             name = (folder.isEmpty ? "" : folder + "/") + "\(stem)\(n).\(ext)"
         }
+        _ = try addRelatedPart(of: owner, type: type, contentType: contentType, name: name, data: data)
+    }
+
+    /// The first free part name `<stem><n>.<ext>` (n = 1, 2, …) next to `owner`: `word/header3.xml`.
+    public func numberedPartName(near owner: String, stem: String, ext: String) -> String {
+        let folder = owner.split(separator: "/").dropLast().joined(separator: "/")
+        var n = 1
+        while self[(folder.isEmpty ? "" : folder + "/") + "\(stem)\(n).\(ext)"] != nil { n += 1 }
+        return (folder.isEmpty ? "" : folder + "/") + "\(stem)\(n).\(ext)"
+    }
+
+    /// Adds the part `name` (next to `owner` or below it) with a relationship from `owner` and a content-type
+    /// override, spliced in so the existing relationships and types keep their bytes. Returns the relationship id.
+    public mutating func addRelatedPart(of owner: String, type: String, contentType: String, name: String, data: Data)
+        throws -> String
+    {
+        let folder = owner.split(separator: "/").dropLast().joined(separator: "/")
         let target = String(name.dropFirst(folder.isEmpty ? 0 : folder.count + 1))
+        let id = try addRelationship(of: owner, type: type, target: target, external: false)
 
-        // Relationship.
-        let relsName = Self.relsPartName(for: owner)
-        let existingIds = Set(try relationships(of: owner).map(\.id))
-        var k = existingIds.count + 1
-        while existingIds.contains("rId\(k)") { k += 1 }
-        let rel =
-            "<Relationship Id=\"rId\(k)\" Type=\"\(RawXML.escapeAttribute(type))\" "
-            + "Target=\"\(RawXML.escapeAttribute(target))\"/>"
-        let rels =
-            self[relsName]
-            ?? Data(
-                ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n"
-                    + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                    + "</Relationships>").utf8)
-        setPart(relsName, data: try Self.appending(rel, toRootOf: rels, part: relsName))
-
-        // Content type.
         let typesName = "[Content_Types].xml"
         guard let types = self[typesName] else { throw DocxCodecError.missingPart(typesName) }
         let override =
@@ -157,6 +158,7 @@ public struct OPCPackage: Sendable, Equatable {
         setPart(typesName, data: try Self.appending(override, toRootOf: types, part: typesName))
 
         setPart(name, data: data)
+        return id
     }
 
     /// Adds a relationship from `owner` (spliced into its `.rels`, so existing ones keep their bytes) and
