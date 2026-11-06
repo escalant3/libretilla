@@ -407,7 +407,9 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     }
 
     func textViewDidInsertNewline(_ textView: LibretillaTextView) {
-        guard let storage = textView.textStorage, let (range, isEmpty) = caretParagraph(), isEmpty, range.location > 0
+        // An empty range is past the last paragraph mark: not a paragraph (styling it would hit the one before).
+        guard let storage = textView.textStorage, let (range, isEmpty) = caretParagraph(), isEmpty, range.location > 0,
+            range.length > 0
         else { return }
         let previous = (storage.string as NSString).paragraphRange(
             for: NSRange(location: range.location - 1, length: 0))

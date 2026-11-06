@@ -386,6 +386,20 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         return Self.editIsAllowed(affectedCharRange, in: storage)
     }
 
+    /// The text ends with the last paragraph's terminator, and AppKit lets the caret sit after it, on a line
+    /// that isn't a paragraph (clicking below the text puts it there). Word has no such place: the caret goes
+    /// to the end of the last paragraph instead, so Return and paragraph commands act on a real paragraph.
+    func textView(
+        _ textView: NSTextView, willChangeSelectionFromCharacterRanges oldSelectedCharRanges: [NSValue],
+        toCharacterRanges newSelectedCharRanges: [NSValue]
+    ) -> [NSValue] {
+        let ns = textView.string as NSString
+        guard ns.length > 0, ns.character(at: ns.length - 1) == 0x0A, newSelectedCharRanges.count == 1,
+            newSelectedCharRanges[0].rangeValue == NSRange(location: ns.length, length: 0)
+        else { return newSelectedCharRanges }
+        return [NSValue(range: NSRange(location: ns.length - 1, length: 0))]
+    }
+
     func textViewDidChangeSelection(_ notification: Notification) {
         scheduleSelectionUpdate()
         onCaretMove?(textView.selectedRange().location)

@@ -170,6 +170,29 @@ final class FormattingCommandTests: XCTestCase {
         XCTAssertNil(try paragraph("Body text", in: saved).properties.styleId)
     }
 
+    /// A new document, clicked below its (only) line: Title, type, Return. The title keeps its style and
+    /// the next line is Normal. (The caret used to land after the last paragraph mark, where Return
+    /// restyled the title and left the new line in Title.)
+    func testReturnAfterTitleAtTheEndContinuesInNormal() throws {
+        doc = LibretillaDocument()
+        doc.makeWindowControllers()
+        doc.windowControllers.first?.window?.makeFirstResponder(textView)
+        let end = (textView.string as NSString).length
+        textView.setSelectedRange(NSRange(location: end, length: 0))
+        XCTAssertEqual(textView.selectedRange().location, max(0, end - 1), "the caret stays in the last paragraph")
+        editor.applyParagraphStyle(
+            menuItem(#selector(EditorViewController.applyParagraphStyle(_:)), representedObject: "builtin:Title"))
+        let title = try XCTUnwrap(doc.bridge.styles.styleId(named: "Title"))
+        XCTAssertEqual(editor.currentFormat.styleId, title)
+        textView.insertText("My Title", replacementRange: textView.selectedRange())
+        textView.insertNewline(nil)
+        XCTAssertNotEqual(editor.currentFormat.styleId, title, "the new line is in the Normal style")
+        textView.insertText("Body text", replacementRange: textView.selectedRange())
+        let saved = try saved()
+        XCTAssertEqual(try paragraph("My Title", in: saved).properties.styleId, title)
+        XCTAssertNil(try paragraph("Body text", in: saved).properties.styleId)
+    }
+
     func testMissingStyleIsAddedToTheDocument() throws {
         try open("12-pages.docx")
         XCTAssertNil(doc.bridge.styles.styleId(named: "heading 4"))
