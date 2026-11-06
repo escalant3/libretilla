@@ -27,8 +27,8 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 
 ## Waiting on the human
 
-- [ ] Header/footer in 1.0 or 1.1. Recommendation in ADR 0002: preserve plus print/PDF and a simple editing sheet in
-      1.0; inline editing in 1.1.
+- [x] Header/footer in 1.0 or 1.1: basics in 1.0 (kept, printed, edited in a sheet), inline editing later
+      (ADR 0007, 2026-11-06).
 - [ ] Sparkle yes/no; domain and website host.
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
 - [ ] Placeholder bundle id `app.libretilla.Libretilla`; confirm, or choose one tied to the domain.
@@ -269,11 +269,30 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   page break, or it's the document's first paragraph). The editor shows nothing new and a save writes nothing
   new. Fixture `13-page-break-before.docx` (direct, through a style chain, turned off three ways; prints on 4
   pages). Tests: 5 package tests (`PageBreakTests`), 3 app tests (`PageSetupDocumentTests`).
+- **Headers and footers (ADR 0007).**
+  - The codec reads the headers and footers the last section uses (its own references, or inherited from earlier
+    sections), with `w:titlePg` and `w:evenAndOddHeaders`. Each part parses like the body, so unedited ones are
+    written back byte for byte and an edit rewrites only its paragraphs. A new header or footer gets its part,
+    relationship, content type and `w:sectPr` reference on save.
+  - `PAGE` and `NUMPAGES` fields, simple or complex, become one opaque inline each, with the same markup on save.
+  - Print and PDF draw each page's header and footer at `w:pgMar`'s header and footer distances, across the text
+    column, with the real page number and page count. Page 1 uses the first-page pair when "Different first
+    page" is on, and even pages the even pair when the document has them. Word's Page Number content control
+    prints its content.
+  - Format ▸ Header and Footer… edits them in a sheet: header and footer text views laid out by the bridge,
+    "Different first page" with First Page / Other Pages, Insert Page Number and Insert Page Count (shown as
+    chips). One undo step; Cancel changes nothing. Even-page ones are kept and printed but not edited there.
+  - Fixture `14-headers-footers.docx`. Tests: 10 package tests (`HeaderFooterTests`), 6 app tests
+    (`HeaderFooterDocumentTests`, including a 3-page PDF that reads "Page 2 of 3").
 
 **Known issues**
 
 - When a page ends early at a paragraph that starts a new page, TextKit still draws that paragraph on the page
   before, clipped out of sight: the paper is right, but the paragraph's text is also in that page's PDF text
   (search, copy, accessibility). The tests read each page's first line, which is right.
+- Headers and footers: a multi-section document prints the last section's on every page (as for page setup).
+  Header text taller than the top margin overlaps the body instead of pushing it down. The editor doesn't show
+  them (edit them in the sheet). Even-page headers and footers can't be edited in the sheet yet. New ones use the
+  document's Header and Footer styles if it has them, plain paragraphs if not.
 - The page-break-before mark is set when the document opens: giving a paragraph another style in the editor
   doesn't change whether it starts a page in print until the document is reopened (the saved file is right).

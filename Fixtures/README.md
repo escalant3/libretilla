@@ -20,6 +20,7 @@ Test inputs for the DOCX codec and the round-trip suite (bootstrap §7).
 | `11-pandoc.docx` | `make_pandoc.sh` (pandoc 3.12) | Markdown → DOCX in pandoc's own markup style: lists, table, image, code, footnote, link |
 | `12-pages.docx` | Pages 14.5 export of `11-pandoc.docx` (`pages_roundtrip.applescript`) | Apple Pages' DOCX writer output. **Not** reproducible byte-for-byte, so regenerate it only on purpose |
 | `13-page-break-before.docx` | `make_corpus.py` | `w:pageBreakBefore` set directly and through a `basedOn` style chain, and turned off (`w:val="0"`, `"false"`, a derived style); prints on 4 pages |
+| `14-headers-footers.docx` | `make_corpus.py` | First-page (`w:titlePg`), even (`w:evenAndOddHeaders`) and default headers and footers; "Page X of Y" from a complex `PAGE` and a simple `NUMPAGES` field; a page number inside a block `w:sdt` (Word's Page Number gallery); prints on 5 pages |
 
 Regenerate: `python3 scripts/fixtures/make_corpus.py && scripts/fixtures/make_pandoc.sh`.
 The output is deterministic, so a rerun must leave `git status` clean.
