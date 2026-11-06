@@ -32,7 +32,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - [ ] Sparkle yes/no; domain and website host.
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
 - [ ] Placeholder bundle id `app.libretilla.Libretilla`; confirm, or choose one tied to the domain.
-- [ ] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"); confirm the name.
+- [x] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"): confirmed by the owner, 2026-11-06.
 - [ ] **Later (deferred by the owner, 2026-11-04):** open Libretilla-written files in Microsoft Word and report any
       repair prompt. Word isn't installed on the dev machine for now. Priority files: one with a new list
       (`numbering.xml` created from scratch), one with a style Libretilla copied in, and a few edited corpus files.
