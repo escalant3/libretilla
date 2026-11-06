@@ -675,7 +675,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SPARKLE_FEED_URL = "https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml";
-				SPARKLE_PUBLIC_KEY = "";
+				SPARKLE_PUBLIC_KEY = "Pcwsejzjf4n9qKYpjKNPD6qSG0XXMHtiYfqTrf7pG7o=";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -748,7 +748,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SPARKLE_FEED_URL = "https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml";
-				SPARKLE_PUBLIC_KEY = "";
+				SPARKLE_PUBLIC_KEY = "Pcwsejzjf4n9qKYpjKNPD6qSG0XXMHtiYfqTrf7pG7o=";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

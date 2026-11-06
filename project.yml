@@ -24,7 +24,7 @@ settings:
     # Sparkle's update feed and the EdDSA public key it checks updates with (docs/RELEASING.md).
     # Without a key the updater refuses to check, and scripts/make-dmg.sh refuses to build.
     SPARKLE_FEED_URL: https://github.com/escalant3/libretilla/releases/latest/download/appcast.xml
-    SPARKLE_PUBLIC_KEY: ""
+    SPARKLE_PUBLIC_KEY: "Pcwsejzjf4n9qKYpjKNPD6qSG0XXMHtiYfqTrf7pG7o="
 packages:
   LibretillaDocx:
     path: Packages/LibretillaDocx
