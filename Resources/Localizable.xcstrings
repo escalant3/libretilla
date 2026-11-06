@@ -12,6 +12,16 @@
         }
       }
     },
+    "A header or footer that Libretilla can't read is kept as it is.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un encabezado o pie de página que Libretilla no puede leer se conserva tal cual."
+          }
+        }
+      }
+    },
     "About Libretilla": {
       "localizations": {
         "es": {
@@ -202,12 +212,102 @@
         }
       }
     },
+    "Different first page": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera página diferente"
+          }
+        }
+      }
+    },
+    "Even pages have their own header and footer, which are kept but can't be edited here.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las páginas pares tienen su propio encabezado y pie de página, que se conservan pero no se pueden editar aquí."
+          }
+        }
+      }
+    },
+    "First Page": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera página"
+          }
+        }
+      }
+    },
     "Fit": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Ajustar"
+          }
+        }
+      }
+    },
+    "Footer": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pie de página"
+          }
+        }
+      }
+    },
+    "Header": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encabezado"
+          }
+        }
+      }
+    },
+    "Header and Footer": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encabezado y pie de página"
+          }
+        }
+      }
+    },
+    "Header and Footer…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encabezado y pie de página…"
+          }
+        }
+      }
+    },
+    "Insert Page Count": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertar número de páginas"
+          }
+        }
+      }
+    },
+    "Insert Page Number": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insertar número de página"
           }
         }
       }
@@ -1109,6 +1209,16 @@
         }
       }
     },
+    "Other Pages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otras páginas"
+          }
+        }
+      }
+    },
     "Outline": {
       "localizations": {
         "es": {
@@ -1125,6 +1235,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salto de página"
+          }
+        }
+      }
+    },
+    "Page count": {
+      "comment": "Chip for a page count field in a header or footer",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de páginas"
+          }
+        }
+      }
+    },
+    "Page number": {
+      "comment": "Chip for a page number field in a header or footer",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Número de página"
           }
         }
       }

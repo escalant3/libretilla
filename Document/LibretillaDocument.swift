@@ -295,6 +295,30 @@ final class LibretillaDocument: NSDocument {
         editor?.apply(setup)
     }
 
+    // MARK: Headers and footers (M5, ADR 0007)
+
+    var headersFooters: HeadersFooters { base?.headersFooters ?? HeadersFooters() }
+    var differentFirstPage: Bool { base?.body.differentFirstPage ?? false }
+
+    /// Replaces the headers and footers and the "Different first page" setting, undoably. The next save writes
+    /// the stories that changed and creates parts for new ones.
+    func setHeadersFooters(
+        _ headersFooters: HeadersFooters, differentFirstPage: Bool,
+        actionName: String = String(localized: "Header and Footer")
+    ) {
+        guard var doc = base else { return }
+        let old = (doc.headersFooters, doc.body.differentFirstPage)
+        doc.headersFooters = headersFooters
+        doc.body.differentFirstPage = differentFirstPage
+        base = doc
+        undoManager?.registerUndo(withTarget: self) { target in
+            MainActor.assumeIsolated {
+                target.setHeadersFooters(old.0, differentFirstPage: old.1, actionName: actionName)
+            }
+        }
+        undoManager?.setActionName(actionName)
+    }
+
     /// Printer choice, scaling and other settings from the last Page Setup or Print sheet.
     private var printSettings = NSPrintInfo.shared.copy() as! NSPrintInfo
 

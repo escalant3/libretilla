@@ -22,6 +22,10 @@ enum ChipLabels {
         case "Column break": String(localized: "Column break", comment: "Chip shown for a column break")
         case "Content control": String(localized: "Content control", comment: "Placeholder for a Word content control")
         case "Section": String(localized: "Section", comment: "Placeholder for a section break")
+        case "Page number":
+            String(localized: "Page number", comment: "Chip for a page number field in a header or footer")
+        case "Page count":
+            String(localized: "Page count", comment: "Chip for a page count field in a header or footer")
         default: table(english) ?? english
         }
     }
