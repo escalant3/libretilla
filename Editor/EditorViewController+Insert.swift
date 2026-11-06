@@ -5,7 +5,10 @@ import LibretillaDocx
 extension EditorViewController {
     /// Insert ▸ Page Break (⌘↩), as in Word: the text before the caret ends with a page break and the
     /// rest starts a new paragraph on the next page. One undo step.
-    @objc func insertPageBreak(_ sender: Any?) {
+    ///
+    /// Not named `insertPageBreak(_:)`: NSTextView answers that action itself (inserting a bare U+000C that
+    /// neither prints a new page nor starts a paragraph), so the menu's action would never reach the editor.
+    @objc func insertDocumentPageBreak(_ sender: Any?) {
         guard textView.isEditable else { return NSSound.beep() }
         let pageBreak = AttributedStringBridge.pageBreak(typingAttributes: textView.typingAttributes)
         let undo = textView.undoManager

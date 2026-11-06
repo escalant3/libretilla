@@ -73,7 +73,7 @@ extension PageSetupDocumentTests {
         let tv = try XCTUnwrap(editor.textView)
         for text in ["A second paragraph", "Centered paragraph."] {
             tv.setSelectedRange(NSRange(location: (tv.string as NSString).range(of: text).location, length: 0))
-            editor.insertPageBreak(nil)
+            editor.insertDocumentPageBreak(nil)
         }
         XCTAssertEqual(try pdfPages(doc).pageCount, 3)
 

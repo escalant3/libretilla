@@ -175,7 +175,8 @@ enum MainMenu {
         menu.addItem(item(String(localized: "Table…"), #selector(EditorViewController.insertTable(_:))))
         menu.addItem(item(String(localized: "Image…"), #selector(EditorViewController.insertImage(_:))))
         menu.addItem(item(String(localized: "Link…"), #selector(EditorViewController.editLink(_:)), "k"))
-        menu.addItem(item(String(localized: "Page Break"), #selector(EditorViewController.insertPageBreak(_:)), "\r"))
+        menu.addItem(
+            item(String(localized: "Page Break"), #selector(EditorViewController.insertDocumentPageBreak(_:)), "\r"))
         return menu
     }
 

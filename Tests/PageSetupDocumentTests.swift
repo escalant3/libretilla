@@ -181,6 +181,19 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertFalse(pdf.string?.contains("\u{FFFC}") ?? true, "no object characters in the PDF's text")
     }
 
+    /// Insert ▸ Page Break goes to the first responder, the text view: the editor must be the first in the chain
+    /// to handle it. (Named `insertPageBreak:`, it was handled by NSTextView, which inserts a bare U+000C.)
+    func testPageBreakMenuActionReachesTheEditorFromTheTextView() throws {
+        let doc = try open("01-plain.docx")
+        let editor = try XCTUnwrap(doc.editor)
+        let item = try XCTUnwrap(
+            MainMenu.make().items.compactMap(\.submenu).flatMap(\.items).first { $0.title == "Page Break" })
+        let action = try XCTUnwrap(item.action)
+        var responder: NSResponder? = editor.textView
+        while let r = responder, !r.responds(to: action) { responder = r.nextResponder }
+        XCTAssertTrue(responder === editor, "handled by \(String(describing: responder))")
+    }
+
     func testInsertPageBreakIsOneUndoStepAndIsSaved() throws {
         let doc = try open("01-plain.docx")
         let editor = try XCTUnwrap(doc.editor)
@@ -189,7 +202,7 @@ final class PageSetupDocumentTests: XCTestCase {
 
         let at = (tv.string as NSString).range(of: "A second paragraph").location
         tv.setSelectedRange(NSRange(location: at, length: 0))
-        editor.insertPageBreak(nil)
+        editor.insertDocumentPageBreak(nil)
         XCTAssertEqual(tv.textStorage?.attribute(.libretillaPageBreak, at: at, effectiveRange: nil) as? Bool, true)
         XCTAssertEqual(tv.selectedRange().location, at + 2, "the caret starts the next page")
         XCTAssertEqual(try pdfPages(doc).pageCount, 2)
