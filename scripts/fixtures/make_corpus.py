@@ -313,6 +313,7 @@ class Package:
         self._next = 1
         # Parts the blank template sets differently from the fixtures.
         self.styles = styles_xml()
+        self.settings = SETTINGS
         self.theme = THEME
         self.font_table = FONT_TABLE
 
@@ -342,7 +343,7 @@ class Package:
             self.rel("numbering", "numbering.xml")
             self.add("word/numbering.xml", numbering_xml(), f"{wml}.numbering+xml")
         self.rel("settings", "settings.xml")
-        self.add("word/settings.xml", SETTINGS, f"{wml}.settings+xml")
+        self.add("word/settings.xml", self.settings, f"{wml}.settings+xml")
         self.rel("webSettings", "webSettings.xml")
         self.add("word/webSettings.xml", WEB_SETTINGS, f"{wml}.webSettings+xml")
         self.rel("fontTable", "fontTable.xml")
@@ -560,6 +561,49 @@ def f07_header_footer(out: Path):
     pkg.write(out / "07-header-footer.docx", document("".join(body), sect_pr(header=hid, footer=fid, w=11906, h=16838)))
 
 
+def simple_field(instr: str, result: str) -> str:
+    return f'<w:fldSimple w:instr=" {instr} "><w:r><w:t>{result}</w:t></w:r></w:fldSimple>'
+
+
+def f14_headers_footers(out: Path):
+    """First-page, even and default headers and footers (`w:titlePg`, `w:evenAndOddHeaders`), with "Page X of
+    Y" as a complex PAGE field and a simple NUMPAGES field, and a page number inside a block content control
+    (as Word's Page Number gallery inserts it). Prints on 5 pages: page 1 has the first-page header and no
+    footer; even pages the even ones; pages 3 and 5 the default ones."""
+    pkg = Package("Headers and footers")
+    pkg.settings = pkg.settings.replace(
+        '<w:defaultTabStop w:val="720"/>', '<w:defaultTabStop w:val="720"/><w:evenAndOddHeaders/>')
+    wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
+
+    def part(kind: str, name: str, content: str) -> str:
+        rid = pkg.rel(kind, name)
+        tag = "w:hdr" if kind == "header" else "w:ftr"
+        pkg.add(f"word/{name}", f"{XML_DECL}<{tag} {ROOT_NS}>{content}</{tag}>", f"{wml}.{kind}+xml")
+        return rid
+
+    first = part("header", "header1.xml", p("Cover page header", style="Header", jc="center"))
+    default_h = part("header", "header2.xml", p("Odd page header", style="Header", jc="right"))
+    even_h = part("header", "header3.xml", p("Even page header", style="Header"))
+    default_f = part("footer", "footer1.xml",
+                     p("Page ", page_field(), " of ", simple_field("NUMPAGES", "1"), style="Footer", jc="center"))
+    gallery = ('<w:sdt><w:sdtPr><w:id w:val="1"/><w:docPartObj><w:docPartGallery w:val="Page Numbers (Bottom of Page)"/>'
+               '<w:docPartUnique/></w:docPartObj></w:sdtPr><w:sdtContent>'
+               + p("Even page ", simple_field("PAGE", "2"), style="Footer")
+               + "</w:sdtContent></w:sdt>")
+    even_f = part("footer", "footer2.xml", gallery)
+    refs = (f'<w:headerReference w:type="even" r:id="{even_h}"/>'
+            f'<w:headerReference w:type="default" r:id="{default_h}"/>'
+            f'<w:footerReference w:type="even" r:id="{even_f}"/>'
+            f'<w:footerReference w:type="default" r:id="{default_f}"/>'
+            f'<w:headerReference w:type="first" r:id="{first}"/>')
+    body = [p("Headers and footers", style="Title")]
+    for i in range(1, 5):
+        body += [p(sentence(i, 40)), page_break()]
+    body.append(p("Page five."))
+    sect = sect_pr(w=11906, h=16838, title_pg=True).replace("<w:sectPr>", "<w:sectPr>" + refs)
+    pkg.write(out / "14-headers-footers.docx", document("".join(body), sect))
+
+
 def f08_spanish(out: Path):
     body = (p("Libretilla de español", style="Title")
             + p("Introducción", style="Heading1")
@@ -695,7 +739,8 @@ def f13_page_break_before(out: Path):
 
 
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
-            f08_spanish, f09_large, f10_word_features, f13_page_break_before]
+            f08_spanish, f09_large, f10_word_features, f13_page_break_before,
+            f14_headers_footers]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a
