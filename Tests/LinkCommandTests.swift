@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// Links (M3) through the real editor, undo and save path.
 @MainActor
@@ -11,12 +11,12 @@ final class LinkCommandTests: XCTestCase {
         .appendingPathComponent("Fixtures/generated")
 
     var scratch: URL!
-    var doc: CartillaDocument!
+    var doc: LibretillaDocument!
     var editor: EditorViewController { doc.editor! }
-    var tv: CartillaTextView { editor.textView }
+    var tv: LibretillaTextView { editor.textView }
 
     override func setUpWithError() throws {
-        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-links-\(UUID())")
+        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-links-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
@@ -27,7 +27,7 @@ final class LinkCommandTests: XCTestCase {
     func open(_ fixture: String) throws {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
-        doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
     }
 
@@ -35,7 +35,7 @@ final class LinkCommandTests: XCTestCase {
         let url = scratch.appendingPathComponent("\(UUID()).docx")
         let done = expectation(description: "saved")
         var failure: Error?
-        doc.save(to: url, ofType: CartillaDocument.docxType, for: .saveToOperation) { error in
+        doc.save(to: url, ofType: LibretillaDocument.docxType, for: .saveToOperation) { error in
             failure = error
             done.fulfill()
         }
@@ -58,7 +58,7 @@ final class LinkCommandTests: XCTestCase {
     func testTypedURLsAreNormalized() {
         XCTAssertEqual(EditorViewController.normalizedURL("example.com"), "https://example.com")
         XCTAssertEqual(EditorViewController.normalizedURL(" https://a.b/c?d=1 "), "https://a.b/c?d=1")
-        XCTAssertEqual(EditorViewController.normalizedURL("hola@cartilla.app"), "mailto:hola@cartilla.app")
+        XCTAssertEqual(EditorViewController.normalizedURL("hola@libretilla.app"), "mailto:hola@libretilla.app")
         XCTAssertEqual(EditorViewController.normalizedURL("mailto:x@y.z"), "mailto:x@y.z")
         XCTAssertNil(EditorViewController.normalizedURL("two words"))
         XCTAssertNil(EditorViewController.normalizedURL(""))
@@ -67,8 +67,8 @@ final class LinkCommandTests: XCTestCase {
     func testLinkingASelectionIsUndoableAndSaved() throws {
         try open("01-plain.docx")
         let r = try range(of: "plain paragraph")
-        editor.applyLink("https://cartilla.app", to: r)
-        XCTAssertEqual(url(at: r.location), "https://cartilla.app")
+        editor.applyLink("https://libretilla.app", to: r)
+        XCTAssertEqual(url(at: r.location), "https://libretilla.app")
         // The Hyperlink character style colours it.
         let color = tv.textStorage?.attribute(.foregroundColor, at: r.location, effectiveRange: nil) as? NSColor
         XCTAssertNotNil(color)
@@ -77,7 +77,7 @@ final class LinkCommandTests: XCTestCase {
         let xml = String(decoding: back.body.serialized(), as: UTF8.self)
         XCTAssertTrue(xml.contains("<w:hyperlink r:id="))
         let rels = try OPCPackage(data: data).relationships(of: "word/document.xml").filter { $0.isExternal }
-        XCTAssertEqual(rels.map(\.target), ["https://cartilla.app"])
+        XCTAssertEqual(rels.map(\.target), ["https://libretilla.app"])
 
         doc.undoManager?.undo()
         XCTAssertNil(url(at: r.location))
@@ -115,10 +115,10 @@ final class LinkCommandTests: XCTestCase {
     func testInsertingALinkAtTheCaret() throws {
         try open("01-plain.docx")
         let at = try range(of: "plain paragraph").location
-        editor.insertLink("Cartilla", url: "https://cartilla.app", at: NSRange(location: at, length: 0))
-        XCTAssertEqual(url(at: at), "https://cartilla.app")
+        editor.insertLink("Libretilla", url: "https://libretilla.app", at: NSRange(location: at, length: 0))
+        XCTAssertEqual(url(at: at), "https://libretilla.app")
         let (back, _) = try saved()
-        XCTAssertTrue(back.body.plainText.contains("This is a Cartillaplain paragraph"))
+        XCTAssertTrue(back.body.plainText.contains("This is a Libretillaplain paragraph"))
     }
 
     func testAPlainClickOnALinkPlacesTheCaret() throws {

@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// Pictures (M3) through the real editor, undo and save path.
 @MainActor
@@ -11,15 +11,15 @@ final class PictureCommandTests: XCTestCase {
         .appendingPathComponent("Fixtures/generated")
 
     var scratch: URL!
-    var doc: CartillaDocument!
-    var tv: CartillaTextView { doc.editor!.textView }
+    var doc: LibretillaDocument!
+    var tv: LibretillaTextView { doc.editor!.textView }
 
     override func setUpWithError() throws {
-        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-pictures-\(UUID())")
+        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-pictures-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
         let url = scratch.appendingPathComponent("01-plain.docx")
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent("01-plain.docx"), to: url)
-        doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
     }
 
@@ -31,7 +31,7 @@ final class PictureCommandTests: XCTestCase {
         let url = scratch.appendingPathComponent("\(UUID()).docx")
         let done = expectation(description: "saved")
         var failure: Error?
-        doc.save(to: url, ofType: CartillaDocument.docxType, for: .saveToOperation) { error in
+        doc.save(to: url, ofType: LibretillaDocument.docxType, for: .saveToOperation) { error in
             failure = error
             done.fulfill()
         }
@@ -78,7 +78,7 @@ final class PictureCommandTests: XCTestCase {
     }
 
     func testPastedImageIsFittedAndSavedAsPNG() throws {
-        let pasteboard = NSPasteboard(name: NSPasteboard.Name("cartilla-test-\(UUID())"))
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("libretilla-test-\(UUID())"))
         defer { pasteboard.releaseGlobally() }
         pasteboard.clearContents()
         pasteboard.setData(Self.image(width: 2000, height: 1000, type: .tiff), forType: .tiff)

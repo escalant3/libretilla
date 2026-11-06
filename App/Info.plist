@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Cartilla</string>
+	<string>Libretilla</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -20,7 +20,7 @@
 				<string>org.openxmlformats.wordprocessingml.document</string>
 			</array>
 			<key>NSDocumentClass</key>
-			<string>$(PRODUCT_MODULE_NAME).CartillaDocument</string>
+			<string>$(PRODUCT_MODULE_NAME).LibretillaDocument</string>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>

@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// Tables (ADR 0006): Insert ▸ Table…, Format ▸ Edit Table…, double-click to edit.
 extension EditorViewController {
@@ -9,16 +9,16 @@ extension EditorViewController {
         guard let storage = textView.textStorage else { return nil }
         for at in [location, location - 1] where at >= 0 && at < storage.length {
             guard
-                let row = storage.attribute(.cartillaTableRow, at: at, effectiveRange: nil) as? Int
-                    ?? (at > 0 ? storage.attribute(.cartillaTableRow, at: at - 1, effectiveRange: nil) as? Int : nil),
-                let box = storage.attribute(.cartillaBlock, at: at, effectiveRange: nil) as? OpaqueBlockBox
+                let row = storage.attribute(.libretillaTableRow, at: at, effectiveRange: nil) as? Int
+                    ?? (at > 0 ? storage.attribute(.libretillaTableRow, at: at - 1, effectiveRange: nil) as? Int : nil),
+                let box = storage.attribute(.libretillaBlock, at: at, effectiveRange: nil) as? OpaqueBlockBox
                     ?? (at > 0
-                        ? storage.attribute(.cartillaBlock, at: at - 1, effectiveRange: nil) as? OpaqueBlockBox : nil)
+                        ? storage.attribute(.libretillaBlock, at: at - 1, effectiveRange: nil) as? OpaqueBlockBox : nil)
             else { continue }
             var range = NSRange()
-            let probe = storage.attribute(.cartillaBlock, at: at, effectiveRange: nil) != nil ? at : at - 1
+            let probe = storage.attribute(.libretillaBlock, at: at, effectiveRange: nil) != nil ? at : at - 1
             _ = storage.attribute(
-                .cartillaBlock, at: probe, longestEffectiveRange: &range,
+                .libretillaBlock, at: probe, longestEffectiveRange: &range,
                 in: NSRange(location: 0, length: storage.length))
             return (range, box, row)
         }
@@ -55,7 +55,7 @@ extension EditorViewController {
     private func range(of box: OpaqueBlockBox) -> NSRange? {
         guard let storage = textView.textStorage else { return nil }
         var found: NSRange?
-        storage.enumerateAttribute(.cartillaBlock, in: NSRange(location: 0, length: storage.length)) { v, r, stop in
+        storage.enumerateAttribute(.libretillaBlock, in: NSRange(location: 0, length: storage.length)) { v, r, stop in
             if (v as AnyObject?) === box {
                 found = found.map { NSUnionRange($0, r) } ?? r
             }

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Cartilla ▸ Settings… (⌘,): a few app-wide choices. Changes apply to open windows at once.
+/// Libretilla ▸ Settings… (⌘,): a few app-wide choices. Changes apply to open windows at once.
 final class SettingsWindowController: NSWindowController {
     static let shared = SettingsWindowController()
 

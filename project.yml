@@ -1,6 +1,6 @@
-name: Cartilla
+name: Libretilla
 options:
-  bundleIdPrefix: app.cartilla
+  bundleIdPrefix: app.libretilla
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
@@ -18,10 +18,10 @@ settings:
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "-"
 packages:
-  CartillaDocx:
-    path: Packages/CartillaDocx
+  LibretillaDocx:
+    path: Packages/LibretillaDocx
 targets:
-  Cartilla:
+  Libretilla:
     type: application
     platform: macOS
     sources:
@@ -32,9 +32,9 @@ targets:
         excludes: ["**/*.md"]
       - Resources
     dependencies:
-      - package: CartillaDocx
+      - package: LibretillaDocx
     entitlements:
-      path: App/Cartilla.entitlements
+      path: App/Libretilla.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.files.user-selected.read-write: true
@@ -42,7 +42,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: Cartilla
+        CFBundleDisplayName: Libretilla
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, es]
         CFBundleShortVersionString: "0.0.1"
@@ -57,47 +57,47 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - org.openxmlformats.wordprocessingml.document
-            NSDocumentClass: $(PRODUCT_MODULE_NAME).CartillaDocument
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).LibretillaDocument
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.cartilla.Cartilla
-        PRODUCT_NAME: Cartilla
+        PRODUCT_BUNDLE_IDENTIFIER: app.libretilla.Libretilla
+        PRODUCT_NAME: Libretilla
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: NO
-  CartillaTests:
+  LibretillaTests:
     type: bundle.unit-test
     platform: macOS
     sources: [Tests]
     dependencies:
-      - target: Cartilla
+      - target: Libretilla
     settings:
       base:
         BUNDLE_LOADER: $(TEST_HOST)
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Cartilla.app/Contents/MacOS/Cartilla
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Libretilla.app/Contents/MacOS/Libretilla
         GENERATE_INFOPLIST_FILE: YES
-  CartillaUITests:
+  LibretillaUITests:
     type: bundle.ui-testing
     platform: macOS
     sources: [UITests]
     dependencies:
-      - target: Cartilla
-      - package: CartillaDocx
+      - target: Libretilla
+      - package: LibretillaDocx
     settings:
       base:
-        TEST_TARGET_NAME: Cartilla
+        TEST_TARGET_NAME: Libretilla
         GENERATE_INFOPLIST_FILE: YES
 schemes:
-  Cartilla:
+  Libretilla:
     build:
       targets:
-        Cartilla: all
-        CartillaTests: [test]
-        CartillaUITests: [test]
+        Libretilla: all
+        LibretillaTests: [test]
+        LibretillaUITests: [test]
     test:
       gatherCoverageData: false
       targets:
-        - CartillaTests
-        - name: CartillaUITests
+        - LibretillaTests
+        - name: LibretillaUITests
           skipped: false

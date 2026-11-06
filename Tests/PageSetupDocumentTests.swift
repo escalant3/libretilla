@@ -1,9 +1,9 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import PDFKit
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// M3 page setup and PDF export through the real document, editor and save path.
 @MainActor
@@ -14,7 +14,7 @@ final class PageSetupDocumentTests: XCTestCase {
     var scratch: URL!
 
     override func setUpWithError() throws {
-        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-pages-\(UUID())")
+        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-pages-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
@@ -22,19 +22,19 @@ final class PageSetupDocumentTests: XCTestCase {
         try? FileManager.default.removeItem(at: scratch)
     }
 
-    func open(_ fixture: String) throws -> CartillaDocument {
+    func open(_ fixture: String) throws -> LibretillaDocument {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
-        let doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        let doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
         return doc
     }
 
-    func saved(_ doc: CartillaDocument) throws -> DocxDocument {
+    func saved(_ doc: LibretillaDocument) throws -> DocxDocument {
         let url = scratch.appendingPathComponent("\(UUID()).docx")
         let done = expectation(description: "saved")
         var failure: Error?
-        doc.save(to: url, ofType: CartillaDocument.docxType, for: .saveToOperation) { error in
+        doc.save(to: url, ofType: LibretillaDocument.docxType, for: .saveToOperation) { error in
             failure = error
             done.fulfill()
         }
@@ -43,7 +43,7 @@ final class PageSetupDocumentTests: XCTestCase {
         return try OOXMLCodec().read(try Data(contentsOf: url))
     }
 
-    func pdfPages(_ doc: CartillaDocument) throws -> PDFDocument {
+    func pdfPages(_ doc: LibretillaDocument) throws -> PDFDocument {
         let url = scratch.appendingPathComponent("\(UUID()).pdf")
         try doc.writePDF(to: url, showsProgress: false)
         return try XCTUnwrap(PDFDocument(url: url))
@@ -63,7 +63,7 @@ final class PageSetupDocumentTests: XCTestCase {
     }
 
     func testNewDocumentsAreA4InCharter() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         XCTAssertEqual(doc.pageSetup, .a4)
         let tv = try XCTUnwrap(doc.editor?.textView)
@@ -190,7 +190,7 @@ final class PageSetupDocumentTests: XCTestCase {
         let at = (tv.string as NSString).range(of: "A second paragraph").location
         tv.setSelectedRange(NSRange(location: at, length: 0))
         editor.insertPageBreak(nil)
-        XCTAssertEqual(tv.textStorage?.attribute(.cartillaPageBreak, at: at, effectiveRange: nil) as? Bool, true)
+        XCTAssertEqual(tv.textStorage?.attribute(.libretillaPageBreak, at: at, effectiveRange: nil) as? Bool, true)
         XCTAssertEqual(tv.selectedRange().location, at + 2, "the caret starts the next page")
         XCTAssertEqual(try pdfPages(doc).pageCount, 2)
 
@@ -198,7 +198,7 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertTrue(saved.body.plainText.contains("\u{000C}\nA second paragraph"))
 
         doc.undoManager?.undo()
-        XCTAssertNil(tv.textStorage?.attribute(.cartillaPageBreak, at: at, effectiveRange: nil))
+        XCTAssertNil(tv.textStorage?.attribute(.libretillaPageBreak, at: at, effectiveRange: nil))
         XCTAssertFalse(try self.saved(doc).body.plainText.contains("\u{000C}"))
     }
 }

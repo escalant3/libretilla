@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// The Format menu / format bar commands, end to end through the real editor: command → text
 /// view (undoable) → save → the `.docx` on disk.
@@ -11,16 +11,16 @@ final class FormattingCommandTests: XCTestCase {
     static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("Fixtures/generated")
 
-    var doc: CartillaDocument!
+    var doc: LibretillaDocument!
     var url: URL!
     var editor: EditorViewController { doc.editor! }
-    var textView: CartillaTextView { editor.textView }
+    var textView: LibretillaTextView { editor.textView }
 
     func open(_ fixture: String) throws {
         let data = try Data(contentsOf: Self.fixtures.appendingPathComponent(fixture))
         url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID())-\(fixture)")
         try data.write(to: url)
-        doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
         doc.windowControllers.first?.window?.makeFirstResponder(textView)
     }
@@ -36,7 +36,7 @@ final class FormattingCommandTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: out) }
         let done = expectation(description: "saved")
         var failure: Error?
-        doc.save(to: out, ofType: CartillaDocument.docxType, for: .saveToOperation) { error in
+        doc.save(to: out, ofType: LibretillaDocument.docxType, for: .saveToOperation) { error in
             failure = error
             done.fulfill()
         }

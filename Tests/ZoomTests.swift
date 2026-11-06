@@ -1,7 +1,7 @@
 import AppKit
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// View zoom, as in Google Docs: ⌘+ / ⌘− / ⌘0 magnify the page; the text's font sizes don't change.
 @MainActor
@@ -15,7 +15,7 @@ final class ZoomTests: XCTestCase {
     }
 
     func testZoomStepsThroughLevelsAndStopsAtTheEnds() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
@@ -39,7 +39,7 @@ final class ZoomTests: XCTestCase {
     }
 
     func testZoomDoesNotChangeTheText() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
@@ -52,7 +52,7 @@ final class ZoomTests: XCTestCase {
     }
 
     func testPageStaysCentredWhenZoomedOut() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
@@ -66,7 +66,7 @@ final class ZoomTests: XCTestCase {
     }
 
     func testZoomedInTheViewShowsTheMiddleOfThePage() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)

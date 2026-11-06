@@ -9,9 +9,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     private var outlineItem: NSSplitViewItem!
     private var outlineShown = false
     nonisolated(unsafe) private var defaultsObserver: (any NSObjectProtocol)?
-    static let formatBarHiddenKey = "CartillaFormatBarHidden"
-    static let showsPageEdgesKey = "CartillaShowsPageEdges"
-    static let zoomKey = "CartillaZoom"
+    static let formatBarHiddenKey = "LibretillaFormatBarHidden"
+    static let showsPageEdgesKey = "LibretillaShowsPageEdges"
+    static let zoomKey = "LibretillaZoom"
     static let minimumWidth: CGFloat = 320
 
     /// Wide enough for the whole format bar and a Letter or A4 page, within the screen's visible area.
@@ -21,7 +21,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         return NSSize(width: min(1040, visible.width), height: min(1000, max(240, visible.height - 120)))
     }
 
-    init(document: CartillaDocument) {
+    init(document: LibretillaDocument) {
         let window = DocumentWindow(
             contentRect: NSRect(x: 0, y: 0, width: 900, height: 1000),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -40,9 +40,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         let editorItem = NSSplitViewItem(viewController: editor)
         editorItem.minimumThickness = Self.minimumWidth
         split.addSplitViewItem(editorItem)
-        // The sidebar's width is remembered; whether it shows is Cartilla's own setting (set after the split
+        // The sidebar's width is remembered; whether it shows is Libretilla's own setting (set after the split
         // view restores its saved state).
-        split.splitView.autosaveName = "CartillaOutlineSplit"
+        split.splitView.autosaveName = "LibretillaOutlineSplit"
         outlineShown = UserDefaults.standard.bool(forKey: Preferences.outlineShownKey)
         outlineItem.isCollapsed = !outlineShown
         window.contentViewController = split
@@ -53,7 +53,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         window.setContentSize(Self.defaultContentSize)
         // Setting the autosave name restores the saved frame, if any; reject frames that are too small.
         let restored =
-            window.setFrameAutosaveName("CartillaDocumentWindow") && window.setFrameUsingName("CartillaDocumentWindow")
+            window.setFrameAutosaveName("LibretillaDocumentWindow") && window.setFrameUsingName("LibretillaDocumentWindow")
         let minimum = window.contentMinSize
         if !restored || window.contentLayoutRect.width < minimum.width
             || window.contentLayoutRect.height < minimum.height
@@ -148,7 +148,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
 
     override var document: AnyObject? {
         didSet {
-            if let doc = document as? CartillaDocument {
+            if let doc = document as? LibretillaDocument {
                 status.show(doc.saveState, isDraft: doc.fileURL == nil)
             }
         }
@@ -203,8 +203,8 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
 
     /// View ▸ Show/Hide Outline (⌃⌘S); remembered for new windows.
     /// The split view restores its saved state (sidebar width, and whether it was collapsed) when it first
-    /// appears, after `init` applied Cartilla's own setting: an outline hidden in View ▸ Show Outline could come
-    /// back open, with the menu still saying "Show Outline". Whether it shows is Cartilla's setting; apply it
+    /// appears, after `init` applied Libretilla's own setting: an outline hidden in View ▸ Show Outline could come
+    /// back open, with the menu still saying "Show Outline". Whether it shows is Libretilla's setting; apply it
     /// again once the window is up.
     override func showWindow(_ sender: Any?) {
         applyOutlineSetting()

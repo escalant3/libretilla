@@ -2,9 +2,9 @@ import AppKit
 
 /// App-wide choices, kept in `UserDefaults` and shown in Settings (⌘,). Windows apply them as they change.
 enum Preferences {
-    static let keepsPageLightKey = "CartillaKeepsPageLight"
-    static let rulerUnitsKey = "CartillaRulerUnits"
-    static let outlineShownKey = "CartillaOutlineShown"
+    static let keepsPageLightKey = "LibretillaKeepsPageLight"
+    static let rulerUnitsKey = "LibretillaRulerUnits"
+    static let outlineShownKey = "LibretillaOutlineShown"
 
     /// The ruler's units, by `NSRulerView`'s built-in names.
     enum RulerUnit: String, CaseIterable, Identifiable {

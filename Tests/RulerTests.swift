@@ -1,13 +1,13 @@
 import AppKit
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// The ruler shows only indent and tab markers, measured from the page's left margin.
 @MainActor
 final class RulerTests: XCTestCase {
     func testRulerHasNoAccessoryAndStartsAtTheMargin() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         defer { doc.close() }
         let window = try XCTUnwrap(doc.windowControllers.first?.window)

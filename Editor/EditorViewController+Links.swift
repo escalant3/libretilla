@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// Insert ▸ Link… (⌘K) and following links (M3).
 extension EditorViewController {

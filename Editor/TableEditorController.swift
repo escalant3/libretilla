@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// The cell editor sheet (ADR 0006): a table's cells as a grid of text fields, plus rows and columns.
 /// Works on the table's XML; `onDone` gets the edited XML (only if something changed).

@@ -1,6 +1,6 @@
 ---
 title: Pandoc-produced fixture
-author: Cartilla fixture generator
+author: Libretilla fixture generator
 lang: es-ES
 ---
 

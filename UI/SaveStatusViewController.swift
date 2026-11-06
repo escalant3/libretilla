@@ -45,7 +45,7 @@ final class SaveStatusViewController: NSTitlebarAccessoryViewController {
         view.setFrameSize(NSSize(width: width, height: view.frame.height))
     }
 
-    func show(_ state: CartillaDocument.SaveState, isDraft: Bool) {
+    func show(_ state: LibretillaDocument.SaveState, isDraft: Bool) {
         loadViewIfNeeded()
         let text: String
         var announce = false
@@ -59,7 +59,7 @@ final class SaveStatusViewController: NSTitlebarAccessoryViewController {
             announce = true
         case .readOnly(let reason):
             text = String(localized: "Read-only")
-            label.toolTip = String(localized: "Cartilla can’t safely save this document: \(reason).")
+            label.toolTip = String(localized: "Libretilla can’t safely save this document: \(reason).")
         }
         if case .failed = state {} else if case .readOnly = state {} else { label.toolTip = nil }
         label.stringValue = text

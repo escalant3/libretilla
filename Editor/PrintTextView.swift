@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// The view printing and PDF export lay the document out in (TextKit 2, like the editor). It starts a
 /// new page after every page break and doesn't draw the editor's page break chips.
@@ -25,7 +25,7 @@ final class PrintTextView: NSTextView {
     static func printable(_ text: NSAttributedString) -> NSAttributedString {
         let out = NSMutableAttributedString(attributedString: text)
         var ranges: [NSRange] = []
-        out.enumerateAttribute(.cartillaPageBreak, in: NSRange(location: 0, length: out.length)) { value, range, _ in
+        out.enumerateAttribute(.libretillaPageBreak, in: NSRange(location: 0, length: out.length)) { value, range, _ in
             if value != nil { ranges.append(range) }
         }
         for range in ranges {
@@ -38,7 +38,7 @@ final class PrintTextView: NSTextView {
     private func pageBreakOffsets() -> [Int] {
         guard let storage = textStorage else { return [] }
         var offsets: [Int] = []
-        storage.enumerateAttribute(.cartillaPageBreak, in: NSRange(location: 0, length: storage.length)) { v, r, _ in
+        storage.enumerateAttribute(.libretillaPageBreak, in: NSRange(location: 0, length: storage.length)) { v, r, _ in
             if v != nil { offsets += Array(r.location..<NSMaxRange(r)) }
         }
         return offsets

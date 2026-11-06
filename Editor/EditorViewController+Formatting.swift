@@ -1,10 +1,10 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// Formatting commands (M2), reached through the responder chain from the Format menu and the
 /// format bar. Each one is a single undoable edit that changes the Word formatting (`RunFormat`,
 /// `ParagraphFormat`) and redraws the text from it.
-extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
+extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate {
     // MARK: - Edit plumbing
 
     var currentFormat: SelectionFormat {
@@ -76,15 +76,15 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
         let caret = min(textView.selectedRange().location, storage.length - 1)
         var attrs = storage.attributes(
             at: caret > 0 && caret == storage.length ? caret - 1 : caret, effectiveRange: nil)
-        for key in NSAttributedString.Key.cartillaNonInheritable { attrs[key] = nil }
+        for key in NSAttributedString.Key.libretillaNonInheritable { attrs[key] = nil }
         if (storage.string as NSString).character(at: caret) == 0x0A, caret > 0,
             (storage.string as NSString).character(at: caret - 1) != 0x0A
         {
             // Caret at the end of a non-empty paragraph: keep the run before it.
             var before = storage.attributes(at: caret - 1, effectiveRange: nil)
-            for key in NSAttributedString.Key.cartillaNonInheritable { before[key] = nil }
+            for key in NSAttributedString.Key.libretillaNonInheritable { before[key] = nil }
             before[.paragraphStyle] = attrs[.paragraphStyle]
-            before[.cartillaParagraphFormat] = attrs[.cartillaParagraphFormat]
+            before[.libretillaParagraphFormat] = attrs[.libretillaParagraphFormat]
             attrs = before
         }
         textView.typingAttributes = attrs
@@ -347,7 +347,7 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
             textView.selectedRange().length > 0
             ? textView.selectedRange().location : max(0, textView.selectedRange().location - 1)
         let run =
-            (storage.attribute(.cartillaRun, at: min(at, storage.length - 1), effectiveRange: nil) as? RunFormat)?
+            (storage.attribute(.libretillaRun, at: min(at, storage.length - 1), effectiveRange: nil) as? RunFormat)?
             .properties ?? RunProperties()
         var runFields: Set<RunProperties.Field> = []
         if run.bold != nil { runFields.insert(.bold) }
@@ -389,7 +389,7 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
         textView.undoManager?.setActionName(name)
     }
 
-    // MARK: - Keyboard (CartillaTextViewDelegate)
+    // MARK: - Keyboard (LibretillaTextViewDelegate)
 
     private func caretParagraph() -> (range: NSRange, isEmpty: Bool)? {
         guard let storage = textView.textStorage, textView.selectedRange().length == 0 else { return nil }
@@ -399,14 +399,14 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
         return (r, content == 0)
     }
 
-    func textViewHandleNewline(_ textView: CartillaTextView) -> Bool {
+    func textViewHandleNewline(_ textView: LibretillaTextView) -> Bool {
         // Return on an empty list item ends the list.
         guard let (_, isEmpty) = caretParagraph(), isEmpty, currentFormat.isListItem else { return false }
         editParagraphs(.list(numId: nil, level: nil), actionName: String(localized: "Typing"))
         return true
     }
 
-    func textViewDidInsertNewline(_ textView: CartillaTextView) {
+    func textViewDidInsertNewline(_ textView: LibretillaTextView) {
         guard let storage = textView.textStorage, let (range, isEmpty) = caretParagraph(), isEmpty, range.location > 0
         else { return }
         let previous = (storage.string as NSString).paragraphRange(
@@ -423,18 +423,18 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
         storage.endEditing()
         textView.didChangeText()
         var attrs = storage.attributes(at: range.location, effectiveRange: nil)
-        for key in NSAttributedString.Key.cartillaNonInheritable { attrs[key] = nil }
-        attrs[.cartillaRun] = nil
+        for key in NSAttributedString.Key.libretillaNonInheritable { attrs[key] = nil }
+        attrs[.libretillaRun] = nil
         textView.typingAttributes = attrs
     }
 
-    func textView(_ textView: CartillaTextView, doubleClickedAt index: Int) -> Bool {
+    func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int) -> Bool {
         guard let found = table(at: index) else { return false }
         openTableEditor(found)
         return true
     }
 
-    func textView(_ textView: CartillaTextView, changeListLevelBy delta: Int) -> Bool {
+    func textView(_ textView: LibretillaTextView, changeListLevelBy delta: Int) -> Bool {
         guard textView.isEditable, currentFormat.isListItem, let storage = textView.textStorage else { return false }
         let sel = textView.selectedRange()
         let paragraph = (storage.string as NSString).paragraphRange(for: NSRange(location: sel.location, length: 0))
@@ -488,7 +488,7 @@ extension EditorViewController: NSMenuItemValidation, CartillaTextViewDelegate {
     }
 }
 
-/// What a style popup item stands for: one of Cartilla's standard styles (by Word's built-in
+/// What a style popup item stands for: one of Libretilla's standard styles (by Word's built-in
 /// name, created on first use if the document lacks it) or a style the document defines.
 enum StyleChoice: Equatable {
     case builtIn(String)

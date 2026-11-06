@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// A heading in the document: a paragraph whose Word style is Title or Heading 1–9. Shared by the outline
 /// sidebar and VoiceOver's heading rotor.
@@ -21,7 +21,7 @@ enum DocumentOutline {
         while location < string.length {
             let paragraph = string.paragraphRange(for: NSRange(location: location, length: 0))
             defer { location = NSMaxRange(paragraph) }
-            let format = text.attribute(.cartillaParagraphFormat, at: paragraph.location, effectiveRange: nil)
+            let format = text.attribute(.libretillaParagraphFormat, at: paragraph.location, effectiveRange: nil)
             let styleId = (format as? ParagraphFormat)?.properties.styleId ?? ""
             let level: Int?
             if let known = levels[styleId] {

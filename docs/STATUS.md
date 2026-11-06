@@ -4,11 +4,11 @@
 
 **Done**
 
-- Repo skeleton: XcodeGen `project.yml` plus the committed `Cartilla.xcodeproj`. arm64-only, macOS 26, Swift 6,
+- Repo skeleton: XcodeGen `project.yml` plus the committed `Libretilla.xcodeproj`. arm64-only, macOS 26, Swift 6,
   sandboxed (user-selected read-write + app-scoped bookmarks), hardened runtime (Release), EN/ES string catalog.
 - App shell: programmatic standard menus, stub autosave-in-place `NSDocument` that declares the `.docx` type,
   page-width text view on a gray canvas. Unit tests and a UI launch smoke test pass.
-- `Packages/CartillaDocx`: the `DocxCodec` protocol, a placeholder `DocxDocument` model, and ZIPFoundation 0.9.20
+- `Packages/LibretillaDocx`: the `DocxCodec` protocol, a placeholder `DocxDocument` model, and ZIPFoundation 0.9.20
   (MIT, approved) with a smoke test that reads a fixture.
 - Fixture corpus: 10 generated Word-style files, plus one from pandoc and one exported from Pages.
   Reproducible, and checked by CI.
@@ -18,7 +18,7 @@
   [0002 own lossless OOXML codec, built incrementally](decisions/0002-docx-library.md).
 - Editor uses an explicit TextKit 2 `NSTextView` and logs a fault if anything forces a TextKit 1 fallback.
   `Tests/TextKit2CompatibilityTests.swift` pins the known gaps.
-- Repo on GitHub: [escalant3/cartilla](https://github.com/escalant3/cartilla) (private). CI is green on the `macos-26`
+- Repo on GitHub: [escalant3/libretilla](https://github.com/escalant3/libretilla) (private). CI is green on the `macos-26`
   runner (Xcode 26.6, arm64); a full run takes about 1.5 minutes.
 
 **Decided with the human:** minimum macOS 26; sandboxed; generated corpus with real-app slots left as TODOs;
@@ -31,17 +31,17 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
       1.0; inline editing in 1.1.
 - [ ] Sparkle yes/no; domain and website host.
 - [ ] Real fixture files for `Fixtures/real/{word,libreoffice,googledocs}` (see `Fixtures/README.md`).
-- [ ] Placeholder bundle id `app.cartilla.Cartilla`; confirm, or choose one tied to the domain.
+- [ ] Placeholder bundle id `app.libretilla.Libretilla`; confirm, or choose one tied to the domain.
 - [ ] Copyright line in `LICENSE` ("Diego Escalante (escalant3)"); confirm the name.
-- [ ] **Later (deferred by the owner, 2026-11-04):** open Cartilla-written files in Microsoft Word and report any
+- [ ] **Later (deferred by the owner, 2026-11-04):** open Libretilla-written files in Microsoft Word and report any
       repair prompt. Word isn't installed on the dev machine for now. Priority files: one with a new list
-      (`numbering.xml` created from scratch), one with a style Cartilla copied in, and a few edited corpus files.
+      (`numbering.xml` created from scratch), one with a style Libretilla copied in, and a few edited corpus files.
 
 ## Milestone 1: Skeleton ✅ (2026-11-04)
 
 **Done**
 
-- `CartillaDocx` codec (ADR 0002):
+- `LibretillaDocx` codec (ADR 0002):
   - `OPCPackage` copies every part through untouched.
   - `RawXML` is a byte-range-preserving XML reader.
   - Paragraphs and runs are modelled; everything else is kept verbatim as opaque blocks or inlines.
@@ -65,7 +65,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
     prompt; `kill -9` loses only the last seconds; the unnamed-draft sheet.
 - Manual check: every fixture, edited by the codec, opens in Pages 14.5 and pandoc.
 
-**Not yet verified:** opening Cartilla-written files in **Microsoft Word**. Deferred; see "Waiting on the human".
+**Not yet verified:** opening Libretilla-written files in **Microsoft Word**. Deferred; see "Waiting on the human".
 
 **Known M1 limitations (planned)**
 
@@ -129,7 +129,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - TextKit 2 positions list items by nesting depth, so lists with unusual indents look approximate. They're
   saved exactly (gap G4).
 - Text inside links, fields and content controls can't be reformatted yet; formatting commands skip it (M3).
-- Copy and paste inside Cartilla goes through RTF, so pasted runs get formats derived from their look. Links
+- Copy and paste inside Libretilla goes through RTF, so pasted runs get formats derived from their look. Links
   and other objects paste as plain text.
 - Superscript and subscript display at full size (TextKit 2 default), not reduced as in Word.
 - Text colours are written as chosen. (Since M4, a dark page draws dark colours lighter, for display only.)
@@ -138,14 +138,14 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 
 ## Milestone 3: Insert & page (in progress)
 
-**CI is off (2026-11-04).** The owner disabled the GitHub Actions workflow to focus on whether Cartilla is
+**CI is off (2026-11-04).** The owner disabled the GitHub Actions workflow to focus on whether Libretilla is
 useful; verify locally (`swift test` in the package, `xcodebuild test`). Re-enable with `gh workflow enable CI`.
 Left open: on CI only, `testFindAndReplaceAll` never sees an autosave after Replace All (it passes locally every
 time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 
 **Done**
 
-- **Page setup** from the final `w:sectPr` (`PageSetup` in CartillaDocx): paper size, orientation and margins.
+- **Page setup** from the final `w:sectPr` (`PageSetup` in LibretillaDocx): paper size, orientation and margins.
   The editor's page and text column follow it, so A4 documents show and wrap at A4 width.
 - **File ▸ Page Setup…** shows the document's paper and orientation. A change is one undoable step, saved by
   rewriting only the changed `w:pgSz` / `w:pgMar` attributes. AppKit's whole-point sizes snap to Word's exact
@@ -192,7 +192,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
-- Pictures can't be resized in the editor yet; copying a picture within Cartilla saves the copy as a new image.
+- Pictures can't be resized in the editor yet; copying a picture within Libretilla saves the copy as a new image.
 - Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
   text; table-style conditional formatting (banded rows, first-row shading from `w:tblStylePr`) isn't drawn;
   nested tables show as one line of text per row; a vertically merged cell's text sits in its first row; tables
@@ -227,7 +227,7 @@ print yet.
   - `PolishUITests.testAccessibilityAudit` runs XCTest's audit on a document window (outline shown) and on
     Settings. It fails on any issue except, documented in the test: the document's own text colours, AppKit's
     window title, window tab and window buttons, and NSTextView's off-screen Touch Bar.
-- **Settings** (Cartilla ▸ Settings… ⌘,): page in Dark Mode, page edges, format bar, and ruler units
+- **Settings** (Libretilla ▸ Settings… ⌘,): page in Dark Mode, page edges, format bar, and ruler units
   (centimetres, inches or points; the default follows the locale). Changes apply to open windows at once.
   Settings opens on the screen of the window you're working in.
 - **Localization.** Every string the code localizes has Spanish; `LocalizationTests` fails if one doesn't.
@@ -245,8 +245,8 @@ print yet.
   - 18 app tests (`PolishTests`, `LocalizationTests`).
   - 4 UI tests (`PolishUITests`: outline with real keys and clicks, Settings changing an open window, Dark
     Mode screenshots, the accessibility audit).
-- UI tests only: `-CartillaUITestFreshDefaults YES` clears Cartilla's settings at launch, and
-  `-CartillaUITestAppearance Dark|Light` forces an appearance.
+- UI tests only: `-LibretillaUITestFreshDefaults YES` clears Libretilla's settings at launch, and
+  `-LibretillaUITestAppearance Dark|Light` forces an appearance.
 
 **Not yet verified**
 
@@ -256,6 +256,6 @@ print yet.
 **Decided with the owner (2026-11-05)**
 
 - AppKit's "Edited" subtitle under the title stays. It is NSDocument's Versions state (changed since the last
-  explicit save), which TextEdit shows too, so it's the Mac's own convention. Cartilla's status beside it says
+  explicit save), which TextEdit shows too, so it's the Mac's own convention. Libretilla's status beside it says
   whether the file on disk is current.
 

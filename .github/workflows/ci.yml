@@ -28,31 +28,31 @@ jobs:
 
       - name: Lint (swift format, strict)
         run: |
-          find App Document Editor UI Tests UITests Packages/CartillaDocx \
+          find App Document Editor UI Tests UITests Packages/LibretillaDocx \
             -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict
 
       - name: Xcode project is in sync with project.yml
         run: |
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           xcodegen generate --quiet
-          git diff --exit-code -- Cartilla.xcodeproj App/Info.plist App/Cartilla.entitlements
+          git diff --exit-code -- Libretilla.xcodeproj App/Info.plist App/Libretilla.entitlements
 
       - name: Fixture corpus is reproducible
         run: |
           python3 scripts/fixtures/make_corpus.py
           git diff --exit-code -- Fixtures/generated Resources/Blank.docx
 
-      - name: CartillaDocx package tests
-        working-directory: Packages/CartillaDocx
+      - name: LibretillaDocx package tests
+        working-directory: Packages/LibretillaDocx
         run: swift test
 
       - name: Build and test app (unit + UI)
         run: |
           set -o pipefail
           mkdir -p build
-          # TEST_RUNNER_ passes CARTILLA_CI to the test runners (see PolishUITests).
-          TEST_RUNNER_CARTILLA_CI=1 xcodebuild test \
-            -project Cartilla.xcodeproj -scheme Cartilla \
+          # TEST_RUNNER_ passes LIBRETILLA_CI to the test runners (see PolishUITests).
+          TEST_RUNNER_LIBRETILLA_CI=1 xcodebuild test \
+            -project Libretilla.xcodeproj -scheme Libretilla \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath build/DerivedData \
             CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO \
@@ -64,7 +64,7 @@ jobs:
         run: |
           mkdir -p build/crash-reports
           for dir in ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports; do
-            find "$dir" -iname 'Cartilla*' -exec cp {} build/crash-reports/ \; 2>/dev/null || true
+            find "$dir" -iname 'Libretilla*' -exec cp {} build/crash-reports/ \; 2>/dev/null || true
           done
           ls -l build/crash-reports
 

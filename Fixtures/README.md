@@ -16,7 +16,7 @@ Test inputs for the DOCX codec and the round-trip suite (bootstrap §7).
 | `07-header-footer.docx` | `make_corpus.py` | Default header and footer, PAGE field, A4 page size, multiple pages |
 | `08-spanish.docx` | `make_corpus.py` | Accents, ñ, ¿¡, «», “”, ordinals, €, French/German/Portuguese, emoji, `w:lang` |
 | `09-large.docx` | `make_corpus.py` | ~67 500 words and 161 pages in Pages: 40 chapters, 120 sections |
-| `10-word-features.docx` | `make_corpus.py` | Content Cartilla doesn't author but must preserve: footnotes/endnotes, comments, tracked insert/delete, complex and simple fields, inline and block `w:sdt` bound to a custom XML part, floating text box (`mc:AlternateContent` with a VML fallback), OMML equation, continuous section break into 2 columns |
+| `10-word-features.docx` | `make_corpus.py` | Content Libretilla doesn't author but must preserve: footnotes/endnotes, comments, tracked insert/delete, complex and simple fields, inline and block `w:sdt` bound to a custom XML part, floating text box (`mc:AlternateContent` with a VML fallback), OMML equation, continuous section break into 2 columns |
 | `11-pandoc.docx` | `make_pandoc.sh` (pandoc 3.12) | Markdown → DOCX in pandoc's own markup style: lists, table, image, code, footnote, link |
 | `12-pages.docx` | Pages 14.5 export of `11-pandoc.docx` (`pages_roundtrip.applescript`) | Apple Pages' DOCX writer output. **Not** reproducible byte-for-byte, so regenerate it only on purpose |
 

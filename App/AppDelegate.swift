@@ -5,9 +5,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Before any document opens (files opened at launch are read before didFinishLaunching).
         ChipLabels.install()
-        // UI tests only: start from the default settings (`-CartillaUITestFreshDefaults YES`). Passing the
+        // UI tests only: start from the default settings (`-LibretillaUITestFreshDefaults YES`). Passing the
         // settings themselves as arguments would pin them, so Settings couldn't change them.
-        if UserDefaults.standard.bool(forKey: "CartillaUITestFreshDefaults") {
+        if UserDefaults.standard.bool(forKey: "LibretillaUITestFreshDefaults") {
             for key in [
                 Preferences.keepsPageLightKey, Preferences.rulerUnitsKey, Preferences.outlineShownKey,
                 DocumentWindowController.showsPageEdgesKey, DocumentWindowController.formatBarHiddenKey,
@@ -15,8 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 UserDefaults.standard.removeObject(forKey: key)
             }
         }
-        // UI tests only: run in Light or Dark Mode whatever the Mac is set to (`-CartillaUITestAppearance Dark`).
-        switch UserDefaults.standard.string(forKey: "CartillaUITestAppearance") {
+        // UI tests only: run in Light or Dark Mode whatever the Mac is set to (`-LibretillaUITestAppearance Dark`).
+        switch UserDefaults.standard.string(forKey: "LibretillaUITestAppearance") {
         case "Dark": NSApp.appearance = NSAppearance(named: .darkAqua)
         case "Light": NSApp.appearance = NSAppearance(named: .aqua)
         default: break

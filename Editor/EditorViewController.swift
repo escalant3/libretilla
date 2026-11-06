@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import os
 
 /// A page-width text column on a quiet canvas (bootstrap §5.1 "page view", stage 1).
@@ -8,7 +8,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     /// The document's page size and margins (from its final `w:sectPr`); set with `apply(_:)`.
     private(set) var pageSetup = PageSetup.fallback
 
-    private(set) var textView: CartillaTextView!
+    private(set) var textView: LibretillaTextView!
     private var canvas: PageCanvasView!
     private var scrollView: NSScrollView!
     /// The cell editor sheet while it's open.
@@ -33,7 +33,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     var onZoomChange: ((CGFloat) -> Void)?
     static let zoomLevels: [CGFloat] = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2]
     /// Supplies the styles and lists the text is mapped through (formatting commands, saving).
-    weak var document: CartillaDocument?
+    weak var document: LibretillaDocument?
     /// Called (coalesced) when the selection or its formatting changes, for the format bar.
     var onSelectionFormatChange: ((SelectionFormat, AttributedStringBridge) -> Void)?
     /// Called (debounced) with the document's headings after the text changes, for the outline sidebar.
@@ -58,9 +58,9 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     private var renumberScheduled = false
     private var selectionUpdateScheduled = false
 
-    var bridge: AttributedStringBridge { document?.bridge ?? CartillaDocument.emptyBridge }
+    var bridge: AttributedStringBridge { document?.bridge ?? LibretillaDocument.emptyBridge }
     nonisolated(unsafe) private var fallbackObserver: (any NSObjectProtocol)?
-    nonisolated private static let log = Logger(subsystem: "app.cartilla.Cartilla", category: "Editor")
+    nonisolated private static let log = Logger(subsystem: "app.libretilla.Libretilla", category: "Editor")
 
     deinit {
         if let fallbackObserver { NotificationCenter.default.removeObserver(fallbackObserver) }
@@ -84,7 +84,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
 
         // TextKit 2, deliberately (ADR 0001). Never touch `textView.layoutManager`: it forces a
         // permanent fallback to TextKit 1. Known TK2 gaps: docs/TEXTKIT2_GAPS.md.
-        let textView = CartillaTextView(usingTextLayoutManager: true)
+        let textView = LibretillaTextView(usingTextLayoutManager: true)
         // The text view is the page's text column; the canvas draws the page around it. (A horizontal
         // textContainerInset would misplace the ruler's right-indent marker.)
         textView.frame = NSRect(x: 0, y: 0, width: pageSetup.textWidth, height: pageSetup.pageSize.height)
@@ -254,7 +254,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     // MARK: NSTextStorageDelegate
 
     /// AppKit's own tools (Font panel, ruler, paste) change display attributes directly; work out
-    /// which Word properties that means. Cartilla's own commands are already consistent (no-op).
+    /// which Word properties that means. Libretilla's own commands are already consistent (no-op).
     func textStorage(
         _ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions,
         range editedRange: NSRange,
@@ -315,7 +315,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
 
     // MARK: NSTextViewDelegate
 
-    /// Content Cartilla only preserves (links, fields, objects, tables) is edited whole or not at all.
+    /// Content Libretilla only preserves (links, fields, objects, tables) is edited whole or not at all.
     /// Formatting changes (no replacement string) are always allowed; they skip such content.
     func textView(
         _ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?
@@ -340,10 +340,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         toAttributes newTypingAttributes: [NSAttributedString.Key: Any] = [:]
     ) -> [NSAttributedString.Key: Any] {
         var attrs = newTypingAttributes
-        for key in NSAttributedString.Key.cartillaNonInheritable { attrs[key] = nil }
+        for key in NSAttributedString.Key.libretillaNonInheritable { attrs[key] = nil }
         // Typing inside a link (not at either end) extends it, as in Word.
         if let storage = textView.textStorage, let link = linkAround(caret: textView.selectedRange(), in: storage) {
-            attrs[.cartillaHyperlink] = link.box
+            attrs[.libretillaHyperlink] = link.box
             if let url = link.box.url { attrs[.link] = url }
         }
         return attrs
@@ -355,7 +355,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         let probe = NSRange(location: start, length: min(text.length - start, range.length + 2))
         let everything = NSRange(location: 0, length: text.length)
         var allowed = true
-        for key in [NSAttributedString.Key.cartillaOpaque, .cartillaBlock] where allowed {
+        for key in [NSAttributedString.Key.libretillaOpaque, .libretillaBlock] where allowed {
             text.enumerateAttribute(key, in: probe) { value, r, stop in
                 guard value != nil else { return }
                 var whole = NSRange()
@@ -635,7 +635,7 @@ final class PageCanvasView: NSView {
             page.setFrameOrigin(NSPoint(x: x, y: padding))
             needsDisplay = true
         }
-        (page as? CartillaTextView)?.alignRulerOrigin()
+        (page as? LibretillaTextView)?.alignRulerOrigin()
     }
 
     override func resize(withOldSuperviewSize oldSize: NSSize) { needsLayout = true }

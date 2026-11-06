@@ -2,12 +2,12 @@ import CryptoKit
 import Foundation
 import os
 
-/// Private copies of documents as they were before Cartilla first saved over them (ADR 0004).
+/// Private copies of documents as they were before Libretilla first saved over them (ADR 0004).
 /// Lives in the app's sandbox container; copies older than 30 days are pruned at launch.
 struct OriginalsStore: Sendable {
     static let retention: TimeInterval = 30 * 24 * 60 * 60
     static let shared = OriginalsStore()
-    private static let log = Logger(subsystem: "app.cartilla.Cartilla", category: "Originals")
+    private static let log = Logger(subsystem: "app.libretilla.Libretilla", category: "Originals")
 
     struct Entry: Codable, Sendable, Equatable {
         var originalPath: String
@@ -22,7 +22,7 @@ struct OriginalsStore: Sendable {
         self.directory =
             directory
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Cartilla/Originals", isDirectory: true)
+            .appendingPathComponent("Libretilla/Originals", isDirectory: true)
     }
 
     private var indexURL: URL { directory.appendingPathComponent("index.json") }

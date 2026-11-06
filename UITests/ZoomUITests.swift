@@ -3,11 +3,11 @@ import XCTest
 
 /// View zoom with real key events, as in Google Docs: ⌘+ / ⌘= / ⌘− / ⌘0 zoom the page (the format bar's
 /// zoom menu follows), and ⇧⌘> / ⇧⌘< change the font size instead.
-final class ZoomUITests: CartillaUITestCase {
+final class ZoomUITests: LibretillaUITestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         // Every run starts at 100% whatever an earlier run left behind.
-        app.launchArguments += ["-CartillaZoom", "1"]
+        app.launchArguments += ["-LibretillaZoom", "1"]
     }
 
     func shoot(_ window: XCUIElement, _ name: String) {

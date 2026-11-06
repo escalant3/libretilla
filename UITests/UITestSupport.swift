@@ -1,11 +1,11 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
 /// Shared set-up for UI tests: a scratch folder, opening copies of fixtures through
 /// LaunchServices (which grants the sandbox access), and polling the file on disk.
-class CartillaUITestCase: XCTestCase {
-    static let bundleID = "app.cartilla.Cartilla"
+class LibretillaUITestCase: XCTestCase {
+    static let bundleID = "app.libretilla.Libretilla"
     static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("Fixtures/generated")
 
@@ -18,10 +18,10 @@ class CartillaUITestCase: XCTestCase {
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         // Start as a fresh install does, outline hidden, whatever an earlier test left: with it open the format
         // bar is narrower and, on a small screen, some of its groups are in the » menu.
-        app.launchArguments += ["-CartillaOutlineShown", "NO"]
+        app.launchArguments += ["-LibretillaOutlineShown", "NO"]
         // And at the default window size, not a frame some earlier run saved (an empty frame is rejected).
-        app.launchArguments += ["-NSWindow Frame CartillaDocumentWindow", ""]
-        work = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-ui-\(UUID())")
+        app.launchArguments += ["-NSWindow Frame LibretillaDocumentWindow", ""]
+        work = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-ui-\(UUID())")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
     }
 

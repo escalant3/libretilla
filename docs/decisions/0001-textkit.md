@@ -6,7 +6,7 @@
 
 ## Context
 
-Cartilla uses `NSTextView` for editing and layout (bootstrap §5.1). On macOS 26 the view uses **TextKit 2**
+Libretilla uses `NSTextView` for editing and layout (bootstrap §5.1). On macOS 26 the view uses **TextKit 2**
 (`NSTextLayoutManager`) by default. It falls back to **TextKit 1** (`NSLayoutManager`) if code touches
 `.layoutManager`. The engine has to be chosen deliberately, because a view that switches engine at runtime behaves
 unpredictably.
@@ -30,9 +30,9 @@ on large documents and gets new AppKit text features first.
 
 Use **TextKit 2**. Every document text view is created with `NSTextView(usingTextLayoutManager: true)`.
 
-- **No TextKit 1 APIs** in Cartilla code: no `layoutManager`, glyph ranges or `NSLayoutManager` delegates. Use
+- **No TextKit 1 APIs** in Libretilla code: no `layoutManager`, glyph ranges or `NSLayoutManager` delegates. Use
   `textLayoutManager`, `textContentStorage`, text layout fragments and `NSTextRange`.
-- **Fallback detection:** `EditorViewController` logs a fault (`app.cartilla.Cartilla`, category `Editor`) on
+- **Fallback detection:** `EditorViewController` logs a fault (`app.libretilla.Libretilla`, category `Editor`) on
   `willSwitchToNSLayoutManagerNotification`. Each fallback found this way becomes a new entry in the gap register.
 - **Track incompatibilities, don't hide them.** Every gap goes in [`docs/TEXTKIT2_GAPS.md`](../TEXTKIT2_GAPS.md),
   with its impact, a workaround and a test. A test named `testGap…` pins the current limitation. If it starts

@@ -11,7 +11,7 @@
 Bootstrap §5.2 offers three options for the DOCX library: (a) adopt Techopolis/SwiftDocX and contribute upstream,
 (b) fork or vendor it, or (c) write our own thin OOXML layer on ZIPFoundation + Foundation XML.
 
-What drives the choice is **R2 and the round-trip policy**: Cartilla autosaves over the user's real file.
+What drives the choice is **R2 and the round-trip policy**: Libretilla autosaves over the user's real file.
 So an open → edit → save cycle must keep every part we don't own byte-identical, and must keep content we don't
 understand (fields, `w:sdt`, comments, footnotes, text boxes, …) intact. A library that *models* a document and
 *regenerates* it can't meet that requirement, however many features it supports.
@@ -63,7 +63,7 @@ Every output was also opened in Pages as a smoke test.
 
 ## Decision
 
-**Option (c).** `Packages/CartillaDocx` implements `DocxCodec` on **ZIPFoundation** plus our own small XML layer.
+**Option (c).** `Packages/LibretillaDocx` implements `DocxCodec` on **ZIPFoundation** plus our own small XML layer.
 SwiftDocX is not used anywhere in the project. We build the codec **gradually**, adding only what the current
 milestone needs (M1: package copy-through, paragraphs and runs; M2: styles, lists, paragraph formatting;
 M3: tables, images, hyperlinks, sections). Each step comes with its fixtures and round-trip tests.
@@ -94,7 +94,7 @@ Design principles for M1:
    - read → write → read is equivalent on the model.
 
    The spike's `DocxProbe` scanner and OPC checker (commit `09ad587`) are good starting points for
-   `CartillaDocx`'s test support.
+   `LibretillaDocx`'s test support.
 
 ## Consequences
 

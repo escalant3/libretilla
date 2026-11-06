@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// Milestone 4: the outline sidebar, VoiceOver's heading rotor, Dark Mode and Settings.
 @MainActor
@@ -15,13 +15,13 @@ final class PolishTests: XCTestCase {
     ]
 
     var scratch: URL!
-    var doc: CartillaDocument!
+    var doc: LibretillaDocument!
     var editor: EditorViewController { doc.editor! }
     var windowController: DocumentWindowController { doc.windowControllers.first as! DocumentWindowController }
 
     override func setUpWithError() throws {
         for key in Self.touchedKeys { UserDefaults.standard.removeObject(forKey: key) }
-        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-polish-\(UUID())")
+        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-polish-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
@@ -34,7 +34,7 @@ final class PolishTests: XCTestCase {
     func open(_ fixture: String) throws {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
-        doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
     }
 
@@ -118,17 +118,17 @@ final class PolishTests: XCTestCase {
         let rotors = editor.textView.accessibilityCustomRotors()
         XCTAssertTrue(rotors.contains { $0.type == .heading })
         let headings = editor.currentHeadings()
-        let first = CartillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "")
+        let first = LibretillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "")
         XCTAssertEqual(first?.title, "Document Title")
-        let second = CartillaTextView.headingSearch(headings, from: first?.range, direction: .next, filter: "")
+        let second = LibretillaTextView.headingSearch(headings, from: first?.range, direction: .next, filter: "")
         XCTAssertEqual(second?.title, "Heading 1")
         XCTAssertEqual(
-            CartillaTextView.headingSearch(headings, from: second?.range, direction: .previous, filter: "")?.title,
+            LibretillaTextView.headingSearch(headings, from: second?.range, direction: .previous, filter: "")?.title,
             "Document Title")
         XCTAssertEqual(
-            CartillaTextView.headingSearch(headings, from: nil, direction: .previous, filter: "")?.title, "Heading 6")
+            LibretillaTextView.headingSearch(headings, from: nil, direction: .previous, filter: "")?.title, "Heading 6")
         XCTAssertEqual(
-            CartillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "ing 4")?.title, "Heading 4")
+            LibretillaTextView.headingSearch(headings, from: nil, direction: .next, filter: "ing 4")?.title, "Heading 4")
     }
 
     // MARK: Dark Mode

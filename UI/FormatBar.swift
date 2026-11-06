@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// The formatting bar under the toolbar (bootstrap §6), Office 97 style, built from standard
 /// controls: Zoom · Style · Font · Size · B I U S · Text colour · Highlight · Alignment · Lists ·

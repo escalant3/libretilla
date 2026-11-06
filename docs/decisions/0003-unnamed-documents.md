@@ -10,11 +10,11 @@ Bootstrap §5.4 asks where a document lives between File ▸ New and the moment 
 1. A system-managed draft until it's named. Closing an unnamed, non-empty document shows the standard "keep this
    document?" sheet. This is how Pages and TextEdit work.
 2. A draft that is filed automatically into a default folder on close, with no sheet.
-3. A real `Untitled.docx` in a default folder (e.g. `~/Documents/Cartilla`) from the first keystroke.
-4. Cartilla's iCloud Drive folder as the default location.
+3. A real `Untitled.docx` in a default folder (e.g. `~/Documents/Libretilla`) from the first keystroke.
+4. Libretilla's iCloud Drive folder as the default location.
 5. The app's own hidden storage, like Notes.
 
-Cartilla is sandboxed, so options 2 and 3 would need a one-time folder grant, and option 4 would need the iCloud
+Libretilla is sandboxed, so options 2 and 3 would need a one-time folder grant, and option 4 would need the iCloud
 capability. Option 1 needs neither.
 
 ## Decision
@@ -34,16 +34,16 @@ capability. Option 1 needs neither.
   that have never been named, and it's the platform's standard behaviour. Documents that already have a file
   never show a dialog.
 - **Closing an empty unnamed document:** it's discarded silently.
-- **Default location in the save sheet:** whatever AppKit remembers (the last folder used). Cartilla adds no
+- **Default location in the save sheet:** whatever AppKit remembers (the last folder used). Libretilla adds no
   custom default folder and no Settings option for one in v1.
 
 ## Consequences
 
-- ✅ Almost no custom code: this is what `NSDocument` does out of the box. Cartilla mainly has to avoid breaking it.
+- ✅ Almost no custom code: this is what `NSDocument` does out of the box. Libretilla mainly has to avoid breaking it.
 - ✅ No sandbox folder grant, no iCloud capability, no untitled files piling up in Finder.
 - ✅ Familiar to Mac users: identical to Pages and TextEdit.
 - ⚠️ Until it's named, a document is invisible in Finder. Drafts live in
-  `~/Library/Containers/app.cartilla.Cartilla/Data/Library/Autosave Information/`.
+  `~/Library/Containers/app.libretilla.Libretilla/Data/Library/Autosave Information/`.
 - ⚠️ The close sheet is a small departure from the Google Docs feel, accepted on purpose.
 - Tests for M1:
   - New → type → quit → relaunch restores the draft.

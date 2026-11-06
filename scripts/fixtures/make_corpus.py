@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Cartilla's synthetic .docx fixture corpus (stdlib only).
+"""Generate Libretilla's synthetic .docx fixture corpus (stdlib only).
 
 The files imitate the markup Microsoft Word 2016+ writes (namespaces, part
 layout, style ids, rsids omitted) so we can exercise a DOCX codec without
@@ -273,7 +273,7 @@ def numbering_xml() -> str:
             "</w:numbering>")
 
 
-def core_xml(title: str, creator: str = "Cartilla fixture generator") -> str:
+def core_xml(title: str, creator: str = "Libretilla fixture generator") -> str:
     return (XML_DECL + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
             'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" '
             'xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
@@ -297,7 +297,7 @@ APP_XML = (XML_DECL + '<Properties xmlns="http://schemas.openxmlformats.org/offi
 class Package:
     CT_MAIN = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
 
-    def __init__(self, title: str, application: str = "Microsoft Office Word", creator: str = "Cartilla fixture generator"):
+    def __init__(self, title: str, application: str = "Microsoft Office Word", creator: str = "Libretilla fixture generator"):
         self.title = title
         self.application = application
         self.creator = creator
@@ -521,7 +521,7 @@ def hyperlink_ext(rid: str, text: str) -> str:
 def f06_hyperlinks(out: Path):
     pkg = Package("Hyperlinks")
     a = pkg.rel("hyperlink", "https://example.com/", external=True)
-    b = pkg.rel("hyperlink", "https://example.org/search?q=cartilla&lang=es", external=True)
+    b = pkg.rel("hyperlink", "https://example.org/search?q=libretilla&lang=es", external=True)
     m = pkg.rel("hyperlink", "mailto:hello@example.com", external=True)
     body = (p("Hyperlinks", style="Heading1")
             + p("Visit ", hyperlink_ext(a, "example.com"), " for details.")
@@ -543,7 +543,7 @@ def f07_header_footer(out: Path):
     wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
     hid = pkg.rel("header", "header1.xml")
     fid = pkg.rel("footer", "footer1.xml")
-    pkg.add("word/header1.xml", f"{XML_DECL}<w:hdr {ROOT_NS}>{p('Cartilla fixture — running header', style='Header', jc='right')}</w:hdr>",
+    pkg.add("word/header1.xml", f"{XML_DECL}<w:hdr {ROOT_NS}>{p('Libretilla fixture — running header', style='Header', jc='right')}</w:hdr>",
             f"{wml}.header+xml")
     pkg.add("word/footer1.xml", f"{XML_DECL}<w:ftr {ROOT_NS}>{p('Page ', page_field(), style='Footer', jc='center')}</w:ftr>",
             f"{wml}.footer+xml")
@@ -556,7 +556,7 @@ def f07_header_footer(out: Path):
 
 
 def f08_spanish(out: Path):
-    body = (p("Cartilla de español", style="Title")
+    body = (p("Libretilla de español", style="Title")
             + p("Introducción", style="Heading1")
             + p(r("¿Qué tal? ¡Muy bien! El niño comió piñata y jalapeños en Logroño.", lang="es-ES"))
             + p(r("Acentos: á é í ó ú Á É Í Ó Ú ü Ü ñ Ñ — comillas «latinas» y “inglesas”; ordinal 1.º y 2.ª; € 1.234,56.", lang="es-ES"))
@@ -582,7 +582,7 @@ def f09_large(out: Path):
 
 
 def f10_word_features(out: Path):
-    """Content Cartilla v1 can't author but must round-trip intact (bootstrap §3, §7)."""
+    """Content Libretilla v1 can't author but must round-trip intact (bootstrap §3, §7)."""
     pkg = Package("Word features")
     wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
     pkg.rel("footnotes", "footnotes.xml")
@@ -603,7 +603,7 @@ def f10_word_features(out: Path):
             "<w:r><w:t>Please double-check this sentence.</w:t></w:r></w:p></w:comment></w:comments>",
             f"{wml}.comments+xml")
     # Custom XML part (as used by content-control data binding / document properties panes).
-    pkg.add("customXml/item1.xml", f'{XML_DECL}<cartilla xmlns="urn:cartilla:fixture"><project>Cartilla</project></cartilla>')
+    pkg.add("customXml/item1.xml", f'{XML_DECL}<libretilla xmlns="urn:libretilla:fixture"><project>Libretilla</project></libretilla>')
     pkg.add("customXml/itemProps1.xml", f'{XML_DECL}<ds:datastoreItem ds:itemID="{{6C1B0E55-1D0B-4C55-9C1B-6A0C2E8F0001}}" '
             'xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml"><ds:schemaRefs/></ds:datastoreItem>',
             "application/vnd.openxmlformats-officedocument.customXmlProperties+xml")
@@ -618,11 +618,11 @@ def f10_word_features(out: Path):
                '<w:del w:id="11" w:author="Reviewer" w:date="2026-01-01T00:00:00Z"><w:r><w:delText>deleted text</w:delText></w:r></w:del>')
     date_field = ('<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> DATE \\@ "yyyy-MM-dd" </w:instrText></w:r>'
                   '<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>2026-01-01</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>')
-    simple_field = '<w:fldSimple w:instr=" AUTHOR "><w:r><w:t>Cartilla fixture generator</w:t></w:r></w:fldSimple>'
+    simple_field = '<w:fldSimple w:instr=" AUTHOR "><w:r><w:t>Libretilla fixture generator</w:t></w:r></w:fldSimple>'
     sdt = ('<w:sdt><w:sdtPr><w:alias w:val="Project name"/><w:tag w:val="project"/><w:id w:val="123456"/>'
-           '<w:dataBinding w:xpath="/ns0:cartilla[1]/ns0:project[1]" w:prefixMappings="xmlns:ns0=\'urn:cartilla:fixture\'" '
+           '<w:dataBinding w:xpath="/ns0:libretilla[1]/ns0:project[1]" w:prefixMappings="xmlns:ns0=\'urn:libretilla:fixture\'" '
            'w:storeItemID="{6C1B0E55-1D0B-4C55-9C1B-6A0C2E8F0001}"/><w:text/></w:sdtPr>'
-           '<w:sdtContent><w:r><w:t>Cartilla</w:t></w:r></w:sdtContent></w:sdt>')
+           '<w:sdtContent><w:r><w:t>Libretilla</w:t></w:r></w:sdtContent></w:sdt>')
     textbox = ('<w:r><mc:AlternateContent><mc:Choice Requires="wps"><w:drawing>'
                '<wp:anchor distT="45720" distB="45720" distL="114300" distR="114300" simplePos="0" relativeHeight="251659264" '
                'behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/>'
@@ -650,10 +650,10 @@ def f10_word_features(out: Path):
             + p("Tracked changes: ", tracked, ".")
             + p("Today is ", date_field, " and the author is ", simple_field, ".")
             + p("Content control bound to custom XML: ", sdt, ".")
-            + sdt.replace("<w:sdtContent><w:r><w:t>Cartilla</w:t></w:r></w:sdtContent>",
+            + sdt.replace("<w:sdtContent><w:r><w:t>Libretilla</w:t></w:r></w:sdtContent>",
                           "<w:sdtContent>" + p("Block-level content control.") + "</w:sdtContent>")
                  .replace('<w:id w:val="123456"/>', '<w:id w:val="123457"/>')
-                 .replace('<w:dataBinding w:xpath="/ns0:cartilla[1]/ns0:project[1]" w:prefixMappings="xmlns:ns0=\'urn:cartilla:fixture\'" w:storeItemID="{6C1B0E55-1D0B-4C55-9C1B-6A0C2E8F0001}"/><w:text/>', "")
+                 .replace('<w:dataBinding w:xpath="/ns0:libretilla[1]/ns0:project[1]" w:prefixMappings="xmlns:ns0=\'urn:libretilla:fixture\'" w:storeItemID="{6C1B0E55-1D0B-4C55-9C1B-6A0C2E8F0001}"/><w:text/>', "")
             + p(textbox, sentence(5, 60))
             + p(r("x"), '<m:oMath><m:r><m:t>E=m</m:t></m:r><m:sSup><m:e><m:r><m:t>c</m:t></m:r></m:e><m:sup><m:r><m:t>2</m:t></m:r></m:sup></m:sSup></m:oMath>')
             + p("End of single-column section.", sect=two_col_break)
@@ -675,8 +675,8 @@ BLANK_FONT = "Charter"
 
 
 def blank(out: Path):
-    """The template every new Cartilla document starts from (Resources/Blank.docx)."""
-    pkg = Package("", application="Cartilla", creator="")
+    """The template every new Libretilla document starts from (Resources/Blank.docx)."""
+    pkg = Package("", application="Libretilla", creator="")
     text_width = BLANK_PAGE["w"] - BLANK_PAGE["margins"][1] - BLANK_PAGE["margins"][3]
     pkg.styles = styles_xml(body_size=24, line=276, text_width=text_width)
     pkg.theme = theme_xml(major=BLANK_FONT, minor=BLANK_FONT)

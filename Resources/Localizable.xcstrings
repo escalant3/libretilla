@@ -12,12 +12,12 @@
         }
       }
     },
-    "About Cartilla": {
+    "About Libretilla": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acerca de Cartilla"
+            "value": "Acerca de Libretilla"
           }
         }
       }
@@ -192,12 +192,12 @@
         }
       }
     },
-    "Cartilla can’t safely save this document: %@.": {
+    "Libretilla can’t safely save this document: %@.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cartilla no puede guardar este documento de forma segura: %@."
+            "value": "Libretilla no puede guardar este documento de forma segura: %@."
           }
         }
       }
@@ -728,12 +728,12 @@
         }
       }
     },
-    "Hide Cartilla": {
+    "Hide Libretilla": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ocultar Cartilla"
+            "value": "Ocultar Libretilla"
           }
         }
       }
@@ -1240,12 +1240,12 @@
         }
       }
     },
-    "Quit Cartilla": {
+    "Quit Libretilla": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salir de Cartilla"
+            "value": "Salir de Libretilla"
           }
         }
       }

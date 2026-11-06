@@ -1,7 +1,7 @@
-import CartillaDocx
+import LibretillaDocx
 import Foundation
 
-/// Spanish (and any other) names for the placeholder chips CartillaDocx draws for content the editor can't show
+/// Spanish (and any other) names for the placeholder chips LibretillaDocx draws for content the editor can't show
 /// yet. The package names them in English; `install()` hands it this translation.
 enum ChipLabels {
     static func install() {
@@ -11,7 +11,7 @@ enum ChipLabels {
     static func localized(_ english: String) -> String {
         switch english {
         case "Text box": String(localized: "Text box", comment: "Placeholder for a text box in the document")
-        case "Image": String(localized: "Image", comment: "Placeholder for a picture Cartilla can't show")
+        case "Image": String(localized: "Image", comment: "Placeholder for a picture Libretilla can't show")
         case "Object": String(localized: "Object", comment: "Placeholder for an embedded object")
         case "Equation": String(localized: "Equation", comment: "Placeholder for an equation")
         case "Footnote": String(localized: "Footnote", comment: "Placeholder for a footnote reference")

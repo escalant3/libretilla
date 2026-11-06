@@ -5,20 +5,20 @@
 
 ## Context
 
-Cartilla autosaves over the user's real `.docx` (bootstrap §5.4). Until the lossless round-trip suite has proven
+Libretilla autosaves over the user's real `.docx` (bootstrap §5.4). Until the lossless round-trip suite has proven
 itself on real Word, LibreOffice and Google Docs files, a codec bug could damage a file the user cares about.
-Bootstrap §5.4 hard case 5 asks for a one-time backup before the first autosave over a file Cartilla didn't create.
+Bootstrap §5.4 hard case 5 asks for a one-time backup before the first autosave over a file Libretilla didn't create.
 
-Cartilla is sandboxed. It can write the file the user opened, but not a sibling like `Report (original).docx`
+Libretilla is sandboxed. It can write the file the user opened, but not a sibling like `Report (original).docx`
 without an extra folder permission.
 
 ## Decision
 
 **Keep a private copy, and rely on Versions as well.**
 
-- **Private copy.** Before the first save of an opened document in each session, Cartilla copies the **untouched
+- **Private copy.** Before the first save of an opened document in each session, Libretilla copies the **untouched
   original bytes** it read at open time into its sandbox container:
-  `~/Library/Containers/app.cartilla.Cartilla/Data/Library/Application Support/Cartilla/Originals/`.
+  `~/Library/Containers/app.libretilla.Libretilla/Data/Library/Application Support/Libretilla/Originals/`.
   - The copy is skipped when an identical copy (by SHA-256) already exists.
   - Copies are kept for **30 days**, then pruned at launch.
   - Unnamed drafts (ADR 0003) have no original, so they are never copied.

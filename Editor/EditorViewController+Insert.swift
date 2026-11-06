@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
 /// The Insert menu (M3).
 extension EditorViewController {

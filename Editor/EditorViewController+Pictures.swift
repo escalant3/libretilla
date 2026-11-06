@@ -1,5 +1,5 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import UniformTypeIdentifiers
 
 /// Insert ▸ Image…, and pictures that arrive by paste or drop (M3).
@@ -9,9 +9,9 @@ extension EditorViewController {
         let column = pageSetup.textWidth
         storage.enumerateAttribute(.attachment, in: range) { value, r, _ in
             guard let attachment = value as? NSTextAttachment,
-                storage.attribute(.cartillaOpaque, at: r.location, effectiveRange: nil) == nil,
-                storage.attribute(.cartillaPageBreak, at: r.location, effectiveRange: nil) == nil,
-                storage.attribute(.cartillaBlock, at: r.location, effectiveRange: nil) == nil
+                storage.attribute(.libretillaOpaque, at: r.location, effectiveRange: nil) == nil,
+                storage.attribute(.libretillaPageBreak, at: r.location, effectiveRange: nil) == nil,
+                storage.attribute(.libretillaBlock, at: r.location, effectiveRange: nil) == nil
             else { return }
             let size =
                 attachment.bounds.width > 0

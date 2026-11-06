@@ -1,0 +1,787 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01AC460FD65313D86681FC42 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 415E6BB5BB83F875C43B56BC /* AppDelegate.swift */; };
+		03405776FDB00090F1A997A7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */; };
+		0BDD8E7BCFFA457856BCAF7E /* LaunchSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */; };
+		0D61C3729FAAD0121F29321F /* FormattingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D595AD1849A99513505DA43 /* FormattingUITests.swift */; };
+		0DA614BF59285BDD79B07354 /* TextKit2CompatibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E301D83384EB360A8F8916D2 /* TextKit2CompatibilityTests.swift */; };
+		10153E635E31DD4C72DAE194 /* ZoomTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B423A9C2D611D5DD9824546 /* ZoomTests.swift */; };
+		1B6F2B0425D58FA3A1FDBDDB /* DocumentWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 076C34620687B5EF853F523F /* DocumentWindowController.swift */; };
+		1FFCDC6AEFD4CEF605D9F5CD /* SaveStatusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F96FB3C331F0D5A842686A3 /* SaveStatusViewController.swift */; };
+		22F46CAC1AEA6A4F9C9D7FE1 /* PictureCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2864D61A43B5853A47E7059D /* PictureCommandTests.swift */; };
+		230F799BD3376A6139500087 /* LibretillaTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */; };
+		24534A60B776471C0D70C67E /* ZoomUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3649D38901A35500098F7DB /* ZoomUITests.swift */; };
+		249663C2B9496B807F26FD48 /* LibretillaDocx in Frameworks */ = {isa = PBXBuildFile; productRef = 689B55E6DD8C56E7C9C2EB0C /* LibretillaDocx */; };
+		28BB6561353EA8ACC674E80E /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89EB5B7C58456AB37D41C38 /* MainMenu.swift */; };
+		2F4ECEE091A2983EC1993FF3 /* LinkCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1220F34C98BB80B1BFC3C436 /* LinkCommandTests.swift */; };
+		37D7467E379D6DE571E2CC02 /* LibretillaDocx in Frameworks */ = {isa = PBXBuildFile; productRef = FF1A720BE765563C98BCD694 /* LibretillaDocx */; };
+		3A0886376ABB989EC5FEF5C7 /* LibretillaDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD76665BBD77320FA1284F2 /* LibretillaDocument.swift */; };
+		3B1EB0AE1326C5A07E0BE6D7 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048A78A99D2D86EE864C12D7 /* UITestSupport.swift */; };
+		3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7396DA2CEF648E1376E074 /* EditorViewController.swift */; };
+		463078BF6947DBDB3F3F94B3 /* FormattingCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */; };
+		550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */; };
+		5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */; };
+		631CDE59FC31D21774FAFC51 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */; };
+		699366E53D34E1F445F0DF37 /* RulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCE3B8C9F8D34BE1FB1904D /* RulerTests.swift */; };
+		6DF2FA824B48D2552205EC8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D732D08D256C51C1D5415580 /* Assets.xcassets */; };
+		79B4E1E2359E3EF8A3382C16 /* PageSetupDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A664DC15DCA4D802E09737C /* PageSetupDocumentTests.swift */; };
+		7D17AE28BC3BE7691FA29A14 /* PolishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B5D15043E73883EF1C49BA /* PolishTests.swift */; };
+		972F462E0FDE8A5FF6FF43A3 /* OutlineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A9DA01A9C521B6E50E1564 /* OutlineViewController.swift */; };
+		A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */; };
+		A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A3ADE5C01027AF83420172 /* PolishUITests.swift */; };
+		A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA4329D6F3940D15193509 /* MainToolbar.swift */; };
+		AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = C3995CF0646BC821F5D8E314 /* Blank.docx */; };
+		AA89D58D874D6599DE634DA5 /* DocumentOutline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */; };
+		B57597D9D9547766175906C5 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6866795AD37DA6D40AA724 /* Preferences.swift */; };
+		B88C0619A4ECD174472EBD10 /* PersistenceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC9E479FE7EB5741F385EAC /* PersistenceUITests.swift */; };
+		BAAA2736C9FD7E41FB7F9A49 /* FormatBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7177A30E8F421E0EE6AF44D /* FormatBar.swift */; };
+		BAE248D0B824C8A7FBAE2768 /* OriginalsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84872E8613509F547BA1D59 /* OriginalsStore.swift */; };
+		BC1014D208A08C2D7F841DD0 /* TableEditorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2F9A5D4C6563A3A0C46E03C /* TableEditorController.swift */; };
+		BE3C0AD166CE1537E680A89A /* EditorViewController+Insert.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64EDB73F09E8A0229A49B81 /* EditorViewController+Insert.swift */; };
+		C245499065D9F55D52053F4E /* TableCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E938312476816FC5636CC08B /* TableCommandTests.swift */; };
+		C9B3D570E3849A02E154A4E2 /* LibretillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */; };
+		CC4DDAEEE2EAA046AE9802B0 /* LocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD086425A16E674FF83850C /* LocalizationTests.swift */; };
+		D4850E42B00B800124198887 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697B3326EEE48C402ABE0847 /* main.swift */; };
+		DD0977FCDDFC8846BF85F941 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 142C68A49BF5037C951AE6E3 /* AppIcon.svg */; };
+		E25AB5A5AFB4AE56BA388FDA /* ChipLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0EF28C05B4D50BBC5D2F52 /* ChipLabels.swift */; };
+		E70125F2083E8D106CF3D2EE /* EditorViewController+Links.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */; };
+		EC8AF2F8C44DB20BCA791EC5 /* NarrowWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28401617AE95724FB376F7A1 /* NarrowWindowTests.swift */; };
+		FEB6C88A497DE64F5DC47AD2 /* PrintTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528D38D33E99CC0F1550AD47 /* PrintTextView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4817347FC76395346D1534A2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 99950B553BEA89EA2B7E9EAE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 60A417160CDE6B7EB7CD0CD9;
+			remoteInfo = Libretilla;
+		};
+		ED28BCE81DCC875581852B93 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 99950B553BEA89EA2B7E9EAE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 60A417160CDE6B7EB7CD0CD9;
+			remoteInfo = Libretilla;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		048A78A99D2D86EE864C12D7 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Links.swift"; sourceTree = "<group>"; };
+		076C34620687B5EF853F523F /* DocumentWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindowController.swift; sourceTree = "<group>"; };
+		1220F34C98BB80B1BFC3C436 /* LinkCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkCommandTests.swift; sourceTree = "<group>"; };
+		142C68A49BF5037C951AE6E3 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
+		14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Pictures.swift"; sourceTree = "<group>"; };
+		168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibretillaDocumentTests.swift; sourceTree = "<group>"; };
+		1A664DC15DCA4D802E09737C /* PageSetupDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSetupDocumentTests.swift; sourceTree = "<group>"; };
+		1FCE3B8C9F8D34BE1FB1904D /* RulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulerTests.swift; sourceTree = "<group>"; };
+		20A9DA01A9C521B6E50E1564 /* OutlineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineViewController.swift; sourceTree = "<group>"; };
+		27BA4329D6F3940D15193509 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
+		28401617AE95724FB376F7A1 /* NarrowWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarrowWindowTests.swift; sourceTree = "<group>"; };
+		2864D61A43B5853A47E7059D /* PictureCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureCommandTests.swift; sourceTree = "<group>"; };
+		2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
+		2F96FB3C331F0D5A842686A3 /* SaveStatusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveStatusViewController.swift; sourceTree = "<group>"; };
+		3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		415E6BB5BB83F875C43B56BC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4A7396DA2CEF648E1376E074 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
+		4ABC421D1901376B88D53F41 /* LibretillaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibretillaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		528D38D33E99CC0F1550AD47 /* PrintTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintTextView.swift; sourceTree = "<group>"; };
+		636A9243E06738157D24E3DC /* Libretilla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Libretilla.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		697B3326EEE48C402ABE0847 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Formatting.swift"; sourceTree = "<group>"; };
+		80B5D15043E73883EF1C49BA /* PolishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishTests.swift; sourceTree = "<group>"; };
+		8B423A9C2D611D5DD9824546 /* ZoomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomTests.swift; sourceTree = "<group>"; };
+		8D595AD1849A99513505DA43 /* FormattingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingUITests.swift; sourceTree = "<group>"; };
+		90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingCommandTests.swift; sourceTree = "<group>"; };
+		96A3ADE5C01027AF83420172 /* PolishUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishUITests.swift; sourceTree = "<group>"; };
+		986F449970D5F0494C31596F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9BD76665BBD77320FA1284F2 /* LibretillaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibretillaDocument.swift; sourceTree = "<group>"; };
+		A84872E8613509F547BA1D59 /* OriginalsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalsStore.swift; sourceTree = "<group>"; };
+		BF22DD48F1146F23726E92C3 /* LibretillaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibretillaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C265588B8F5CD56D46001C1F /* Libretilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Libretilla.entitlements; sourceTree = "<group>"; };
+		C3995CF0646BC821F5D8E314 /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
+		D2F9A5D4C6563A3A0C46E03C /* TableEditorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorController.swift; sourceTree = "<group>"; };
+		D732D08D256C51C1D5415580 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		D8431395F3D0E153A51C2342 /* LibretillaDocx */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LibretillaDocx; path = Packages/LibretillaDocx; sourceTree = SOURCE_ROOT; };
+		D89EB5B7C58456AB37D41C38 /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
+		DA6866795AD37DA6D40AA724 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentOutline.swift; sourceTree = "<group>"; };
+		DCD086425A16E674FF83850C /* LocalizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationTests.swift; sourceTree = "<group>"; };
+		E301D83384EB360A8F8916D2 /* TextKit2CompatibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextKit2CompatibilityTests.swift; sourceTree = "<group>"; };
+		E64EDB73F09E8A0229A49B81 /* EditorViewController+Insert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Insert.swift"; sourceTree = "<group>"; };
+		E7177A30E8F421E0EE6AF44D /* FormatBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatBar.swift; sourceTree = "<group>"; };
+		E938312476816FC5636CC08B /* TableCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCommandTests.swift; sourceTree = "<group>"; };
+		EEC9E479FE7EB5741F385EAC /* PersistenceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceUITests.swift; sourceTree = "<group>"; };
+		F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Tables.swift"; sourceTree = "<group>"; };
+		F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibretillaTextView.swift; sourceTree = "<group>"; };
+		F3649D38901A35500098F7DB /* ZoomUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomUITests.swift; sourceTree = "<group>"; };
+		FF0EF28C05B4D50BBC5D2F52 /* ChipLabels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipLabels.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		209CA56E38E588D526BAC97D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				249663C2B9496B807F26FD48 /* LibretillaDocx in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D2B7FB5F9DD6EA6C66909F01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37D7467E379D6DE571E2CC02 /* LibretillaDocx in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2F5E43478F0D96A8BD8BE0C5 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				E7177A30E8F421E0EE6AF44D /* FormatBar.swift */,
+				27BA4329D6F3940D15193509 /* MainToolbar.swift */,
+				20A9DA01A9C521B6E50E1564 /* OutlineViewController.swift */,
+				2F96FB3C331F0D5A842686A3 /* SaveStatusViewController.swift */,
+				D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		45F66E9618A849AE3093501E /* Document */ = {
+			isa = PBXGroup;
+			children = (
+				076C34620687B5EF853F523F /* DocumentWindowController.swift */,
+				9BD76665BBD77320FA1284F2 /* LibretillaDocument.swift */,
+				A84872E8613509F547BA1D59 /* OriginalsStore.swift */,
+			);
+			path = Document;
+			sourceTree = "<group>";
+		};
+		4A71F60EC9196D6054C3A45F /* Icon */ = {
+			isa = PBXGroup;
+			children = (
+				142C68A49BF5037C951AE6E3 /* AppIcon.svg */,
+			);
+			path = Icon;
+			sourceTree = "<group>";
+		};
+		81A3E1A85C7C5D781907D23B /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */,
+				168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */,
+				1220F34C98BB80B1BFC3C436 /* LinkCommandTests.swift */,
+				DCD086425A16E674FF83850C /* LocalizationTests.swift */,
+				28401617AE95724FB376F7A1 /* NarrowWindowTests.swift */,
+				1A664DC15DCA4D802E09737C /* PageSetupDocumentTests.swift */,
+				2864D61A43B5853A47E7059D /* PictureCommandTests.swift */,
+				80B5D15043E73883EF1C49BA /* PolishTests.swift */,
+				1FCE3B8C9F8D34BE1FB1904D /* RulerTests.swift */,
+				E938312476816FC5636CC08B /* TableCommandTests.swift */,
+				E301D83384EB360A8F8916D2 /* TextKit2CompatibilityTests.swift */,
+				8B423A9C2D611D5DD9824546 /* ZoomTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		B09054DA7EB97846EE05E4D8 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				8D595AD1849A99513505DA43 /* FormattingUITests.swift */,
+				2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */,
+				EEC9E479FE7EB5741F385EAC /* PersistenceUITests.swift */,
+				96A3ADE5C01027AF83420172 /* PolishUITests.swift */,
+				048A78A99D2D86EE864C12D7 /* UITestSupport.swift */,
+				F3649D38901A35500098F7DB /* ZoomUITests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		BDB956CE99E2151516E90E33 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				FF0EF28C05B4D50BBC5D2F52 /* ChipLabels.swift */,
+				DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */,
+				4A7396DA2CEF648E1376E074 /* EditorViewController.swift */,
+				7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */,
+				E64EDB73F09E8A0229A49B81 /* EditorViewController+Insert.swift */,
+				04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */,
+				14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */,
+				F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */,
+				F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */,
+				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
+				D2F9A5D4C6563A3A0C46E03C /* TableEditorController.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+		BFC539D1B2BF6020A4C6DF14 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4A71F60EC9196D6054C3A45F /* Icon */,
+				D732D08D256C51C1D5415580 /* Assets.xcassets */,
+				C3995CF0646BC821F5D8E314 /* Blank.docx */,
+				3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C0F4D9BC56F73C3024F4960B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				636A9243E06738157D24E3DC /* Libretilla.app */,
+				4ABC421D1901376B88D53F41 /* LibretillaTests.xctest */,
+				BF22DD48F1146F23726E92C3 /* LibretillaUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C65DAF50A98BBA708B04A993 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				415E6BB5BB83F875C43B56BC /* AppDelegate.swift */,
+				986F449970D5F0494C31596F /* Info.plist */,
+				C265588B8F5CD56D46001C1F /* Libretilla.entitlements */,
+				697B3326EEE48C402ABE0847 /* main.swift */,
+				D89EB5B7C58456AB37D41C38 /* MainMenu.swift */,
+				DA6866795AD37DA6D40AA724 /* Preferences.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D2E9E82A56727D6B52811B96 = {
+			isa = PBXGroup;
+			children = (
+				C65DAF50A98BBA708B04A993 /* App */,
+				45F66E9618A849AE3093501E /* Document */,
+				BDB956CE99E2151516E90E33 /* Editor */,
+				F022CEDDF00C7E770CC44D57 /* Packages */,
+				BFC539D1B2BF6020A4C6DF14 /* Resources */,
+				81A3E1A85C7C5D781907D23B /* Tests */,
+				2F5E43478F0D96A8BD8BE0C5 /* UI */,
+				B09054DA7EB97846EE05E4D8 /* UITests */,
+				C0F4D9BC56F73C3024F4960B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F022CEDDF00C7E770CC44D57 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				D8431395F3D0E153A51C2342 /* LibretillaDocx */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		60A417160CDE6B7EB7CD0CD9 /* Libretilla */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BBE0F2DAF6574DB559CF7710 /* Build configuration list for PBXNativeTarget "Libretilla" */;
+			buildPhases = (
+				43757D00166DEBF41E923470 /* Sources */,
+				308F0CB48746516B30225BCC /* Resources */,
+				D2B7FB5F9DD6EA6C66909F01 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Libretilla;
+			packageProductDependencies = (
+				FF1A720BE765563C98BCD694 /* LibretillaDocx */,
+			);
+			productName = Libretilla;
+			productReference = 636A9243E06738157D24E3DC /* Libretilla.app */;
+			productType = "com.apple.product-type.application";
+		};
+		74CF9E664D082459A4493627 /* LibretillaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 49507C877BBD11948B09883D /* Build configuration list for PBXNativeTarget "LibretillaTests" */;
+			buildPhases = (
+				6CB05D270DC8A8DD7D1B5109 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1839DED2A913E8B4833793BE /* PBXTargetDependency */,
+			);
+			name = LibretillaTests;
+			packageProductDependencies = (
+			);
+			productName = LibretillaTests;
+			productReference = 4ABC421D1901376B88D53F41 /* LibretillaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CEFFE659220EF91CE1192818 /* LibretillaUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A60C384DF53FDF880F484567 /* Build configuration list for PBXNativeTarget "LibretillaUITests" */;
+			buildPhases = (
+				E9A2389257C6BF3AEAC6F703 /* Sources */,
+				209CA56E38E588D526BAC97D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				38947056952DAD43A7F94A60 /* PBXTargetDependency */,
+			);
+			name = LibretillaUITests;
+			packageProductDependencies = (
+				689B55E6DD8C56E7C9C2EB0C /* LibretillaDocx */,
+			);
+			productName = LibretillaUITests;
+			productReference = BF22DD48F1146F23726E92C3 /* LibretillaUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		99950B553BEA89EA2B7E9EAE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					60A417160CDE6B7EB7CD0CD9 = {
+						ProvisioningStyle = Automatic;
+					};
+					74CF9E664D082459A4493627 = {
+						ProvisioningStyle = Automatic;
+					};
+					CEFFE659220EF91CE1192818 = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = 60A417160CDE6B7EB7CD0CD9;
+					};
+				};
+			};
+			buildConfigurationList = EBDA4C376C9AF45DD7C9E6F2 /* Build configuration list for PBXProject "Libretilla" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				es,
+			);
+			mainGroup = D2E9E82A56727D6B52811B96;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F0AD96E99A40DD46E1EAD9DE /* XCLocalSwiftPackageReference "Packages/LibretillaDocx" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C0F4D9BC56F73C3024F4960B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				60A417160CDE6B7EB7CD0CD9 /* Libretilla */,
+				74CF9E664D082459A4493627 /* LibretillaTests */,
+				CEFFE659220EF91CE1192818 /* LibretillaUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		308F0CB48746516B30225BCC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DD0977FCDDFC8846BF85F941 /* AppIcon.svg in Resources */,
+				6DF2FA824B48D2552205EC8A /* Assets.xcassets in Resources */,
+				AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */,
+				03405776FDB00090F1A997A7 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		43757D00166DEBF41E923470 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01AC460FD65313D86681FC42 /* AppDelegate.swift in Sources */,
+				E25AB5A5AFB4AE56BA388FDA /* ChipLabels.swift in Sources */,
+				AA89D58D874D6599DE634DA5 /* DocumentOutline.swift in Sources */,
+				1B6F2B0425D58FA3A1FDBDDB /* DocumentWindowController.swift in Sources */,
+				A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */,
+				BE3C0AD166CE1537E680A89A /* EditorViewController+Insert.swift in Sources */,
+				E70125F2083E8D106CF3D2EE /* EditorViewController+Links.swift in Sources */,
+				5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */,
+				550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */,
+				3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */,
+				BAAA2736C9FD7E41FB7F9A49 /* FormatBar.swift in Sources */,
+				3A0886376ABB989EC5FEF5C7 /* LibretillaDocument.swift in Sources */,
+				230F799BD3376A6139500087 /* LibretillaTextView.swift in Sources */,
+				28BB6561353EA8ACC674E80E /* MainMenu.swift in Sources */,
+				A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */,
+				BAE248D0B824C8A7FBAE2768 /* OriginalsStore.swift in Sources */,
+				972F462E0FDE8A5FF6FF43A3 /* OutlineViewController.swift in Sources */,
+				B57597D9D9547766175906C5 /* Preferences.swift in Sources */,
+				FEB6C88A497DE64F5DC47AD2 /* PrintTextView.swift in Sources */,
+				1FFCDC6AEFD4CEF605D9F5CD /* SaveStatusViewController.swift in Sources */,
+				631CDE59FC31D21774FAFC51 /* SettingsWindowController.swift in Sources */,
+				BC1014D208A08C2D7F841DD0 /* TableEditorController.swift in Sources */,
+				D4850E42B00B800124198887 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CB05D270DC8A8DD7D1B5109 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				463078BF6947DBDB3F3F94B3 /* FormattingCommandTests.swift in Sources */,
+				C9B3D570E3849A02E154A4E2 /* LibretillaDocumentTests.swift in Sources */,
+				2F4ECEE091A2983EC1993FF3 /* LinkCommandTests.swift in Sources */,
+				CC4DDAEEE2EAA046AE9802B0 /* LocalizationTests.swift in Sources */,
+				EC8AF2F8C44DB20BCA791EC5 /* NarrowWindowTests.swift in Sources */,
+				79B4E1E2359E3EF8A3382C16 /* PageSetupDocumentTests.swift in Sources */,
+				22F46CAC1AEA6A4F9C9D7FE1 /* PictureCommandTests.swift in Sources */,
+				7D17AE28BC3BE7691FA29A14 /* PolishTests.swift in Sources */,
+				699366E53D34E1F445F0DF37 /* RulerTests.swift in Sources */,
+				C245499065D9F55D52053F4E /* TableCommandTests.swift in Sources */,
+				0DA614BF59285BDD79B07354 /* TextKit2CompatibilityTests.swift in Sources */,
+				10153E635E31DD4C72DAE194 /* ZoomTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9A2389257C6BF3AEAC6F703 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D61C3729FAAD0121F29321F /* FormattingUITests.swift in Sources */,
+				0BDD8E7BCFFA457856BCAF7E /* LaunchSmokeTests.swift in Sources */,
+				B88C0619A4ECD174472EBD10 /* PersistenceUITests.swift in Sources */,
+				A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */,
+				3B1EB0AE1326C5A07E0BE6D7 /* UITestSupport.swift in Sources */,
+				24534A60B776471C0D70C67E /* ZoomUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1839DED2A913E8B4833793BE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 60A417160CDE6B7EB7CD0CD9 /* Libretilla */;
+			targetProxy = 4817347FC76395346D1534A2 /* PBXContainerItemProxy */;
+		};
+		38947056952DAD43A7F94A60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 60A417160CDE6B7EB7CD0CD9 /* Libretilla */;
+			targetProxy = ED28BCE81DCC875581852B93 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		17DB4A8DE17E6EE8E15BF60A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.LibretillaTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Libretilla.app/Contents/MacOS/Libretilla";
+			};
+			name = Release;
+		};
+		2BB2001DFDDBAE3B88FFB63E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Libretilla.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.Libretilla;
+				PRODUCT_NAME = Libretilla;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		3B8D66EDEA69C79C0112910A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.LibretillaUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = Libretilla;
+			};
+			name = Release;
+		};
+		62A64850E66009879B0D602B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Libretilla.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.Libretilla;
+				PRODUCT_NAME = Libretilla;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		69F4C48F5AA745CEE58123DA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.LibretillaUITests;
+				SDKROOT = macosx;
+				TEST_TARGET_NAME = Libretilla;
+			};
+			name = Debug;
+		};
+		6AB9F46A7A37B4FFABC733BE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.libretilla.LibretillaTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Libretilla.app/Contents/MacOS/Libretilla";
+			};
+			name = Debug;
+		};
+		6B6105CA381E544B9A137F1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		D4404EFD71515F3099D89EB7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		49507C877BBD11948B09883D /* Build configuration list for PBXNativeTarget "LibretillaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6AB9F46A7A37B4FFABC733BE /* Debug */,
+				17DB4A8DE17E6EE8E15BF60A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A60C384DF53FDF880F484567 /* Build configuration list for PBXNativeTarget "LibretillaUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				69F4C48F5AA745CEE58123DA /* Debug */,
+				3B8D66EDEA69C79C0112910A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BBE0F2DAF6574DB559CF7710 /* Build configuration list for PBXNativeTarget "Libretilla" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2BB2001DFDDBAE3B88FFB63E /* Debug */,
+				62A64850E66009879B0D602B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EBDA4C376C9AF45DD7C9E6F2 /* Build configuration list for PBXProject "Libretilla" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4404EFD71515F3099D89EB7 /* Debug */,
+				6B6105CA381E544B9A137F1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F0AD96E99A40DD46E1EAD9DE /* XCLocalSwiftPackageReference "Packages/LibretillaDocx" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LibretillaDocx;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		689B55E6DD8C56E7C9C2EB0C /* LibretillaDocx */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LibretillaDocx;
+		};
+		FF1A720BE765563C98BCD694 /* LibretillaDocx */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LibretillaDocx;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 99950B553BEA89EA2B7E9EAE /* Project object */;
+}

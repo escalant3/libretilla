@@ -2,11 +2,11 @@ import AppKit
 import XCTest
 
 /// Milestone 4 in the real app: the outline sidebar, Settings, Dark Mode and an accessibility audit.
-final class PolishUITests: CartillaUITestCase {
+final class PolishUITests: LibretillaUITestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         // Every run starts from the defaults, whatever an earlier run left behind.
-        app.launchArguments += ["-CartillaZoom", "1", "-CartillaUITestFreshDefaults", "YES"]
+        app.launchArguments += ["-LibretillaZoom", "1", "-LibretillaUITestFreshDefaults", "YES"]
     }
 
     func shoot(_ element: XCUIElement, _ name: String) {
@@ -67,7 +67,7 @@ final class PolishUITests: CartillaUITestCase {
     @MainActor
     func testDarkModeScreenshots() throws {
         let file = try copyFixture("02-headings.docx", as: "Dark.docx")
-        app.launchArguments += ["-CartillaUITestAppearance", "Dark"]
+        app.launchArguments += ["-LibretillaUITestAppearance", "Dark"]
         app.launch()
         let window = try open(file)
         window.textViews["Document body"].click()
@@ -106,12 +106,12 @@ final class PolishUITests: CartillaUITestCase {
         // On GitHub's runners the contrast audit flags plainly readable labels: Settings' "Page in Dark Mode" and
         // "Show format bar", the title bar's "Saved". Its own crops of them show black text on white or light
         // gray, waiting doesn't change it, and it marks the windows "Disabled". A false positive there: skip the
-        // contrast check on CI only (CARTILLA_CI, set by the workflow through TEST_RUNNER_CARTILLA_CI). Every
+        // contrast check on CI only (LIBRETILLA_CI, set by the workflow through TEST_RUNNER_LIBRETILLA_CI). Every
         // other check runs on CI, and the whole audit runs everywhere else.
-        let onCI = ProcessInfo.processInfo.environment["CARTILLA_CI"] != nil
+        let onCI = ProcessInfo.processInfo.environment["LIBRETILLA_CI"] != nil
         func exempt(_ issue: XCUIAccessibilityAuditIssue, in audited: XCUIElement) -> Bool {
             if onCI, issue.auditType == .contrast { return true }
-            // A tooltip AppKit happens to show under the pointer isn't Cartilla's.
+            // A tooltip AppKit happens to show under the pointer isn't Libretilla's.
             if issue.element?.elementType == .helpTag { return true }
             // AppKit's window tab is labelled with the file name ("Audit.docx"), which the audit doesn't
             // consider readable; it's the system's tab, as in every document app.
@@ -123,7 +123,7 @@ final class PolishUITests: CartillaUITestCase {
             if issue.auditType == .parentChild, let frame = issue.element?.frame, buttons.contains(frame) {
                 return true
             }
-            // The document's text colours are its author's; Cartilla keeps them on a white page (and only
+            // The document's text colours are its author's; Libretilla keeps them on a white page (and only
             // lightens them on a dark page). The chrome, sidebar and Settings must pass.
             if issue.auditType == .contrast, let frame = issue.element?.frame, body.contains(frame) { return true }
             print("Audit issue: \(issue.compactDescription): \(String(describing: issue.element))")

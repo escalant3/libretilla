@@ -2,9 +2,9 @@ import AppKit
 import PDFKit
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
-/// Tracks TextKit 2 behaviour Cartilla depends on (ADR 0001) and the known gaps listed in
+/// Tracks TextKit 2 behaviour Libretilla depends on (ADR 0001) and the known gaps listed in
 /// `docs/TEXTKIT2_GAPS.md`. Tests named `testGap…` pin a *current limitation*. When one fails,
 /// TextKit 2 has improved: update the gap register and remove the workaround.
 @MainActor
@@ -99,7 +99,7 @@ final class TextKit2CompatibilityTests: XCTestCase {
         XCTAssertFalse(load(Self.listText(), into: makeTextView()))
     }
 
-    /// Any access to `.layoutManager` permanently drops a view to TextKit 1. Cartilla code must
+    /// Any access to `.layoutManager` permanently drops a view to TextKit 1. Libretilla code must
     /// never touch it; the editor logs a fault if a fallback ever happens (see `EditorViewController`).
     func testTextKit1AccessorForcesFallback() {
         let tv = makeTextView()

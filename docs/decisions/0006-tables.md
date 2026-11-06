@@ -21,7 +21,7 @@ across pages between rows.
 ## Options
 
 1. **Drawn row attachments + cell editor sheet (recommended).** Each table row shows as one attachment the width
-   of the text column, drawn by Cartilla from the model: grid, spans, merges, borders, shading, and the cell
+   of the text column, drawn by Libretilla from the model: grid, spans, merges, borders, shading, and the cell
    paragraphs through the bridge (so fonts, bold, colours and alignment show). Rows are separate lines, so print and
    PDF paginate between rows as Word does. Double-clicking a table (or Format ▸ Table…) opens a sheet with the
    cells in a grid of text fields, plus add/remove row and column. Saving rewrites only the cells that changed; a

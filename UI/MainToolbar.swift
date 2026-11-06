@@ -5,7 +5,7 @@ import AppKit
 @MainActor
 enum MainToolbar {
     static func make() -> NSToolbar {
-        let toolbar = NSToolbar(identifier: "CartillaMainToolbar")
+        let toolbar = NSToolbar(identifier: "LibretillaMainToolbar")
         toolbar.displayMode = .iconOnly
         toolbar.allowsUserCustomization = true
         toolbar.autosavesConfiguration = true

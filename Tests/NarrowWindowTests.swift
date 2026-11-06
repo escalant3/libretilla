@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// A thin window works as a note-taking strip: the format bar overflows into a menu, the text rewraps to the
 /// window, and the window can be as narrow as a phone.
@@ -65,7 +65,7 @@ final class NarrowWindowTests: XCTestCase {
     }
 
     func testDocumentWindowsCanBeAsNarrowAsANote() throws {
-        let doc = CartillaDocument()
+        let doc = LibretillaDocument()
         doc.makeWindowControllers()
         let window = try XCTUnwrap(doc.windowControllers.first?.window)
         XCTAssertEqual(window.contentMinSize.width, 320)

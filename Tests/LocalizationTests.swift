@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// Bootstrap §10 M4: "strings fully localized". Every string the app's code localizes has a Spanish translation.
 final class LocalizationTests: XCTestCase {

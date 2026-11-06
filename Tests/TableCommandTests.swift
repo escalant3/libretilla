@@ -1,8 +1,8 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
-@testable import Cartilla
+@testable import Libretilla
 
 /// Tables (ADR 0006) through the real editor, undo and save path.
 @MainActor
@@ -11,12 +11,12 @@ final class TableCommandTests: XCTestCase {
         .appendingPathComponent("Fixtures/generated")
 
     var scratch: URL!
-    var doc: CartillaDocument!
+    var doc: LibretillaDocument!
     var editor: EditorViewController { doc.editor! }
-    var tv: CartillaTextView { editor.textView }
+    var tv: LibretillaTextView { editor.textView }
 
     override func setUpWithError() throws {
-        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("cartilla-tables-\(UUID())")
+        scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-tables-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
@@ -27,7 +27,7 @@ final class TableCommandTests: XCTestCase {
     func open(_ fixture: String) throws {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
-        doc = try CartillaDocument(contentsOf: url, ofType: CartillaDocument.docxType)
+        doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
         doc.makeWindowControllers()
     }
 
@@ -35,7 +35,7 @@ final class TableCommandTests: XCTestCase {
         let url = scratch.appendingPathComponent("\(UUID()).docx")
         let done = expectation(description: "saved")
         var failure: Error?
-        doc.save(to: url, ofType: CartillaDocument.docxType, for: .saveToOperation) { error in
+        doc.save(to: url, ofType: LibretillaDocument.docxType, for: .saveToOperation) { error in
             failure = error
             done.fulfill()
         }
@@ -75,7 +75,7 @@ final class TableCommandTests: XCTestCase {
     }
 
     func testInsertTableMakesATableGridTable() throws {
-        doc = CartillaDocument()
+        doc = LibretillaDocument()
         doc.makeWindowControllers()
         tv.insertText("Before", replacementRange: NSRange(location: 0, length: 0))
         editor.insertTable(rows: 2, columns: 3)

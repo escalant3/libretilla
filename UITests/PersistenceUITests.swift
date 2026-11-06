@@ -1,10 +1,10 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
 /// End-to-end checks of the persistence model (bootstrap §5.4, ADR 0003): edits reach the real
 /// file with no Save action, quitting never prompts, and an untouched file stays untouched.
-final class PersistenceUITests: CartillaUITestCase {
+final class PersistenceUITests: LibretillaUITestCase {
     @MainActor
     func testEditsAutosaveToTheRealFile() throws {
         let file = try copyFixture("01-plain.docx", as: "Autosave.docx")

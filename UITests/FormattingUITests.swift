@@ -1,10 +1,10 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 import XCTest
 
 /// M2 end to end with real key events: shortcuts, the format bar, undo, the ruler and
 /// Find and Replace, checked in the autosaved `.docx`.
-final class FormattingUITests: CartillaUITestCase {
+final class FormattingUITests: LibretillaUITestCase {
     func paragraphs(of url: URL) throws -> [Paragraph] {
         try OOXMLCodec().read(try Data(contentsOf: url)).body.blocks.compactMap {
             if case .paragraph(let p) = $0 { p } else { nil }

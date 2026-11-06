@@ -1,7 +1,7 @@
 import AppKit
-import CartillaDocx
+import LibretillaDocx
 
-/// Builds the standard macOS menu bar in code: AppKit's conventional items plus Cartilla's
+/// Builds the standard macOS menu bar in code: AppKit's conventional items plus Libretilla's
 /// Insert (M3) and Format (M2) menus.
 @MainActor
 enum MainMenu {
@@ -38,10 +38,10 @@ enum MainMenu {
     }
 
     private static func appMenu() -> NSMenu {
-        let menu = NSMenu(title: "Cartilla")
+        let menu = NSMenu(title: "Libretilla")
         menu.addItem(
             item(
-                String(localized: "About Cartilla"),
+                String(localized: "About Libretilla"),
                 #selector(NSApplication.orderFrontStandardAboutPanel(_:))))
         menu.addItem(.separator())
         menu.addItem(item(String(localized: "Settings…"), #selector(AppDelegate.showSettings(_:)), ","))
@@ -52,7 +52,7 @@ enum MainMenu {
         NSApp.servicesMenu = services
         menu.addItem(servicesItem)
         menu.addItem(.separator())
-        menu.addItem(item(String(localized: "Hide Cartilla"), #selector(NSApplication.hide(_:)), "h"))
+        menu.addItem(item(String(localized: "Hide Libretilla"), #selector(NSApplication.hide(_:)), "h"))
         menu.addItem(
             item(
                 String(localized: "Hide Others"),
@@ -60,7 +60,7 @@ enum MainMenu {
         menu.addItem(
             item(String(localized: "Show All"), #selector(NSApplication.unhideAllApplications(_:))))
         menu.addItem(.separator())
-        menu.addItem(item(String(localized: "Quit Cartilla"), #selector(NSApplication.terminate(_:)), "q"))
+        menu.addItem(item(String(localized: "Quit Libretilla"), #selector(NSApplication.terminate(_:)), "q"))
         return menu
     }
 
@@ -88,9 +88,9 @@ enum MainMenu {
         menu.addItem(
             item(String(localized: "Browse All Versions…"), #selector(NSDocument.browseVersions(_:))))
         menu.addItem(
-            item(String(localized: "Restore Original…"), #selector(CartillaDocument.restoreOriginal(_:))))
+            item(String(localized: "Restore Original…"), #selector(LibretillaDocument.restoreOriginal(_:))))
         menu.addItem(.separator())
-        menu.addItem(item(String(localized: "Export as PDF…"), #selector(CartillaDocument.exportPDF(_:))))
+        menu.addItem(item(String(localized: "Export as PDF…"), #selector(LibretillaDocument.exportPDF(_:))))
         menu.addItem(
             item(String(localized: "Page Setup…"), #selector(NSDocument.runPageLayout(_:)), "p", [.command, .shift]))
         menu.addItem(item(String(localized: "Print…"), #selector(NSDocument.printDocument(_:)), "p"))
