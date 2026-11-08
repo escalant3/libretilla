@@ -1,4 +1,5 @@
 import AppKit
+import CoreImage
 import UniformTypeIdentifiers
 
 // Pictures: the document's own show as images; any other attachment becomes a new picture on save.
@@ -9,16 +10,110 @@ extension AttributedStringBridge {
         guard let ref = inline.image, let data = images[ref.relationshipId], let image = NSImage(data: data) else {
             return nil
         }
+        return Self.pictureAttachment(image, format: ref.format)
+    }
+
+    /// An attachment showing `source` as `format` says.
+    static func pictureAttachment(_ source: NSImage, format: PictureFormat) -> NSTextAttachment {
         let attachment = NSTextAttachment()
-        attachment.image = image
-        attachment.bounds = NSRect(origin: .zero, size: ref.size)
+        let identity = format.rotation == 0 && !format.isAdjusted
+        attachment.image = identity ? source : rendered(source, format: format)
+        attachment.bounds = NSRect(origin: .zero, size: identity ? format.size : format.boundingSize)
         return attachment
+    }
+
+    /// `source` drawn as `format` says, at its rotated bounding size.
+    public static func rendered(_ source: NSImage, format: PictureFormat) -> NSImage {
+        let adjusted = adjusted(source, brightness: format.brightness, contrast: format.contrast) ?? source
+        let bound = format.boundingSize
+        let image = NSImage(size: bound, flipped: false) { _ in
+            let t = NSAffineTransform()
+            t.translateX(by: bound.width / 2, yBy: bound.height / 2)
+            // DrawingML turns clockwise; AppKit's y axis points up, so that's a negative angle here.
+            t.rotate(byDegrees: -format.rotation)
+            t.concat()
+            let rect = NSRect(
+                x: -format.size.width / 2, y: -format.size.height / 2, width: format.size.width,
+                height: format.size.height)
+            adjusted.draw(in: rect, from: .zero, operation: .sourceOver, fraction: format.opacity)
+            return true
+        }
+        image.accessibilityDescription = source.accessibilityDescription
+        return image
+    }
+
+    /// `source` with brightness and contrast changed (Core Image's colour controls), or nil if unchanged.
+    static func adjusted(_ source: NSImage, brightness: CGFloat, contrast: CGFloat) -> NSImage? {
+        guard brightness != 0 || contrast != 0,
+            let cg = source.cgImage(forProposedRect: nil, context: nil, hints: nil),
+            let filter = CIFilter(name: "CIColorControls")
+        else { return nil }
+        filter.setValue(CIImage(cgImage: cg), forKey: kCIInputImageKey)
+        filter.setValue(brightness, forKey: kCIInputBrightnessKey)
+        // DrawingML contrast −100 %…100 % goes from flat grey to (nearly) black and white.
+        let factor = contrast >= 0 ? 1 / (1 - min(contrast, 0.95)) : 1 + contrast
+        filter.setValue(factor, forKey: kCIInputContrastKey)
+        filter.setValue(1, forKey: kCIInputSaturationKey)
+        guard let output = filter.outputImage,
+            let result = CIContext().createCGImage(output, from: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+        else { return nil }
+        return NSImage(cgImage: result, size: source.size)
+    }
+
+    // MARK: - Format ▸ Picture…
+
+    /// A picture in the text that Format ▸ Picture… can change.
+    public struct EditablePicture {
+        /// The picture's object character.
+        public let range: NSRange
+        /// How it shows now.
+        public let format: PictureFormat
+        /// Its image as stored, before rotation and adjustments.
+        public let source: NSImage
+        /// Its natural size in points (the image's own).
+        public var naturalSize: CGSize { source.size }
+        let inline: OpaqueInline
+    }
+
+    /// The picture at character `index`: the document's own or one inserted, pasted or dropped.
+    public func editablePicture(in text: NSAttributedString, at index: Int) -> EditablePicture? {
+        guard index >= 0, index < text.length,
+            let attachment = text.attribute(.attachment, at: index, effectiveRange: nil) as? NSTextAttachment
+        else { return nil }
+        let range = NSRange(location: index, length: 1)
+        let attrs = text.attributes(at: index, effectiveRange: nil)
+        guard attrs[.libretillaBlock] == nil, attrs[.libretillaPageBreak] == nil else { return nil }
+        if let box = attrs[.libretillaOpaque] as? OpaqueInlineBox {
+            guard let ref = box.inline.image,
+                let data = box.inline.newMedia?.data ?? images[ref.relationshipId],
+                let source = NSImage(data: data), box.inline.formattingPicture(ref.format) != nil
+            else { return nil }
+            return EditablePicture(range: range, format: ref.format, source: source, inline: box.inline)
+        }
+        // Not saved yet: becomes a new drawing now, so its format can be written into it.
+        guard let inline = Self.newPicture(from: attachment, runFormat: attrs[.libretillaRun] as? RunFormat),
+            let ref = inline.image, let data = inline.newMedia?.data, let source = NSImage(data: data)
+        else { return nil }
+        return EditablePicture(range: range, format: ref.format, source: source, inline: inline)
+    }
+
+    /// The attributes that show `picture` as `format` and save it so (`.attachment` and `.libretillaOpaque`),
+    /// or nil if its drawing can't take the format.
+    public func attributes(for picture: EditablePicture, format: PictureFormat) -> [NSAttributedString.Key: Any]? {
+        guard let inline = picture.inline.formattingPicture(format) else { return nil }
+        return [
+            .attachment: Self.pictureAttachment(picture.source, format: format),
+            .libretillaOpaque: OpaqueInlineBox(inline),
+        ]
     }
 
     /// The bytes and file extension to store for an attachment's image.
     static func media(of attachment: NSTextAttachment) -> NewMedia? {
-        let wrapper = attachment.fileWrapper
-        let data = attachment.contents ?? (wrapper?.isRegularFile == true ? wrapper?.regularFileContents : nil)
+        // `fileWrapper` only when there are no `contents`: asking a data attachment for one makes AppKit
+        // rebuild it, which can pull its image from under TextKit while it's on screen.
+        let data =
+            attachment.contents
+            ?? attachment.fileWrapper.flatMap { $0.isRegularFile ? $0.regularFileContents : nil }
         // The bytes say what they are more reliably than an attachment's declared type.
         if let data, let ext = sniffedImageExtension(data) {
             return NewMedia(data: data, fileExtension: ext)

@@ -24,6 +24,9 @@ final class PictureCommandTests: XCTestCase {
     }
 
     override func tearDown() {
+        // Format Picture shows a real sheet, which puts the window on screen: close it with the document.
+        if let window = doc?.editor?.view.window, let sheet = window.attachedSheet { window.endSheet(sheet) }
+        doc?.close()
         try? FileManager.default.removeItem(at: scratch)
     }
 
@@ -90,5 +93,97 @@ final class PictureCommandTests: XCTestCase {
         let (_, package) = try saved()
         let media = package.partNames.filter { $0.hasPrefix("word/media/") }
         XCTAssertEqual(media, ["word/media/image1.png"])
+    }
+
+    // MARK: - Format ▸ Picture…
+
+    func insertPicture(width: Int, height: Int) throws -> Data {
+        let file = scratch.appendingPathComponent("\(UUID()).png")
+        let png = Self.image(width: width, height: height, type: .png)
+        try png.write(to: file)
+        tv.setSelectedRange(NSRange(location: 0, length: 0))
+        try doc.editor!.insertImage(contentsOf: file)
+        // The test is one run-loop pass, so one undo group; end it as the end of a user event would.
+        if let undo = doc.undoManager, undo.groupingLevel > 0 {
+            undo.endUndoGrouping()
+            undo.beginUndoGrouping()
+        }
+        return png
+    }
+
+    func testFormatPictureResizesKeepingOrNotTheAspectRatio() throws {
+        _ = try insertPicture(width: 200, height: 100)
+        let editor = doc.editor!
+        tv.setSelectedRange(NSRange(location: 1, length: 0))
+        XCTAssertEqual(editor.pictureIndex(for: nil), 0)
+        editor.formatPicture(nil)
+        let sheet = try XCTUnwrap(editor.pictureFormatter)
+        XCTAssertEqual(sheet.format.size, CGSize(width: 200, height: 100))
+
+        sheet.setWidth(100)
+        XCTAssertEqual(sheet.format.size, CGSize(width: 100, height: 50))
+        // Shown while the sheet is open, but not an edit yet.
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 100, height: 50))
+        XCTAssertFalse(doc.undoManager!.canUndo && doc.undoManager!.undoActionName == "Format Picture")
+
+        sheet.keepAspectRatio.state = .off
+        sheet.setHeight(80)
+        XCTAssertEqual(sheet.format.size, CGSize(width: 100, height: 80))
+        sheet.ok(nil)
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 100, height: 80))
+        XCTAssertEqual(doc.undoManager?.undoActionName, "Format Picture")
+
+        let xml = String(decoding: try saved().0.body.serialized(), as: UTF8.self)
+        XCTAssertTrue(xml.contains(#"<wp:extent cx="1270000" cy="1016000"/>"#))
+
+        doc.undoManager?.undo()
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 200, height: 100))
+    }
+
+    func testFormatPictureRotatesAndAdjustsAndCancelRestores() throws {
+        let png = try insertPicture(width: 40, height: 20)
+        let editor = doc.editor!
+        editor.openPictureFormatter(at: 0)
+        var sheet = try XCTUnwrap(editor.pictureFormatter)
+        sheet.rotateRight(nil)
+        XCTAssertEqual(sheet.format.rotation, 90)
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 20, height: 40))
+        sheet.cancel(nil)
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 40, height: 20))
+
+        editor.pictureFormatter = nil
+        editor.openPictureFormatter(at: 0)
+        sheet = try XCTUnwrap(editor.pictureFormatter)
+        sheet.rotateLeft(nil)
+        sheet.brightnessField.stringValue = "25"
+        sheet.controlTextDidChange(
+            Notification(name: NSControl.textDidChangeNotification, object: sheet.brightnessField))
+        sheet.contrastSlider.doubleValue = -40
+        sheet.contrastSlider.sendAction(sheet.contrastSlider.action, to: sheet.contrastSlider.target)
+        sheet.opacitySlider.doubleValue = 60
+        sheet.opacitySlider.sendAction(sheet.opacitySlider.action, to: sheet.opacitySlider.target)
+        XCTAssertEqual(
+            sheet.format,
+            PictureFormat(
+                size: CGSize(width: 40, height: 20), rotation: 270, brightness: 0.25, contrast: -0.4, opacity: 0.6))
+        sheet.ok(nil)
+
+        let (back, package) = try saved()
+        XCTAssertEqual(package["word/media/image1.png"], png, "the image is stored as it was")
+        let xml = String(decoding: back.body.serialized(), as: UTF8.self)
+        XCTAssertTrue(xml.contains(#"rot="16200000""#))
+        XCTAssertTrue(xml.contains(#"<a:lum bright="25000" contrast="-40000"/>"#))
+        XCTAssertTrue(xml.contains(#"<a:alphaModFix amt="60000"/>"#))
+    }
+
+    func testFormatPictureIsOnlyForPictures() throws {
+        let editor = doc.editor!
+        tv.setSelectedRange(NSRange(location: 0, length: 0))
+        XCTAssertNil(editor.pictureIndex(for: nil))
+        let item = NSMenuItem(title: "", action: #selector(EditorViewController.formatPicture(_:)), keyEquivalent: "")
+        XCTAssertFalse(editor.validateMenuItem(item))
+        _ = try insertPicture(width: 10, height: 10)
+        tv.setSelectedRange(NSRange(location: 0, length: 1))
+        XCTAssertTrue(editor.validateMenuItem(item))
     }
 }

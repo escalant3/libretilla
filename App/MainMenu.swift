@@ -187,6 +187,7 @@ enum MainMenu {
         menu.addItem(submenuItem(styleMenu()))
         menu.addItem(submenuItem(listMenu()))
         menu.addItem(item(String(localized: "Edit Table…"), #selector(EditorViewController.editTable(_:))))
+        menu.addItem(item(String(localized: "Picture…"), #selector(EditorViewController.formatPicture(_:))))
         menu.addItem(
             item(String(localized: "Header and Footer…"), #selector(EditorViewController.editHeaderAndFooter(_:))))
         menu.addItem(.separator())

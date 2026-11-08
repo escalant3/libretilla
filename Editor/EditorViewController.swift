@@ -13,6 +13,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     private var scrollView: NSScrollView!
     /// The cell editor sheet while it's open.
     var tableEditor: TableEditorController?
+    var pictureFormatter: PictureFormatController?
     var headerFooterEditor: HeaderFooterController?
 
     /// Off (the default): the paper fills the window, with the text column centred at the document's text

@@ -171,6 +171,12 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   image relationship, a content-type default if needed, and Word's standard inline drawing with a unique
   `wp:docPr` id; identical images share a part. PNG, JPEG and GIF are stored as they are (detected from their
   bytes); anything else (HEIC, TIFF, PDF…) as PNG.
+- **Format ▸ Picture…** (also double-click a picture, or its contextual menu): width and height (keeping the
+  aspect ratio or not, in the ruler's units), rotation (any angle, plus quarter turns), brightness, contrast and
+  opacity, shown live and applied as one undo step. Saved as Word writes them: `wp:extent` and `a:xfrm/a:ext`,
+  `a:xfrm@rot` with the rotated picture's room in `wp:effectExtent`, `a:blip/a:lum` and `a:blip/a:alphaModFix`;
+  the rest of the drawing keeps its bytes, and the image itself is never re-encoded. Documents that already
+  carry these show them. Word 2010's newer brightness/contrast extension (`a14:imgEffect`) isn't read.
 - **Tables** ([ADR 0006](decisions/0006-tables.md)). Each table is drawn from its XML, one attachment line per row:
   column grid (scaled to the text width if wider), horizontal spans, vertical merges, shading, borders from the
   table, its style (`basedOn` chain) or the cell, cell margins, the table style's paragraph spacing, and cell
@@ -192,7 +198,8 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
-- Pictures can't be resized in the editor yet; copying a picture within Libretilla saves the copy as a new image.
+- Pictures are formatted from a sheet, not by dragging handles. Copying a picture within Libretilla saves the copy
+  as a new image.
 - Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
   text; table-style conditional formatting (banded rows, first-row shading from `w:tblStylePr`) isn't drawn;
   nested tables show as one line of text per row; a vertically merged cell's text sits in its first row; tables

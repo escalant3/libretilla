@@ -430,7 +430,11 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         textView.typingAttributes = attrs
     }
 
-    func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int) -> Bool {
+    func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int, on hit: Int?) -> Bool {
+        if let hit, isPicture(at: hit) {
+            openPictureFormatter(at: hit)
+            return true
+        }
         guard let found = table(at: index) else { return false }
         openTableEditor(found)
         return true
@@ -451,6 +455,7 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         guard let action = item.action else { return true }
         if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
+        if action == #selector(formatPicture(_:)) { return pictureIndex(for: item) != nil && textView.isEditable }
         if action == #selector(editHeaderAndFooter(_:)) { return textView.isEditable && document != nil }
         switch action {
         case #selector(zoomIn(_:)): return zoom < Self.zoomLevels.last! - 0.001

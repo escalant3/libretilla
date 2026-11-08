@@ -155,4 +155,90 @@ import Testing
         let (back, _, _) = try save(l)
         #expect(documentXML(back).components(separatedBy: "<w:drawing>").count == 2)
     }
+
+    // MARK: - Format ▸ Picture…
+
+    func reformat(_ l: Loaded, at index: Int, _ change: (inout PictureFormat) -> Void) throws {
+        let picture = try #require(l.bridge.editablePicture(in: l.text, at: index))
+        var format = picture.format
+        change(&format)
+        let attrs = try #require(l.bridge.attributes(for: picture, format: format))
+        l.text.addAttributes(attrs, range: picture.range)
+    }
+
+    @Test func documentPictureFormatIsSavedAndReopened() throws {
+        let original = try Corpus.data("05-images.docx")
+        let l = try load(original)
+        let pictures = attachments(in: l.text).filter { $0.1.image?.accessibilityDescription == nil }
+        let first = try #require(pictures.first)
+        try reformat(l, at: first.0) {
+            $0.size = CGSize(width: 192, height: 72)
+            $0.rotation = 90
+            $0.brightness = 0.2
+            $0.contrast = -0.3
+            $0.opacity = 0.5
+        }
+        // Shown turned: the room it takes on the line is its rotated size.
+        let shown = try #require(l.text.attribute(.attachment, at: first.0, effectiveRange: nil) as? NSTextAttachment)
+        #expect(shown.bounds.size == CGSize(width: 72, height: 192))
+
+        let (back, out, notices) = try save(l)
+        #expect(notices.isEmpty)
+        let xml = documentXML(back)
+        #expect(xml.contains(#"<wp:extent cx="2438400" cy="914400"/>"#))
+        #expect(xml.contains(#"rot="5400000""#))
+        #expect(xml.contains(#"<a:lum bright="20000" contrast="-30000"/>"#))
+        #expect(xml.contains(#"<a:alphaModFix amt="50000"/>"#))
+        // The other picture is untouched.
+        let before = String(decoding: try codec.read(original).body.serialized(), as: UTF8.self)
+        let drawings = before.matches(of: /<w:drawing>.*?<\/w:drawing>/).map { String($0.output) }
+        #expect(drawings.count == 2)
+        #expect(!xml.contains(drawings[0]))
+        #expect(xml.contains(drawings[1]))
+
+        let reopened = try load(out)
+        let picture = try #require(reopened.bridge.editablePicture(in: reopened.text, at: first.0))
+        #expect(
+            picture.format
+                == PictureFormat(
+                    size: CGSize(width: 192, height: 72), rotation: 90, brightness: 0.2, contrast: -0.3, opacity: 0.5))
+
+        // Back to plain: the effects go away again.
+        try reformat(reopened, at: first.0) { $0 = PictureFormat(size: $0.size) }
+        let plain = documentXML(try save(reopened).0)
+        #expect(!plain.contains("a:lum"))
+        #expect(!plain.contains("alphaModFix"))
+        #expect(!plain.contains("rot="))
+    }
+
+    @Test func insertedPictureCanBeFormattedBeforeSaving() throws {
+        let l = try load("01-plain.docx")
+        let data = Self.png(width: 200, height: 100)
+        let picture = try #require(
+            AttributedStringBridge.picture(data: data, filename: "chart.png", maxWidth: 1000, attributes: [:]))
+        l.text.insert(picture, at: 0)
+        try reformat(l, at: 0) {
+            $0.size = CGSize(width: 100, height: 100)
+            $0.rotation = 45
+        }
+        let (back, out, notices) = try save(l)
+        #expect(notices.isEmpty)
+        #expect(try OPCPackage(data: out)["word/media/image1.png"] == data)
+        let xml = documentXML(back)
+        #expect(xml.contains(#"<wp:extent cx="1270000" cy="1270000"/>"#))
+        #expect(xml.contains(#"rot="2700000""#))
+        // √2 × 100 pt wide when turned 45°: 20.71 pt more on each side.
+        #expect(xml.contains(#"<wp:effectExtent l="263023" t="263023" r="263023" b="263023"/>"#))
+        #expect(!xml.contains(OpaqueInline.relationshipPlaceholder))
+    }
+
+    @Test func boundingSizeOfRotatedPictures() {
+        var f = PictureFormat(size: CGSize(width: 40, height: 10))
+        #expect(f.boundingSize == CGSize(width: 40, height: 10))
+        f.rotation = 90
+        #expect(f.boundingSize == CGSize(width: 10, height: 40))
+        f.rotation = 180
+        #expect(f.boundingSize == CGSize(width: 40, height: 10))
+        #expect(PictureFormat.normalized(-90) == 270)
+    }
 }

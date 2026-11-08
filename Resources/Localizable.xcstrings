@@ -132,6 +132,16 @@
         }
       }
     },
+    "Back to the picture's own size, unturned and unadjusted": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve al tamaño propio de la imagen, sin girar ni ajustar"
+          }
+        }
+      }
+    },
     "Bigger": {
       "localizations": {
         "es": {
@@ -158,6 +168,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Negrita"
+          }
+        }
+      }
+    },
+    "Brightness": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brillo"
+          }
+        }
+      }
+    },
+    "Brightness:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brillo:"
           }
         }
       }
@@ -212,6 +242,26 @@
         }
       }
     },
+    "Contrast": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraste"
+          }
+        }
+      }
+    },
+    "Contrast:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraste:"
+          }
+        }
+      }
+    },
     "Different first page": {
       "localizations": {
         "es": {
@@ -262,6 +312,26 @@
         }
       }
     },
+    "Format Picture": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato de imagen"
+          }
+        }
+      }
+    },
+    "Format Picture…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formato de imagen…"
+          }
+        }
+      }
+    },
     "Header": {
       "localizations": {
         "es": {
@@ -292,6 +362,26 @@
         }
       }
     },
+    "Height": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alto"
+          }
+        }
+      }
+    },
+    "Height:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alto:"
+          }
+        }
+      }
+    },
     "Insert Page Count": {
       "localizations": {
         "es": {
@@ -308,6 +398,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Insertar número de página"
+          }
+        }
+      }
+    },
+    "Keep aspect ratio": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener proporciones"
           }
         }
       }
@@ -1168,6 +1268,16 @@
         }
       }
     },
+    "OK": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceptar"
+          }
+        }
+      }
+    },
     "Object": {
       "comment": "Placeholder for an embedded object",
       "localizations": {
@@ -1175,6 +1285,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Objeto"
+          }
+        }
+      }
+    },
+    "Opacity": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opacidad"
+          }
+        }
+      }
+    },
+    "Opacity:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opacidad:"
           }
         }
       }
@@ -1205,6 +1335,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir…"
+          }
+        }
+      }
+    },
+    "Original Size": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamaño original"
           }
         }
       }
@@ -1338,6 +1478,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pegar"
+          }
+        }
+      }
+    },
+    "Picture…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen…"
           }
         }
       }
@@ -1502,6 +1652,16 @@
         }
       }
     },
+    "Reset": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer"
+          }
+        }
+      }
+    },
     "Restore Original…": {
       "localizations": {
         "es": {
@@ -1518,6 +1678,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volver a la versión guardada"
+          }
+        }
+      }
+    },
+    "Rotate Left": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girar a la izquierda"
+          }
+        }
+      }
+    },
+    "Rotate Right": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girar a la derecha"
+          }
+        }
+      }
+    },
+    "Rotation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotación"
+          }
+        }
+      }
+    },
+    "Rotation:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotación:"
           }
         }
       }
@@ -1976,6 +2176,26 @@
         }
       }
     },
+    "Width": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancho"
+          }
+        }
+      }
+    },
+    "Width:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancho:"
+          }
+        }
+      }
+    },
     "Window": {
       "localizations": {
         "es": {
@@ -2032,6 +2252,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ajustar al ancho"
+          }
+        }
+      }
+    },
+    "cm": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cm"
+          }
+        }
+      }
+    },
+    "in": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in"
+          }
+        }
+      }
+    },
+    "pt": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pt"
           }
         }
       }

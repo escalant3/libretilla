@@ -52,6 +52,7 @@
 		C245499065D9F55D52053F4E /* TableCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E938312476816FC5636CC08B /* TableCommandTests.swift */; };
 		C9B3D570E3849A02E154A4E2 /* LibretillaDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168B274A830B0893B1F6E953 /* LibretillaDocumentTests.swift */; };
 		CC4DDAEEE2EAA046AE9802B0 /* LocalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD086425A16E674FF83850C /* LocalizationTests.swift */; };
+		D0025110FA1B5C51C4ACC799 /* PictureFormatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF3460C10976676B60230B9 /* PictureFormatController.swift */; };
 		D3C09A8A50D5DD26C0B54C1C /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 00FEAD00FE14DEAC2B647921 /* Credits.rtf */; };
 		D4850E42B00B800124198887 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697B3326EEE48C402ABE0847 /* main.swift */; };
 		DD0977FCDDFC8846BF85F941 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 142C68A49BF5037C951AE6E3 /* AppIcon.svg */; };
@@ -104,6 +105,7 @@
 		528D38D33E99CC0F1550AD47 /* PrintTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintTextView.swift; sourceTree = "<group>"; };
 		636A9243E06738157D24E3DC /* Libretilla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Libretilla.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		697B3326EEE48C402ABE0847 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		6FF3460C10976676B60230B9 /* PictureFormatController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureFormatController.swift; sourceTree = "<group>"; };
 		7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Formatting.swift"; sourceTree = "<group>"; };
 		80B5D15043E73883EF1C49BA /* PolishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishTests.swift; sourceTree = "<group>"; };
 		8B423A9C2D611D5DD9824546 /* ZoomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomTests.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */,
 				A234C2002F9E82D041ED583B /* HeaderFooterController.swift */,
 				F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */,
+				6FF3460C10976676B60230B9 /* PictureFormatController.swift */,
 				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
 				D2F9A5D4C6563A3A0C46E03C /* TableEditorController.swift */,
 			);
@@ -449,6 +452,7 @@
 				A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */,
 				BAE248D0B824C8A7FBAE2768 /* OriginalsStore.swift in Sources */,
 				972F462E0FDE8A5FF6FF43A3 /* OutlineViewController.swift in Sources */,
+				D0025110FA1B5C51C4ACC799 /* PictureFormatController.swift in Sources */,
 				B57597D9D9547766175906C5 /* Preferences.swift in Sources */,
 				FEB6C88A497DE64F5DC47AD2 /* PrintTextView.swift in Sources */,
 				1FFCDC6AEFD4CEF605D9F5CD /* SaveStatusViewController.swift in Sources */,

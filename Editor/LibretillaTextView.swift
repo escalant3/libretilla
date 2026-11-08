@@ -11,8 +11,9 @@ protocol LibretillaTextViewDelegate: AnyObject {
     func textViewDidInsertNewline(_ textView: LibretillaTextView)
     /// Tab (`by` 1) or Shift-Tab (`by` -1); true if handled.
     func textView(_ textView: LibretillaTextView, changeListLevelBy delta: Int) -> Bool
-    /// A double-click at character `index`; true if handled (a table opened in the cell editor).
-    func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int) -> Bool
+    /// A double-click at character `index` (the insertion point nearest the click) on character `hit` (the
+    /// one under the pointer, if any); true if handled (a table or picture opened in its editor).
+    func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int, on hit: Int?) -> Bool
 }
 
 final class LibretillaTextView: NSTextView {
@@ -37,7 +38,9 @@ final class LibretillaTextView: NSTextView {
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 2 {
             let index = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
-            if structureDelegate?.textView(self, doubleClickedAt: index) == true { return }
+            let hit = characterIndex(for: NSEvent.mouseLocation)
+            let on = hit == NSNotFound ? nil : hit
+            if structureDelegate?.textView(self, doubleClickedAt: index, on: on) == true { return }
         }
         super.mouseDown(with: event)
     }

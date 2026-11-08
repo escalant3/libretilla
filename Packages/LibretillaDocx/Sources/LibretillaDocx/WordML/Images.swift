@@ -7,6 +7,8 @@ public struct ImageReference: Sendable, Equatable {
     public var size: CGSize
     /// The drawing floats (`wp:anchor`); Libretilla shows it inline where it's anchored.
     public var isFloating: Bool
+    /// Its rotation, brightness, contrast and opacity (and `size` again).
+    public var format: PictureFormat
 
     static let emuPerPoint: CGFloat = 12700
 
@@ -24,6 +26,7 @@ public struct ImageReference: Sendable, Equatable {
         relationshipId = id
         size = CGSize(width: CGFloat(cx) / Self.emuPerPoint, height: CGFloat(cy) / Self.emuPerPoint)
         isFloating = frame.name == "wp:anchor"
+        format = PictureFormat(frame: frame, size: size)
     }
 }
 
