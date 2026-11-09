@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01AC460FD65313D86681FC42 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 415E6BB5BB83F875C43B56BC /* AppDelegate.swift */; };
 		03405776FDB00090F1A997A7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */; };
+		07C688A950F72132142DB1FA /* ParagraphSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41264998A288BC6B190DE697 /* ParagraphSheet.swift */; };
 		0BC898C14154E15D520A6B39 /* Sheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1933AA87BA9B62B5808580A3 /* Sheet.swift */; };
 		0BDD8E7BCFFA457856BCAF7E /* LaunchSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */; };
 		0D61C3729FAAD0121F29321F /* FormattingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D595AD1849A99513505DA43 /* FormattingUITests.swift */; };
@@ -31,6 +32,7 @@
 		3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7396DA2CEF648E1376E074 /* EditorViewController.swift */; };
 		4585E143CD274D8142094E69 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = D68B841A8AADEC4B87EF5D0E /* Updater.swift */; };
 		463078BF6947DBDB3F3F94B3 /* FormattingCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D61E896E4D8C4DF5B0BA5B /* FormattingCommandTests.swift */; };
+		4C1DC4C24DA1E97044B4BC20 /* EditorViewController+Paragraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C283BB1015590B837D2E5E /* EditorViewController+Paragraph.swift */; };
 		550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */; };
 		5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */; };
 		631CDE59FC31D21774FAFC51 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */; };
@@ -104,11 +106,13 @@
 		2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
 		300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Margins.swift"; sourceTree = "<group>"; };
 		3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		41264998A288BC6B190DE697 /* ParagraphSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphSheet.swift; sourceTree = "<group>"; };
 		415E6BB5BB83F875C43B56BC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4A7396DA2CEF648E1376E074 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
 		4ABC421D1901376B88D53F41 /* LibretillaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibretillaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		528D38D33E99CC0F1550AD47 /* PrintTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintTextView.swift; sourceTree = "<group>"; };
 		636A9243E06738157D24E3DC /* Libretilla.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Libretilla.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		66C283BB1015590B837D2E5E /* EditorViewController+Paragraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Paragraph.swift"; sourceTree = "<group>"; };
 		697B3326EEE48C402ABE0847 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Formatting.swift"; sourceTree = "<group>"; };
 		80B5D15043E73883EF1C49BA /* PolishTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolishTests.swift; sourceTree = "<group>"; };
@@ -242,11 +246,13 @@
 				E64EDB73F09E8A0229A49B81 /* EditorViewController+Insert.swift */,
 				04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */,
 				300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */,
+				66C283BB1015590B837D2E5E /* EditorViewController+Paragraph.swift */,
 				14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */,
 				F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */,
 				BE7C25902D4AA65EA63A5397 /* HeaderFooterSheet.swift */,
 				F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */,
 				AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */,
+				41264998A288BC6B190DE697 /* ParagraphSheet.swift */,
 				0BA71DE3FCA81496A95F9048 /* PictureFormatSheet.swift */,
 				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
 				C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */,
@@ -451,6 +457,7 @@
 				BE3C0AD166CE1537E680A89A /* EditorViewController+Insert.swift in Sources */,
 				E70125F2083E8D106CF3D2EE /* EditorViewController+Links.swift in Sources */,
 				7AACAB5CA70B42C68CE24855 /* EditorViewController+Margins.swift in Sources */,
+				4C1DC4C24DA1E97044B4BC20 /* EditorViewController+Paragraph.swift in Sources */,
 				5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */,
 				550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */,
 				3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */,
@@ -463,6 +470,7 @@
 				9152D6084F537D20DC9219AE /* MarginsSheet.swift in Sources */,
 				BAE248D0B824C8A7FBAE2768 /* OriginalsStore.swift in Sources */,
 				FBF74DB259EFB5992D7882C8 /* OutlineSidebar.swift in Sources */,
+				07C688A950F72132142DB1FA /* ParagraphSheet.swift in Sources */,
 				36F0CA9D57CA5AD5ED8CEDC3 /* PictureFormatSheet.swift in Sources */,
 				B57597D9D9547766175906C5 /* Preferences.swift in Sources */,
 				FEB6C88A497DE64F5DC47AD2 /* PrintTextView.swift in Sources */,

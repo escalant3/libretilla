@@ -133,8 +133,8 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
   and other objects paste as plain text.
 - Superscript and subscript display at full size (TextKit 2 default), not reduced as in Word.
 - Text colours are written as chosen. (Since M4, a dark page draws dark colours lighter, for display only.)
-- No Paragraph… dialog yet for exact spacing and indent values; use the ruler, the spacing menu or the indent
-  buttons.
+- ~~No Paragraph… dialog yet~~ Format ▸ Paragraph… (⌥⌘M) sets alignment, indents (first line, hanging), spacing
+  and line spacing (multiple, at least, exactly) exactly (backlog 2, 2026-11-09).
 
 ## Milestone 3: Insert & page (in progress)
 

@@ -187,6 +187,11 @@ enum MainMenu {
         menu.addItem(submenuItem(textMenu()))
         menu.addItem(submenuItem(styleMenu()))
         menu.addItem(submenuItem(listMenu()))
+        // ⌥⌘M, as in Word for Mac.
+        menu.addItem(
+            item(
+                String(localized: "Paragraph…"), #selector(EditorViewController.formatParagraph(_:)), "m",
+                [.command, .option]))
         menu.addItem(item(String(localized: "Edit Table…"), #selector(EditorViewController.editTable(_:))))
         menu.addItem(item(String(localized: "Picture…"), #selector(EditorViewController.formatPicture(_:))))
         menu.addItem(

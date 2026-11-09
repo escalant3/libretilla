@@ -151,6 +151,68 @@ final class FormattingCommandTests: XCTestCase {
         XCTAssertEqual(p.properties.indentLeft, 36)
     }
 
+    func testParagraphSheetSetsExactValuesInOneUndoStep() throws {
+        try open("01-plain.docx")
+        let first = "plain paragraph"
+        try select(first)
+        // Across two paragraphs: only what the sheet changes is applied to both.
+        let both = NSUnionRange(
+            (textView.string as NSString).range(of: first),
+            (textView.string as NSString).range(of: "Centered paragraph"))
+        textView.setSelectedRange(both)
+        editor.formatParagraph(nil)
+        let sheet = try XCTUnwrap(editor.paragraphEditor)
+        XCTAssertEqual(sheet.values.alignment, "left")
+        XCTAssertEqual(sheet.values.lineRule, .multiple)
+        sheet.values.left = 36
+        sheet.values.special = .hanging
+        sheet.values.by = 18
+        sheet.values.after = 6
+        let lines = sheet.values.line
+        sheet.lineRule = .exactly
+        XCTAssertEqual(sheet.values.line, (lines * 12).rounded(), "a line is about 12 pt")
+        sheet.values.line = 15
+        sheet.ok()
+        XCTAssertNil(editor.paragraphEditor)
+        XCTAssertEqual(doc.undoManager?.undoActionName, String(localized: "Paragraph"))
+
+        let saved = try saved()
+        for text in [first, "Centered paragraph"] {
+            let p = try paragraph(text, in: saved).properties
+            XCTAssertEqual(p.indentLeft, 36)
+            XCTAssertEqual(p.firstLine, -18)
+            XCTAssertEqual(p.spaceAfter, 6)
+            XCTAssertEqual(p.line, 15)
+            XCTAssertEqual(p.lineRule, "exact")
+        }
+        XCTAssertEqual(try paragraph("Centered paragraph", in: saved).properties.alignment, "center", "kept")
+
+        doc.undoManager?.undo()
+        let back = try paragraph(first, in: try self.saved()).properties
+        XCTAssertNil(back.indentLeft)
+        XCTAssertNil(back.line)
+    }
+
+    func testParagraphSheetShowsIndentsInRulerUnitsAndCancelChangesNothing() throws {
+        var p = ParagraphProperties()
+        p.indentLeft = 72
+        p.firstLine = 36
+        p.alignment = "both"
+        p.line = 1.5
+        let sheet = ParagraphSheet(paragraph: p, unit: .inches)
+        XCTAssertEqual(sheet.indent(\.left).wrappedValue, 1)
+        XCTAssertEqual(sheet.values.special, .firstLine)
+        XCTAssertEqual(sheet.indent(\.by).wrappedValue, 0.5)
+        XCTAssertEqual(sheet.values.alignment, "both")
+        sheet.indent(\.right).wrappedValue = 0.25
+        XCTAssertEqual(sheet.values.right, 18)
+        XCTAssertEqual(sheet.changes, [.indents(left: 72, right: 18, firstLine: 36)])
+        var result: [ParagraphChange]? = []
+        sheet.onDone = { result = $0 }
+        sheet.cancel()
+        XCTAssertNil(result)
+    }
+
     func testHeadingStyleAndReturnContinuesInNormal() throws {
         try open("01-plain.docx")
         try select("plain paragraph")

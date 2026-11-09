@@ -36,8 +36,13 @@ public enum ParagraphChange: Sendable, Equatable {
     case lineSpacing(Double)
     case spaceBefore(Double)
     case spaceAfter(Double)
+    /// Line spacing in points: at least (`atLeast`) or exactly this much (Word's "At least" and "Exactly").
+    case lineHeight(Double, atLeast: Bool)
     /// Adds to the left indent (points; negative to decrease), never below zero.
     case indent(by: Double)
+    /// Sets the left and right indents and the first line (positive) or hanging (negative) indent, in points
+    /// (Format ▸ Paragraph…).
+    case indents(left: Double, right: Double, firstLine: Double)
     /// Makes the paragraph an item of list `numId` at `level` (nil keeps its current level, or 0),
     /// or (`numId` nil) not a list item.
     case list(numId: Int?, level: Int?)
@@ -248,6 +253,12 @@ extension AttributedStringBridge {
             new.line = same ? nil : m
             new.lineRule = same ? nil : "auto"
             return format.setting([.lineSpacing], from: new)
+        case .lineHeight(let points, let atLeast):
+            let rule = atLeast ? "atLeast" : "exact"
+            let same = inherited.lineRule == rule && abs((inherited.line ?? 0) - points) < 0.01
+            new.line = same ? nil : points
+            new.lineRule = same ? nil : rule
+            return format.setting([.lineSpacing], from: new)
         case .spaceBefore(let v):
             new.spaceBefore = abs((inherited.spaceBefore ?? 0) - v) < 0.01 ? nil : v
             return format.setting([.spaceBefore], from: new)
@@ -265,6 +276,16 @@ extension AttributedStringBridge {
                 new.indentLeft = nil
                 new.indentRight = nil
                 new.firstLine = nil
+            }
+            return format.setting([.indentation], from: new)
+        case .indents(let left, let right, let firstLine):
+            func same(_ a: Double, _ b: Double?) -> Bool { abs(a - (b ?? 0)) < 0.01 }
+            if same(left, inherited.indentLeft), same(right, inherited.indentRight),
+                same(firstLine, inherited.firstLine)
+            {
+                (new.indentLeft, new.indentRight, new.firstLine) = (nil, nil, nil)
+            } else {
+                (new.indentLeft, new.indentRight, new.firstLine) = (left, right, firstLine)
             }
             return format.setting([.indentation], from: new)
         case .list(let numId, let level):

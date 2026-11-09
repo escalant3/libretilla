@@ -2415,6 +2415,286 @@
           }
         }
       }
+    },
+    "Paragraph": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Párrafo"
+          }
+        }
+      }
+    },
+    "Paragraph…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Párrafo…"
+          }
+        }
+      }
+    },
+    "Alignment:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alineación:"
+          }
+        }
+      }
+    },
+    "Left": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izquierda"
+          }
+        }
+      }
+    },
+    "Centered": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centrada"
+          }
+        }
+      }
+    },
+    "Right": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derecha"
+          }
+        }
+      }
+    },
+    "Justified": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Justificada"
+          }
+        }
+      }
+    },
+    "Indentation": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sangría"
+          }
+        }
+      }
+    },
+    "Left indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sangría izquierda"
+          }
+        }
+      }
+    },
+    "Right indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sangría derecha"
+          }
+        }
+      }
+    },
+    "Special:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Especial:"
+          }
+        }
+      }
+    },
+    "Special indent": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sangría especial"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna"
+          }
+        }
+      }
+    },
+    "First line": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primera línea"
+          }
+        }
+      }
+    },
+    "Hanging": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Francesa"
+          }
+        }
+      }
+    },
+    "By:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En:"
+          }
+        }
+      }
+    },
+    "Special indent by": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medida de la sangría especial"
+          }
+        }
+      }
+    },
+    "Before:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anterior:"
+          }
+        }
+      }
+    },
+    "After:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posterior:"
+          }
+        }
+      }
+    },
+    "Space before": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio anterior"
+          }
+        }
+      }
+    },
+    "Space after": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio posterior"
+          }
+        }
+      }
+    },
+    "Line spacing:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlineado:"
+          }
+        }
+      }
+    },
+    "Line spacing rule": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tipo de interlineado"
+          }
+        }
+      }
+    },
+    "Multiple": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Múltiple"
+          }
+        }
+      }
+    },
+    "At least": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mínimo"
+          }
+        }
+      }
+    },
+    "Exactly": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exacto"
+          }
+        }
+      }
+    },
+    "Line spacing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interlineado"
+          }
+        }
+      }
+    },
+    "lines": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "líneas"
+          }
+        }
+      }
     }
   }
 }

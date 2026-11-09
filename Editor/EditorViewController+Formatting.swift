@@ -43,6 +43,13 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     /// Paragraph formatting on every paragraph the selection touches.
     func editParagraphs(_ change: ParagraphChange, actionName: String, bridge override: AttributedStringBridge? = nil) {
+        editParagraphs([change], actionName: actionName, bridge: override)
+    }
+
+    /// Several paragraph changes on every paragraph the selection touches, as one undo step.
+    func editParagraphs(
+        _ changes: [ParagraphChange], actionName: String, bridge override: AttributedStringBridge? = nil
+    ) {
         guard textView.isEditable, let storage = textView.textStorage, storage.length > 0 else { return NSSound.beep() }
         let bridge = override ?? self.bridge
         let paragraphs = selectedRanges.flatMap { AttributedStringBridge.paragraphRanges(in: storage, touching: $0) }
@@ -50,7 +57,7 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         let affected = paragraphs.reduce(first) { NSUnionRange($0, $1) }
         guard textView.shouldChangeText(in: affected, replacementString: nil) else { return }
         storage.beginEditing()
-        bridge.apply(change, to: storage, range: affected)
+        for change in changes { bridge.apply(change, to: storage, range: affected) }
         storage.endEditing()
         textView.didChangeText()
         textView.undoManager?.setActionName(actionName)
@@ -434,7 +441,9 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         guard let action = item.action else { return true }
         if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
         if action == #selector(formatPicture(_:)) { return pictureIndex(for: item) != nil && textView.isEditable }
-        if action == #selector(editHeaderAndFooter(_:)) || action == #selector(editMargins(_:)) {
+        if action == #selector(editHeaderAndFooter(_:)) || action == #selector(editMargins(_:))
+            || action == #selector(formatParagraph(_:))
+        {
             return textView.isEditable && document != nil
         }
         switch action {

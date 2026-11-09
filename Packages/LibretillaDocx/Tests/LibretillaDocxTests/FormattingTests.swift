@@ -173,6 +173,34 @@ import Testing
         #expect(s < i && i < j)
     }
 
+    @Test func exactIndentsAndLineHeightsAreWrittenAndShown() throws {
+        let l = try load("01-plain.docx")
+        let r = try range(of: "Elit enim", in: l.text)
+        l.bridge.apply(.indents(left: 54, right: 18, firstLine: -18), to: l.text, range: r)
+        l.bridge.apply(.lineHeight(20, atLeast: false), to: l.text, range: r)
+        let style = try #require(
+            l.text.attribute(.paragraphStyle, at: r.location, effectiveRange: nil) as? NSParagraphStyle)
+        #expect(style.headIndent == 54 && style.firstLineHeadIndent == 36 && style.tailIndent == -18)
+        #expect(style.minimumLineHeight == 20 && style.maximumLineHeight == 20)
+        var (back, _) = try save(l)
+        var p = xml(try paragraph(containing: "Elit enim", in: back))
+        #expect(p.contains("<w:ind w:left=\"1080\" w:right=\"360\" w:hanging=\"360\"/>"))
+        #expect(p.contains("w:line=\"400\" w:lineRule=\"exact\""))
+
+        // A first-line indent and "at least"; back to the style's own indents removes w:ind.
+        l.bridge.apply(.indents(left: 0, right: 0, firstLine: 0), to: l.text, range: r)
+        l.bridge.apply(.lineHeight(14, atLeast: true), to: l.text, range: r)
+        (back, _) = try save(l)
+        p = xml(try paragraph(containing: "Elit enim", in: back))
+        #expect(!p.contains("<w:ind"))
+        #expect(p.contains("w:line=\"280\" w:lineRule=\"atLeast\""))
+        l.bridge.apply(.indents(left: 0, right: 0, firstLine: 36), to: l.text, range: r)
+        (back, _) = try save(l)
+        #expect(
+            xml(try paragraph(containing: "Elit enim", in: back)).contains(
+                "<w:ind w:left=\"0\" w:right=\"0\" w:firstLine=\"720\"/>"))
+    }
+
     @Test func applyingAHeadingStyleWritesPStyleAndRedrawsTheText() throws {
         let l = try load("01-plain.docx")
         let r = try range(of: "plain paragraph", in: l.text)

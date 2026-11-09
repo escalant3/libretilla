@@ -6,7 +6,7 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 ## Page and layout
 
 - [x] 1. Margins have no editor. Page Setup only does paper size and orientation. *Done: File ▸ Margins….*
-- [ ] 2. No Paragraph… dialog for exact spacing and indent values.
+- [x] 2. No Paragraph… dialog for exact spacing and indent values. *Done: Format ▸ Paragraph… (⌥⌘M).*
 - [ ] 3. Multi-section documents use the last section's page setup everywhere.
 - [ ] 4. The space below the last line equals the top margin (TextKit's inset is symmetric).
 - [ ] 5. Superscript and subscript display at full size.
