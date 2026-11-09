@@ -234,6 +234,43 @@ final class PageSetupDocumentTests: XCTestCase {
             "last text page ends with \(lastWords)")
     }
 
+    // MARK: Sections
+
+    func testEachSectionPrintsOnItsOwnPaper() throws {
+        let doc = try open("15-sections.docx")
+        XCTAssertEqual(doc.pageSetup.width, 11906, "the editor shows the final section's")
+        let pdf = try pdfPages(doc)
+        XCTAssertEqual(pdf.pageCount, 4)
+        let sizes = (0..<pdf.pageCount).map { pdf.page(at: $0)!.bounds(for: .mediaBox).size }
+        XCTAssertEqual(sizes[0], CGSize(width: 612, height: 792), "Letter")
+        XCTAssertEqual(sizes[1], CGSize(width: 792, height: 612), "landscape")
+        XCTAssertEqual(sizes[3].width, 595.3, accuracy: 0.5, "A4")
+
+        func text(_ i: Int) -> String { pdf.page(at: i)?.string ?? "" }
+        XCTAssertTrue(text(0).contains("Section one"))
+        XCTAssertFalse(text(0).contains("Section two"))
+        XCTAssertTrue(text(1).contains("Section two"))
+        XCTAssertTrue(text(1).contains("Section three"), "a continuous section stays on the page")
+        XCTAssertFalse(text(2).contains("Section"), "blank: an even-page section can't start on page 3")
+        XCTAssertTrue(text(3).contains("Section four"))
+        // Footers number the pages across sections.
+        XCTAssertTrue(text(0).contains("Page 1"))
+        XCTAssertTrue(text(1).contains("Page 2"))
+        XCTAssertTrue(text(3).contains("Page 4"))
+
+        // The A4 section's 2″ left margin.
+        let body = try XCTUnwrap(pdf.page(at: 3)?.selection(for: NSRange(location: 0, length: 1)))
+        XCTAssertEqual(body.bounds(for: pdf.page(at: 3)!).minX, 144, accuracy: 2)
+    }
+
+    func testPrintingASectionedDocumentPrintsItsPDF() throws {
+        let doc = try open("15-sections.docx")
+        let op = try doc.printOperation(withSettings: [:])
+        XCTAssertNotNil(op.view, "a PDF view of the sections' pages")
+        XCTAssertEqual(doc.printParts().count, 3, "the continuous section joins the landscape pages")
+        XCTAssertEqual(try open("01-plain.docx").printParts().count, 1)
+    }
+
     func testPDFOfALandscapeDocumentIsWide() throws {
         let doc = try open("01-plain.docx")
         var setup = doc.pageSetup

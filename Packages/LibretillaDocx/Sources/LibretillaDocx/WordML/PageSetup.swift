@@ -3,8 +3,8 @@ import Foundation
 /// Page size, orientation and margins of a document, from the final body `w:sectPr`
 /// (ECMA-376 Part 1, §17.6.13 `w:pgSz` and §17.6.11 `w:pgMar`). Lengths are in twips (1/20 pt).
 ///
-/// A document with several sections uses the last section's setup for the whole document in
-/// Libretilla (display, print and PDF); every section keeps its own `w:sectPr` bytes on save.
+/// Print and PDF lay each section out with its own setup (`AttributedStringBridge.sections(in:last:)`). The editor
+/// shows, and Page Setup and Margins edit, the final section's; every section keeps its own `w:sectPr` bytes on save.
 public struct PageSetup: Sendable, Equatable {
     public var width: Int
     public var height: Int
@@ -17,6 +17,13 @@ public struct PageSetup: Sendable, Equatable {
     /// `w:footer`), in twips. Read only: changing the page setup keeps the section's own values.
     public var header = 720
     public var footer = 720
+    /// How the section starts (`w:type`). Read only.
+    public var start = SectionStart.nextPage
+
+    /// `w:type` (ECMA-376 Part 1, §17.18.77): where a section starts.
+    public enum SectionStart: String, Sendable, Equatable {
+        case nextPage, continuous, evenPage, oddPage, nextColumn
+    }
 
     public init(width: Int, height: Int, top: Int, right: Int, bottom: Int, left: Int, isLandscape: Bool = false) {
         self.width = width
@@ -114,6 +121,8 @@ public struct PageSetup: Sendable, Equatable {
         setup.left = int(margins, "w:left") ?? setup.left
         setup.header = int(margins, "w:header").map(abs) ?? setup.header
         setup.footer = int(margins, "w:footer").map(abs) ?? setup.footer
+        setup.start =
+            sectPr?.firstChild(named: "w:type")?.attribute("w:val").flatMap(SectionStart.init(rawValue:)) ?? .nextPage
         self = setup
     }
 }

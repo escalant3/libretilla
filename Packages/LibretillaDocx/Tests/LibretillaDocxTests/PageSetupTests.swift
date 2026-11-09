@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 
@@ -20,6 +21,30 @@ import Testing
         let a4 = try codec.read(try Corpus.data("07-header-footer.docx")).body.pageSetup
         #expect(a4.width == 11906 && a4.height == 16838)
         #expect(a4.margins.left == 72)
+    }
+
+    @Test func sectionsHaveTheirOwnSetupAndStart() throws {
+        let doc = try codec.read(try Corpus.data("15-sections.docx"))
+        let text = AttributedStringBridge(doc).attributedString(for: doc.body)
+        let sections = AttributedStringBridge.sections(in: text, last: doc.body.pageSetup)
+        #expect(sections.count == 4)
+        let ns = text.string as NSString
+        func content(_ i: Int) -> String { ns.substring(with: sections[i].range) }
+        #expect(content(0).hasPrefix("Section one") && content(0).hasSuffix("\n"))
+        #expect(content(1).hasPrefix("Section two"))
+        #expect(content(2) == "Section three: continuous, on the landscape page.\n")
+        #expect(content(3).hasPrefix("Section four"))
+        #expect(NSMaxRange(sections[3].range) == text.length)
+        #expect(sections[0].setup == .letter && sections[0].setup.start == .nextPage)
+        #expect(sections[1].setup.isLandscape && sections[1].setup.width == 15840)
+        #expect(sections[2].setup.start == .continuous)
+        #expect(sections[3].setup.start == .evenPage && sections[3].setup.left == 2880)
+
+        // One section when there are no breaks.
+        let plain = try codec.read(try Corpus.data("01-plain.docx"))
+        let plainText = AttributedStringBridge(plain).attributedString(for: plain.body)
+        let one = AttributedStringBridge.sections(in: plainText, last: .letter)
+        #expect(one == [PageSection(range: NSRange(location: 0, length: plainText.length), setup: .letter)])
     }
 
     @Test func readsPagesOrientationAndOddSizes() throws {

@@ -11,6 +11,10 @@ final class PrintTextView: NSTextView {
         var differentFirstPage: Bool
         var bridge: AttributedStringBridge
         var setup: PageSetup
+        /// Pages printed before this view's (earlier sections), and the whole document's page count if it isn't
+        /// this view's own.
+        var pageOffset = 0
+        var totalPages: Int?
     }
 
     var decorations: Decorations?
@@ -126,8 +130,8 @@ final class PrintTextView: NSTextView {
     /// number and the page count.
     override func drawPageBorder(with borderSize: NSSize) {
         guard let decorations, let op = NSPrintOperation.current else { return }
-        let page = op.currentPage
-        let pages = NSMaxRange(op.pageRange) - 1
+        let page = op.currentPage + decorations.pageOffset
+        let pages = decorations.totalPages ?? NSMaxRange(op.pageRange) - 1
         let saved = frame
         // As AppKit's documentation says: the page border is drawn in a frame the size of the paper.
         frame = NSRect(origin: .zero, size: borderSize)

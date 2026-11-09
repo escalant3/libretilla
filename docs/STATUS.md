@@ -194,7 +194,9 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 **Known limitations so far**
 
 - ~~Margins have no editor yet~~ File ▸ Margins… edits them, in the ruler's units (backlog 1, 2026-11-09).
-- Multi-section documents use the last section's page setup throughout; each section keeps its own XML.
+- ~~Multi-section documents use the last section's page setup throughout~~ Print and PDF lay out each section on
+  its own paper and margins, with next-page, continuous, odd- and even-page starts; page numbers run across them
+  (backlog 3, 2026-11-09). The editor shows, and Page Setup and Margins edit, the final section's.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.

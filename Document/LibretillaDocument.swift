@@ -1,5 +1,6 @@
 import AppKit
 import LibretillaDocx
+import PDFKit
 import Synchronization
 import os
 
@@ -384,15 +385,103 @@ final class LibretillaDocument: NSDocument {
     override func printOperation(withSettings printSettings: [NSPrintInfo.AttributeKey: Any]) throws
         -> NSPrintOperation
     {
+        let parts = printParts()
+        guard parts.count > 1 else {
+            let part = parts.first ?? PrintPart(text: initialText, setup: pageSetup)
+            return operation(printing: part, pageOffset: 0, totalPages: nil, settings: printSettings)
+        }
+        // Sections with their own paper: print the PDF made of each one's pages.
         let info = Self.printInfo(for: pageSetup, basedOn: printInfo)
         info.dictionary().addEntries(from: printSettings)
-        let view = PrintTextView(text: editor?.textSnapshot() ?? initialText, width: pageSetup.textWidth)
+        guard let op = try sectionedPDF(parts).printOperation(for: info, scalingMode: .pageScaleNone, autoRotate: true)
+        else { throw CocoaError(.fileWriteUnknown) }
+        return op
+    }
+
+    /// Text printed on pages of one setup: a section, with any continuous sections after it.
+    struct PrintPart {
+        var text: NSAttributedString
+        var setup: PageSetup
+    }
+
+    /// The text to print, by section (`AttributedStringBridge.sections`). A section that starts on a new page
+    /// (or an odd or even one) starts a part; a continuous one joins the part before it, on the same pages.
+    func printParts() -> [PrintPart] {
+        let text = editor?.textSnapshot() ?? initialText
+        var ranges: [(range: NSRange, setup: PageSetup)] = []
+        for section in AttributedStringBridge.sections(in: text, last: pageSetup) {
+            if let last = ranges.indices.last, [.continuous, .nextColumn].contains(section.setup.start) {
+                ranges[last].range = NSUnionRange(ranges[last].range, section.range)
+            } else {
+                ranges.append((section.range, section.setup))
+            }
+        }
+        let ns = text.string as NSString
+        return ranges.map { range, setup in
+            var r = range
+            // A section's last paragraph mark would add an empty line, and maybe an empty page.
+            if r.length > 1, NSMaxRange(r) < ns.length, ns.character(at: NSMaxRange(r) - 1) == 0x0A { r.length -= 1 }
+            return PrintPart(text: text.attributedSubstring(from: r), setup: setup)
+        }
+    }
+
+    /// The print operation for one part: its paper size and margins, its headers and footers numbered from
+    /// `pageOffset + 1` out of `totalPages` (or the part's own count).
+    private func operation(
+        printing part: PrintPart, pageOffset: Int, totalPages: Int?, settings: [NSPrintInfo.AttributeKey: Any]
+    ) -> NSPrintOperation {
+        let info = Self.printInfo(for: part.setup, basedOn: printInfo)
+        info.dictionary().addEntries(from: settings)
+        let view = PrintTextView(text: part.text, width: part.setup.textWidth)
         if let base, !base.headersFooters.stories.isEmpty {
             view.decorations = PrintTextView.Decorations(
                 headersFooters: base.headersFooters, differentFirstPage: base.body.differentFirstPage, bridge: bridge,
-                setup: pageSetup)
+                setup: part.setup, pageOffset: pageOffset, totalPages: totalPages)
         }
         return NSPrintOperation(view: view, printInfo: info)
+    }
+
+    /// The document as a PDF, each part on its own paper. An odd- or even-page section gets a blank page before it
+    /// when it would start on the wrong side, as in Word. Headers and footers need the page count, so with them
+    /// the parts are laid out twice.
+    func sectionedPDF(_ parts: [PrintPart]) throws -> PDFDocument {
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-print-\(UUID())")
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let passes = base.map { $0.headersFooters.stories.isEmpty } == false ? 2 : 1
+        var total: Int?
+        var pdf = PDFDocument()
+        for _ in 0..<passes {
+            pdf = PDFDocument()
+            for (i, part) in parts.enumerated() {
+                let nextPage = pdf.pageCount + 1
+                let wrongSide =
+                    switch part.setup.start {
+                    case .evenPage: nextPage % 2 == 1
+                    case .oddPage: nextPage % 2 == 0
+                    default: false
+                    }
+                if wrongSide, pdf.pageCount > 0 {
+                    let blank = PDFPage()
+                    blank.setBounds(NSRect(origin: .zero, size: part.setup.pageSize), for: .mediaBox)
+                    pdf.insert(blank, at: pdf.pageCount)
+                }
+                let url = scratch.appendingPathComponent("\(i).pdf")
+                let op = operation(
+                    printing: part, pageOffset: pdf.pageCount, totalPages: total,
+                    settings: [.jobDisposition: NSPrintInfo.JobDisposition.save, .jobSavingURL: url])
+                op.showsPrintPanel = false
+                op.showsProgressPanel = false
+                guard op.run(), let pages = PDFDocument(url: url) else {
+                    throw CocoaError(.fileWriteUnknown, userInfo: [NSURLErrorKey: url])
+                }
+                for p in 0..<pages.pageCount {
+                    if let page = pages.page(at: p) { pdf.insert(page, at: pdf.pageCount) }
+                }
+            }
+            total = pdf.pageCount
+        }
+        return pdf
     }
 
     // MARK: PDF export (M3)
@@ -416,8 +505,15 @@ final class LibretillaDocument: NSDocument {
         }
     }
 
-    /// Writes the document as a PDF, paginated with the document's own paper size and margins.
+    /// Writes the document as a PDF, paginated with each section's own paper size and margins.
     func writePDF(to url: URL, showsProgress: Bool = true) throws {
+        let parts = printParts()
+        if parts.count > 1 {
+            guard try sectionedPDF(parts).write(to: url) else {
+                throw CocoaError(.fileWriteUnknown, userInfo: [NSURLErrorKey: url])
+            }
+            return
+        }
         let op = try printOperation(withSettings: [
             .jobDisposition: NSPrintInfo.JobDisposition.save,
             .jobSavingURL: url,

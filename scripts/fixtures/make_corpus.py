@@ -738,9 +738,31 @@ def f13_page_break_before(out: Path):
     pkg.write(out / "13-page-break-before.docx", document("".join(body)))
 
 
+def f15_sections(out: Path):
+    """Sections with their own page setup and starts. Prints on 4 pages: Letter portrait; Letter landscape, with
+    a continuous section on the same page; a blank page (an even-page section can't start on page 3); A4."""
+    pkg = Package("Sections")
+    wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
+    fid = pkg.rel("footer", "footer1.xml")
+    pkg.add("word/footer1.xml", f"{XML_DECL}<w:ftr {ROOT_NS}>{p('Page ', page_field(), style='Footer', jc='center')}</w:ftr>",
+            f"{wml}.footer+xml")
+    landscape = dict(w=15840, h=12240, orient="landscape")
+    body = [
+        p("Section one: portrait Letter.", style="Heading1"),
+        p(sentence(1, 40), sect=sect_pr()),
+        p("Section two: landscape Letter.", style="Heading1"),
+        p(sentence(2, 40), sect=sect_pr(**landscape)),
+        p("Section three: continuous, on the landscape page.", sect=sect_pr(type_="continuous", **landscape)),
+        p("Section four: A4 on an even page.", style="Heading1"),
+        p(sentence(4, 40)),
+    ]
+    final = sect_pr(footer=fid, w=11906, h=16838, type_="evenPage", margins=(1440, 1440, 1440, 2880))
+    pkg.write(out / "15-sections.docx", document("".join(body), final))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
             f08_spanish, f09_large, f10_word_features, f13_page_break_before,
-            f14_headers_footers]
+            f14_headers_footers, f15_sections]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a
