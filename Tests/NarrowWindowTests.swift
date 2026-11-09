@@ -24,23 +24,54 @@ final class NarrowWindowTests: XCTestCase {
         XCTAssertFalse(bar.hiddenGroups.isEmpty)
         XCTAssertEqual(bar.hiddenGroups.last, .spacing)
         XCTAssertTrue(bar.hiddenGroups.contains(.character))
-        let overflow = try XCTUnwrap(
-            bar.view.firstDescendant {
-                ($0 as? NSPopUpButton)?.accessibilityLabel() == String(localized: "More formatting")
-            }
-                as? NSPopUpButton)
-        XCTAssertFalse(overflow.isHidden)
-        let titles = overflow.itemArray.dropFirst().map(\.title)
+        let titles = FormatBarViewController.overflowMenus(for: bar.hiddenGroups).map(\.title)
         XCTAssertTrue(titles.contains(String(localized: "Font")), "\(titles)")
         XCTAssertTrue(titles.contains(String(localized: "Text")), "\(titles)")
         // Its copies of menu bar items carry no shortcuts (the menu bar answers those).
-        let font = try XCTUnwrap(overflow.itemArray.first { $0.title == String(localized: "Font") }?.submenu)
+        let font = try XCTUnwrap(
+            FormatBarViewController.overflowMenus(for: bar.hiddenGroups).first { $0.title == String(localized: "Font") }
+        )
         XCTAssertTrue(font.items.allSatisfy { $0.keyEquivalent.isEmpty })
 
-        // Wide again: everything comes back and the » goes away.
+        // Wide again: everything comes back, and with nothing hidden there's no » button.
         bar.fit(width: 1400)
         XCTAssertEqual(bar.hiddenGroups, [])
-        XCTAssertTrue(overflow.isHidden)
+        XCTAssertTrue(FormatBarViewController.overflowMenus(for: bar.hiddenGroups).isEmpty)
+    }
+
+    func testFormatBarGroupsFitFromTheLeftLeavingRoomForTheOverflowButton() {
+        let widths: [CGFloat] = [100, 100, 100]
+        let s = FormatBarViewController.spacing
+        // All three fit without the » button.
+        XCTAssertEqual(FormatBarViewController.groupsThatFit(widths: widths, overflowWidth: 30, in: 300 + 2 * s), 3)
+        // One point less: the third goes, and the first two leave room for the » button.
+        XCTAssertEqual(FormatBarViewController.groupsThatFit(widths: widths, overflowWidth: 30, in: 299 + 2 * s), 2)
+        XCTAssertEqual(FormatBarViewController.groupsThatFit(widths: widths, overflowWidth: 30, in: 230), 1)
+        XCTAssertEqual(FormatBarViewController.groupsThatFit(widths: widths, overflowWidth: 30, in: 50), 0)
+    }
+
+    func testFormatBarReflectsZoomAndFonts() {
+        let bar = FormatBarViewController()
+        bar.showZoom(1.25)
+        XCTAssertEqual(bar.model.zoomSelection, 1.25)
+        XCTAssertEqual(bar.model.zoomLevels, EditorViewController.zoomLevels)
+        // A pinch can land between the levels: that zoom is listed while it lasts.
+        bar.showZoom(1.1)
+        XCTAssertEqual(bar.model.zoomSelection, 1.1)
+        XCTAssertTrue(bar.model.zoomLevels.contains(1.1))
+        bar.showZoom(0.8, fits: true)
+        XCTAssertEqual(bar.model.zoomSelection, EditorViewController.fitZoomItem)
+        XCTAssertEqual(bar.model.zoomLevels, EditorViewController.zoomLevels)
+
+        // A font the document names but this Mac doesn't have is shown anyway.
+        var format = SelectionFormat()
+        format.fontFamily = "No Such Font Family"
+        bar.update(format, bridge: AttributedStringBridge(styles: StyleSheet()), editable: false)
+        XCTAssertEqual(bar.model.missingFamily, "No Such Font Family")
+        XCTAssertFalse(bar.model.editable)
+        format.fontFamily = FormatBarModel.installedFamilies.first
+        bar.update(format, bridge: AttributedStringBridge(styles: StyleSheet()), editable: true)
+        XCTAssertNil(bar.model.missingFamily)
     }
 
     func testTextRewrapsToANarrowWindowAndKeepsThePageWidthOtherwise() throws {
@@ -70,15 +101,5 @@ final class NarrowWindowTests: XCTestCase {
         let window = try XCTUnwrap(doc.windowControllers.first?.window)
         XCTAssertEqual(window.contentMinSize.width, 320)
         XCTAssertLessThanOrEqual(window.frame.width, (NSScreen.main?.visibleFrame.width ?? .infinity) + 0.5)
-    }
-}
-
-extension NSView {
-    func firstDescendant(where match: (NSView) -> Bool) -> NSView? {
-        for sub in subviews {
-            if match(sub) { return sub }
-            if let found = sub.firstDescendant(where: match) { return found }
-        }
-        return nil
     }
 }

@@ -100,12 +100,12 @@ final class TableCommandTests: XCTestCase {
     func testTheEditorSheetCommitsItsFields() throws {
         try open("04-tables.docx")
         let found = try XCTUnwrap(editor.table(at: firstRow))
-        let sheet = try XCTUnwrap(TableEditorController(xml: found.box.block.xml, row: 1))
+        let sheet = try XCTUnwrap(TableEditorSheet(xml: found.box.block.xml, row: 1))
         var result: Data?
         sheet.onDone = { result = $0 }
-        sheet.fields[.init(row: 1, cell: 0)]?.stringValue = "Green apples"
-        sheet.addRow(nil)
-        sheet.done(nil)
+        sheet.texts[.init(row: 1, cell: 0)] = "Green apples"
+        sheet.addRow()
+        sheet.done()
         let model = try XCTUnwrap(result.flatMap(TableModel.init(xml:)))
         XCTAssertEqual(model.rows[1].cells[0].text, "Green apples")
         XCTAssertEqual(model.rows.count, 8)

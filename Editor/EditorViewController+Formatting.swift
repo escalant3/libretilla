@@ -143,35 +143,26 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         editRuns(.size(next), actionName: String(localized: "Font Size"))
     }
 
-    @objc func applyFontFamily(_ sender: Any?) {
-        let family: String? =
-            switch sender {
-            case let popup as NSPopUpButton:
-                popup.selectedItem?.representedObject as? String ?? popup.titleOfSelectedItem
-            case let item as NSMenuItem: item.representedObject as? String ?? item.title
-            default: nil
-            }
-        guard let family, !family.isEmpty else { return }
+    /// The format bar's font menu.
+    func applyFontFamily(_ family: String) {
+        guard !family.isEmpty else { return }
         editRuns(.font(family), actionName: String(localized: "Font"))
         view.window?.makeFirstResponder(textView)
     }
 
-    @objc func applyFontSize(_ sender: Any?) {
-        let value: Double? =
-            switch sender {
-            case let field as NSComboBox: Double(field.stringValue.replacingOccurrences(of: ",", with: "."))
-            case let item as NSMenuItem: item.representedObject as? Double
-            default: nil
-            }
-        guard let value, value >= 1, value <= 1638 else { return NSSound.beep() }
+    /// The format bar's size box: what was typed, in points ("10,5" as well as "10.5").
+    func applyFontSize(_ typed: String) {
+        guard let value = Double(typed.replacingOccurrences(of: ",", with: ".")), value >= 1, value <= 1638 else {
+            return NSSound.beep()
+        }
         // Word stores half points.
         editRuns(.size((value * 2).rounded() / 2), actionName: String(localized: "Font Size"))
         view.window?.makeFirstResponder(textView)
     }
 
-    @objc func applyTextColor(_ sender: Any?) {
-        guard let well = sender as? NSColorWell else { return }
-        editRuns(.color(AttributedStringBridge.hex(well.color)), actionName: String(localized: "Text Color"))
+    /// The format bar's colour well.
+    func applyTextColor(_ color: NSColor) {
+        editRuns(.color(AttributedStringBridge.hex(color)), actionName: String(localized: "Text Color"))
     }
 
     @objc func applyAutomaticTextColor(_ sender: Any?) {
@@ -179,7 +170,11 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     }
 
     @objc func applyHighlight(_ sender: Any?) {
-        let name = (sender as? NSMenuItem)?.representedObject as? String
+        applyHighlight(named: (sender as? NSMenuItem)?.representedObject as? String)
+    }
+
+    /// A Word highlight colour by name (`yellow`…), or none.
+    func applyHighlight(named name: String?) {
         editRuns(.highlight(name), actionName: String(localized: "Highlight"))
     }
 
@@ -209,19 +204,23 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     /// Tags: 0 left, 1 centre, 2 right, 3 justify (also the format bar's segment order).
     static let alignments = ["left", "center", "right", "both"]
 
-    @objc func applyAlignment(_ sender: Any?) {
-        let index =
-            switch sender {
-            case let control as NSSegmentedControl: control.selectedSegment
-            case let item as NSMenuItem: item.tag
-            default: 0
-            }
+    @objc func applyAlignment(_ sender: Any?) { applyAlignment(at: (sender as? NSMenuItem)?.tag ?? 0) }
+
+    /// An alignment by its index in `alignments`.
+    func applyAlignment(at index: Int) {
         guard Self.alignments.indices.contains(index) else { return }
         editParagraphs(.alignment(Self.alignments[index]), actionName: String(localized: "Alignment"))
     }
 
+    /// Line spacing values offered (the Format menu's and the format bar's), as multiples of single spacing.
+    static let lineSpacings: [(title: String, value: Double)] = [("1", 1), ("1.15", 1.15), ("1.5", 1.5), ("2", 2)]
+
     @objc func applyLineSpacing(_ sender: Any?) {
-        guard let item = sender as? NSMenuItem, let multiple = item.representedObject as? Double else { return }
+        guard let multiple = (sender as? NSMenuItem)?.representedObject as? Double else { return }
+        applyLineSpacing(multiple: multiple)
+    }
+
+    func applyLineSpacing(multiple: Double) {
         editParagraphs(.lineSpacing(multiple), actionName: String(localized: "Line Spacing"))
     }
 
@@ -255,26 +254,6 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     @objc func toggleNumberedList(_ sender: Any?) { toggleList(.numbered) }
 
-    /// Format bar: segment 0 bullets, 1 numbers.
-    @objc func formatBarToggleList(_ sender: NSSegmentedControl) {
-        toggleList(sender.selectedSegment == 0 ? .bullet : .numbered)
-    }
-
-    /// Format bar: segment 0 decrease, 1 increase.
-    @objc func formatBarIndent(_ sender: NSSegmentedControl) {
-        if sender.selectedSegment == 0 { decreaseIndent(sender) } else { increaseIndent(sender) }
-    }
-
-    /// Format bar: segments bold, italic, underline, strikethrough.
-    @objc func formatBarToggleTrait(_ sender: NSSegmentedControl) {
-        switch sender.selectedSegment {
-        case 0: toggleBold(sender)
-        case 1: toggleItalic(sender)
-        case 2: toggleUnderline(sender)
-        default: toggleStrikethrough(sender)
-        }
-    }
-
     func toggleList(_ kind: Numbering.ListKind) {
         guard textView.isEditable, let storage = textView.textStorage, let document else { return NSSound.beep() }
         let name = kind == .bullet ? String(localized: "Bulleted List") : String(localized: "Numbered List")
@@ -302,15 +281,14 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     // MARK: - Styles
 
-    /// The style popup and Format ▸ Style items carry a `StyleChoice` key as their represented object.
+    /// Format ▸ Style items carry a `StyleChoice` key as their represented object.
     @objc func applyParagraphStyle(_ sender: Any?) {
-        let key: String? =
-            switch sender {
-            case let popup as NSPopUpButton: popup.selectedItem?.representedObject as? String
-            case let item as NSMenuItem: item.representedObject as? String
-            default: nil
-            }
-        guard let key, let document, let choice = StyleChoice(key: key) else { return }
+        if let key = (sender as? NSMenuItem)?.representedObject as? String { applyParagraphStyle(key: key) }
+    }
+
+    /// The style a `StyleChoice` key stands for (the format bar's style menu, Format ▸ Style).
+    func applyParagraphStyle(key: String) {
+        guard let document, let choice = StyleChoice(key: key) else { return }
         let id: String?
         switch choice {
         case .builtIn(let name): id = document.paragraphStyleId(named: name)

@@ -1,5 +1,6 @@
 import AppKit
 import LibretillaDocx
+import SwiftUI
 
 /// Tables (ADR 0006): Insert ▸ Table…, Format ▸ Edit Table…, double-click to edit.
 extension EditorViewController {
@@ -35,17 +36,16 @@ extension EditorViewController {
     }
 
     func openTableEditor(_ found: (range: NSRange, box: OpaqueBlockBox, row: Int)) {
-        guard textView.isEditable, let window = view.window else { return NSSound.beep() }
-        guard let editor = TableEditorController(xml: found.box.block.xml, row: found.row) else {
-            return NSSound.beep()
-        }
+        guard textView.isEditable, let window = view.window,
+            let editor = TableEditorSheet(xml: found.box.block.xml, row: found.row)
+        else { return NSSound.beep() }
         let box = found.box
         editor.onDone = { [weak self] xml in
             guard let self, let current = self.range(of: box) else { return }
             self.replaceTable(current, box: box, with: xml)
         }
         tableEditor = editor
-        window.beginSheet(editor.window!) { [weak self] _ in
+        editor.present(on: window) { [weak self] in
             self?.tableEditor = nil
             self.map { $0.view.window?.makeFirstResponder($0.textView) }
         }
@@ -80,29 +80,14 @@ extension EditorViewController {
     /// (after the current paragraph's text before the caret, which stays a paragraph of its own).
     @objc func insertTable(_ sender: Any?) {
         guard textView.isEditable, let window = view.window else { return NSSound.beep() }
-        let alert = NSAlert()
-        alert.messageText = String(localized: "Insert Table")
-        let rows = NSTextField(string: "3")
-        let columns = NSTextField(string: "3")
-        let grid = NSGridView(views: [
-            [NSTextField(labelWithString: String(localized: "Rows")), rows],
-            [NSTextField(labelWithString: String(localized: "Columns")), columns],
-        ])
-        grid.column(at: 1).width = 60
-        grid.frame = NSRect(x: 0, y: 0, width: 160, height: 56)
-        alert.accessoryView = grid
-        alert.addButton(withTitle: String(localized: "Insert"))
-        alert.addButton(withTitle: String(localized: "Cancel"))
-        alert.window.initialFirstResponder = rows
-        alert.beginSheetModal(for: window) { [weak self] response in
-            MainActor.assumeIsolated {
-                guard response == .alertFirstButtonReturn, let self else { return }
-                let r = min(100, max(1, rows.integerValue))
-                let c = min(20, max(1, columns.integerValue))
-                self.insertTable(rows: r, columns: c)
-                self.view.window?.makeFirstResponder(self.textView)
-            }
+        var sheet: NSWindow?
+        let finish: @MainActor (_ size: (rows: Int, columns: Int)?) -> Void = { [weak self] size in
+            Sheet.end(sheet)
+            guard let self else { return }
+            if let size { self.insertTable(rows: size.rows, columns: size.columns) }
+            self.view.window?.makeFirstResponder(self.textView)
         }
+        sheet = Sheet.present(String(localized: "Insert Table"), on: window, content: InsertTableView(finish: finish))
     }
 
     func insertTable(rows: Int, columns: Int) {
@@ -121,5 +106,31 @@ extension EditorViewController {
         insertion.append(table)
         textView.insertText(insertion, replacementRange: at)
         textView.undoManager?.setActionName(String(localized: "Insert Table"))
+    }
+}
+
+/// Insert ▸ Table…'s sheet: how many rows (1–100) and columns (1–20).
+private struct InsertTableView: View {
+    let finish: @MainActor ((rows: Int, columns: Int)?) -> Void
+    @State private var rows = 3
+    @State private var columns = 3
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(String(localized: "Insert Table")).font(.headline)
+            Form {
+                Stepper(value: $rows, in: 1...100) {
+                    TextField(String(localized: "Rows"), value: $rows, format: .number).frame(width: 140)
+                }
+                Stepper(value: $columns, in: 1...20) {
+                    TextField(String(localized: "Columns"), value: $columns, format: .number).frame(width: 140)
+                }
+            }
+            SheetButtons(cancel: { finish(nil) }, confirmTitle: String(localized: "Insert")) {
+                finish((min(100, max(1, rows)), min(20, max(1, columns))))
+            }
+        }
+        .padding(20)
+        .frame(width: 280)
     }
 }

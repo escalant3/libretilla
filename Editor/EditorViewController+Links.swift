@@ -1,5 +1,6 @@
 import AppKit
 import LibretillaDocx
+import SwiftUI
 
 /// Insert ▸ Link… (⌘K) and following links (M3).
 extension EditorViewController {
@@ -27,43 +28,28 @@ extension EditorViewController {
         let target = existing?.range ?? selection
         let needsText = target.length == 0
 
-        let alert = NSAlert()
-        alert.messageText = existing == nil ? String(localized: "Add Link") : String(localized: "Edit Link")
-        let urlField = NSTextField(string: existing?.box.url?.absoluteString ?? "")
-        urlField.placeholderString = "https://"
-        let textField = NSTextField(string: "")
-        textField.placeholderString = String(localized: "Text to show")
-        let stack = NSStackView(views: needsText ? [textField, urlField] : [urlField])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        for field in stack.arrangedSubviews { field.widthAnchor.constraint(equalToConstant: 300).isActive = true }
-        stack.frame = NSRect(x: 0, y: 0, width: 300, height: needsText ? 56 : 24)
-        alert.accessoryView = stack
-        alert.addButton(withTitle: existing == nil ? String(localized: "Add Link") : String(localized: "Update Link"))
-        alert.addButton(withTitle: String(localized: "Cancel"))
-        if existing != nil { alert.addButton(withTitle: String(localized: "Remove Link")) }
-        alert.window.initialFirstResponder = needsText ? textField : urlField
-
-        alert.beginSheetModal(for: window) { [weak self] response in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                switch response {
-                case .alertFirstButtonReturn:
-                    guard let url = Self.normalizedURL(urlField.stringValue) else { return NSSound.beep() }
-                    if needsText {
-                        let title = textField.stringValue.isEmpty ? url : textField.stringValue
-                        self.insertLink(title, url: url, at: target)
-                    } else {
-                        self.applyLink(url, to: target)
-                    }
-                case .alertThirdButtonReturn:
-                    self.removeLink(in: target)
-                default:
-                    break
+        var sheet: NSWindow?
+        let finish: @MainActor (LinkSheetView.Result) -> Void = { [weak self] result in
+            Sheet.end(sheet)
+            guard let self else { return }
+            switch result {
+            case .link(let typed, let title):
+                guard let url = Self.normalizedURL(typed) else { return NSSound.beep() }
+                if needsText {
+                    self.insertLink(title.isEmpty ? url : title, url: url, at: target)
+                } else {
+                    self.applyLink(url, to: target)
                 }
-                self.view.window?.makeFirstResponder(self.textView)
+            case .remove: self.removeLink(in: target)
+            case .cancel: break
             }
+            self.view.window?.makeFirstResponder(self.textView)
         }
+        let content = LinkSheetView(
+            isNew: existing == nil, needsText: needsText, url: existing?.box.url?.absoluteString ?? "", finish: finish)
+        sheet = Sheet.present(
+            existing == nil ? String(localized: "Add Link") : String(localized: "Edit Link"), on: window,
+            content: content)
     }
 
     /// What the user typed as a URL: `example.com` → `https://example.com`, `a@b.com` → `mailto:a@b.com`.
@@ -126,5 +112,42 @@ extension EditorViewController {
             textView.setSelectedRange(NSRange(location: charIndex, length: 0))
         }
         return true
+    }
+}
+
+/// Insert ▸ Link…'s sheet: the address, and the text to show when there's no selection to link.
+struct LinkSheetView: View {
+    enum Result {
+        case link(url: String, title: String)
+        case remove
+        case cancel
+    }
+
+    let isNew: Bool
+    let needsText: Bool
+    @State var url: String
+    let finish: @MainActor (Result) -> Void
+    @State private var title = ""
+    @FocusState private var focusesTitle: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(isNew ? String(localized: "Add Link") : String(localized: "Edit Link")).font(.headline)
+            if needsText {
+                TextField(String(localized: "Text to show"), text: $title).focused($focusesTitle)
+            }
+            TextField("https://", text: $url)
+            SheetButtons(
+                cancel: { finish(.cancel) },
+                confirmTitle: isNew ? String(localized: "Add Link") : String(localized: "Update Link"),
+                confirm: { finish(.link(url: url, title: title)) }
+            ) {
+                if !isNew { Button(String(localized: "Remove Link")) { finish(.remove) } }
+            }
+        }
+        .textFieldStyle(.roundedBorder)
+        .padding(20)
+        .frame(width: 340)
+        .onAppear { focusesTitle = needsText }
     }
 }

@@ -126,10 +126,10 @@ final class PictureCommandTests: XCTestCase {
         XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 100, height: 50))
         XCTAssertFalse(doc.undoManager!.canUndo && doc.undoManager!.undoActionName == "Format Picture")
 
-        sheet.keepAspectRatio.state = .off
+        sheet.keepAspectRatio = false
         sheet.setHeight(80)
         XCTAssertEqual(sheet.format.size, CGSize(width: 100, height: 80))
-        sheet.ok(nil)
+        sheet.ok()
         XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 100, height: 80))
         XCTAssertEqual(doc.undoManager?.undoActionName, "Format Picture")
 
@@ -145,28 +145,25 @@ final class PictureCommandTests: XCTestCase {
         let editor = doc.editor!
         editor.openPictureFormatter(at: 0)
         var sheet = try XCTUnwrap(editor.pictureFormatter)
-        sheet.rotateRight(nil)
+        sheet.rotate(by: 90)
         XCTAssertEqual(sheet.format.rotation, 90)
         XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 20, height: 40))
-        sheet.cancel(nil)
+        sheet.cancel()
         XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 40, height: 20))
 
         editor.pictureFormatter = nil
         editor.openPictureFormatter(at: 0)
         sheet = try XCTUnwrap(editor.pictureFormatter)
-        sheet.rotateLeft(nil)
-        sheet.brightnessField.stringValue = "25"
-        sheet.controlTextDidChange(
-            Notification(name: NSControl.textDidChangeNotification, object: sheet.brightnessField))
-        sheet.contrastSlider.doubleValue = -40
-        sheet.contrastSlider.sendAction(sheet.contrastSlider.action, to: sheet.contrastSlider.target)
-        sheet.opacitySlider.doubleValue = 60
-        sheet.opacitySlider.sendAction(sheet.opacitySlider.action, to: sheet.opacitySlider.target)
+        sheet.rotate(by: -90)
+        // What the brightness field, and the contrast and opacity sliders, set (a slider's value is rounded).
+        sheet.brightness = 25
+        sheet.contrast = -40.2
+        sheet.opacity = 60
         XCTAssertEqual(
             sheet.format,
             PictureFormat(
                 size: CGSize(width: 40, height: 20), rotation: 270, brightness: 0.25, contrast: -0.4, opacity: 0.6))
-        sheet.ok(nil)
+        sheet.ok()
 
         let (back, package) = try saved()
         XCTAssertEqual(package["word/media/image1.png"], png, "the image is stored as it was")
