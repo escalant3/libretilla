@@ -5,7 +5,7 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 ## Page and layout
 
-- [ ] 1. Margins have no editor. Page Setup only does paper size and orientation.
+- [x] 1. Margins have no editor. Page Setup only does paper size and orientation. *Done: File ▸ Margins….*
 - [ ] 2. No Paragraph… dialog for exact spacing and indent values.
 - [ ] 3. Multi-section documents use the last section's page setup everywhere.
 - [ ] 4. The space below the last line equals the top margin (TextKit's inset is symmetric).

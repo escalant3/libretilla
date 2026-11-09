@@ -25,12 +25,7 @@ final class PictureFormatSheet {
         self.format = format
         original = format
         self.naturalSize = naturalSize
-        self.unit =
-            switch unit {
-            case .points: (1, String(localized: "pt"), 0)
-            case .inches: (72, String(localized: "in"), 2)
-            case .centimeters: (72 / 2.54, String(localized: "cm"), 2)
-            }
+        self.unit = unit.display
     }
 
     /// Shows the sheet on `parent`; `onEnd` runs once it has gone.

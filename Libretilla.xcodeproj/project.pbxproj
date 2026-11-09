@@ -37,7 +37,9 @@
 		699366E53D34E1F445F0DF37 /* RulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCE3B8C9F8D34BE1FB1904D /* RulerTests.swift */; };
 		6DF2FA824B48D2552205EC8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D732D08D256C51C1D5415580 /* Assets.xcassets */; };
 		79B4E1E2359E3EF8A3382C16 /* PageSetupDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A664DC15DCA4D802E09737C /* PageSetupDocumentTests.swift */; };
+		7AACAB5CA70B42C68CE24855 /* EditorViewController+Margins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */; };
 		7D17AE28BC3BE7691FA29A14 /* PolishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B5D15043E73883EF1C49BA /* PolishTests.swift */; };
+		9152D6084F537D20DC9219AE /* MarginsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */; };
 		A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */; };
 		A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A3ADE5C01027AF83420172 /* PolishUITests.swift */; };
 		A32E9DA737A9F369A379DC2A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DDAC94F106BD02A44A365D23 /* Sparkle */; };
@@ -100,6 +102,7 @@
 		28401617AE95724FB376F7A1 /* NarrowWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarrowWindowTests.swift; sourceTree = "<group>"; };
 		2864D61A43B5853A47E7059D /* PictureCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureCommandTests.swift; sourceTree = "<group>"; };
 		2D43EDC8EDD5CFD4630962B6 /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
+		300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+Margins.swift"; sourceTree = "<group>"; };
 		3B36A9F4FFF5456BD8035B40 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		415E6BB5BB83F875C43B56BC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4A7396DA2CEF648E1376E074 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
@@ -118,6 +121,7 @@
 		9BD76665BBD77320FA1284F2 /* LibretillaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibretillaDocument.swift; sourceTree = "<group>"; };
 		A4DE1811376AD9A51C6C1BB4 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
 		A84872E8613509F547BA1D59 /* OriginalsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalsStore.swift; sourceTree = "<group>"; };
+		AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginsSheet.swift; sourceTree = "<group>"; };
 		BE7C25902D4AA65EA63A5397 /* HeaderFooterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderFooterSheet.swift; sourceTree = "<group>"; };
 		BF22DD48F1146F23726E92C3 /* LibretillaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibretillaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C265588B8F5CD56D46001C1F /* Libretilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Libretilla.entitlements; sourceTree = "<group>"; };
@@ -237,10 +241,12 @@
 				0E3D002A7D65B04D65D836E4 /* EditorViewController+HeaderFooter.swift */,
 				E64EDB73F09E8A0229A49B81 /* EditorViewController+Insert.swift */,
 				04946CA1A0392C64484121A1 /* EditorViewController+Links.swift */,
+				300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */,
 				14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */,
 				F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */,
 				BE7C25902D4AA65EA63A5397 /* HeaderFooterSheet.swift */,
 				F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */,
+				AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */,
 				0BA71DE3FCA81496A95F9048 /* PictureFormatSheet.swift */,
 				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
 				C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */,
@@ -444,6 +450,7 @@
 				E9AF36DE23E4AD6870A45925 /* EditorViewController+HeaderFooter.swift in Sources */,
 				BE3C0AD166CE1537E680A89A /* EditorViewController+Insert.swift in Sources */,
 				E70125F2083E8D106CF3D2EE /* EditorViewController+Links.swift in Sources */,
+				7AACAB5CA70B42C68CE24855 /* EditorViewController+Margins.swift in Sources */,
 				5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */,
 				550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */,
 				3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */,
@@ -453,6 +460,7 @@
 				230F799BD3376A6139500087 /* LibretillaTextView.swift in Sources */,
 				28BB6561353EA8ACC674E80E /* MainMenu.swift in Sources */,
 				A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */,
+				9152D6084F537D20DC9219AE /* MarginsSheet.swift in Sources */,
 				BAE248D0B824C8A7FBAE2768 /* OriginalsStore.swift in Sources */,
 				FBF74DB259EFB5992D7882C8 /* OutlineSidebar.swift in Sources */,
 				36F0CA9D57CA5AD5ED8CEDC3 /* PictureFormatSheet.swift in Sources */,

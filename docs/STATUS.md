@@ -193,7 +193,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 
 **Known limitations so far**
 
-- Margins have no editor yet (only Page Setup's paper and orientation); the ruler still sets paragraph indents.
+- ~~Margins have no editor yet~~ File ▸ Margins… edits them, in the ruler's units (backlog 1, 2026-11-09).
 - Multi-section documents use the last section's page setup throughout; each section keeps its own XML.
 - The space below the last line equals the top margin (TextKit's inset is symmetric).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.

@@ -131,6 +131,79 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertEqual(try saved(doc).body.pageSetup, setup)
     }
 
+    // MARK: Margins
+
+    func testMarginsSheetChangesMarginsUndoablyAndKeepsTheRestOfTheSection() throws {
+        let doc = try open("01-plain.docx")
+        let editor = try XCTUnwrap(doc.editor)
+        editor.editMargins(nil)
+        let sheet = try XCTUnwrap(editor.marginsEditor)
+        XCTAssertEqual(sheet.points(.left), 72)
+        sheet.set(.left, points: 108)
+        sheet.set(.top, points: 54)
+        sheet.ok()
+        XCTAssertEqual(doc.undoManager?.undoActionName, String(localized: "Margins"))
+        XCTAssertEqual(editor.textView.frame.width, 612 - 108 - 72, accuracy: 0.5)
+        XCTAssertEqual(editor.textView.textContainerInset.height, 54)
+        XCTAssertEqual(doc.printInfo.leftMargin, 108)
+
+        let saved = try saved(doc)
+        XCTAssertEqual(saved.body.pageSetup.left, 2160)
+        XCTAssertEqual(saved.body.pageSetup.top, 1080)
+        XCTAssertEqual(saved.body.pageSetup.width, PageSetup.letter.width, "paper unchanged")
+        XCTAssertEqual(saved.body.pageSetup.header, 720, "header distance kept")
+
+        doc.undoManager?.undo()
+        XCTAssertEqual(doc.pageSetup, .letter)
+    }
+
+    func testMarginsSheetShowsRulerUnitsAndKeepsSomeText() {
+        let sheet = MarginsSheet(setup: .letter, unit: .inches)
+        XCTAssertEqual(sheet.value(.left).wrappedValue, 1, accuracy: 0.001)
+        sheet.value(.left).wrappedValue = 1.5
+        XCTAssertEqual(sheet.setup.left, 2160)
+        // At least half an inch of text stays: 8.5″ − 1.5″ − 0.5″ = 6.5″ at most on the right.
+        XCTAssertEqual(sheet.range(.right).upperBound, 6.5, accuracy: 0.001)
+        sheet.value(.right).wrappedValue = 20
+        XCTAssertEqual(sheet.setup.right, 9360)
+
+        let cm = MarginsSheet(setup: .a4, unit: .centimeters)
+        XCTAssertEqual(cm.value(.top).wrappedValue, 2.5, accuracy: 0.01)
+        XCTAssertEqual(cm.value(.left).wrappedValue, 3, accuracy: 0.01)
+    }
+
+    func testMarginsSheetDefaultsFollowThePaper() {
+        var letter = PageSetup.letter
+        (letter.left, letter.top) = (100, 100)
+        let a = MarginsSheet(setup: letter)
+        a.useDefaults()
+        XCTAssertEqual(a.setup, .letter)
+
+        var landscape = PageSetup.a4
+        (landscape.width, landscape.height, landscape.isLandscape) = (16838, 11906, true)
+        let b = MarginsSheet(setup: landscape)
+        b.useDefaults()
+        XCTAssertEqual(b.setup.top, PageSetup.a4.left, "turned with the paper")
+        XCTAssertEqual(b.setup.left, PageSetup.a4.top)
+    }
+
+    func testCancellingTheMarginsSheetChangesNothing() throws {
+        let doc = try open("01-plain.docx")
+        let sheet = MarginsSheet(setup: doc.pageSetup)
+        var called = false
+        var result: PageSetup? = .a4
+        sheet.onDone = {
+            called = true
+            result = $0
+        }
+        sheet.set(.left, points: 200)
+        sheet.cancel()
+        XCTAssertTrue(called)
+        XCTAssertNil(result)
+        XCTAssertEqual(doc.pageSetup, .letter)
+        XCTAssertFalse(doc.isDocumentEdited)
+    }
+
     func testPDFUsesTheDocumentsPaperSize() throws {
         let a4 = try pdfPages(try open("07-header-footer.docx"))
         let a4Box = try XCTUnwrap(a4.page(at: 0)).bounds(for: .mediaBox)

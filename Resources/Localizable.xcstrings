@@ -2295,6 +2295,126 @@
           }
         }
       }
+    },
+    "Margins": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Márgenes"
+          }
+        }
+      }
+    },
+    "Margins…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Márgenes…"
+          }
+        }
+      }
+    },
+    "Top:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Superior:"
+          }
+        }
+      }
+    },
+    "Bottom:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inferior:"
+          }
+        }
+      }
+    },
+    "Left:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izquierdo:"
+          }
+        }
+      }
+    },
+    "Right:": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derecho:"
+          }
+        }
+      }
+    },
+    "Top margin": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen superior"
+          }
+        }
+      }
+    },
+    "Bottom margin": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen inferior"
+          }
+        }
+      }
+    },
+    "Left margin": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen izquierdo"
+          }
+        }
+      }
+    },
+    "Right margin": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margen derecho"
+          }
+        }
+      }
+    },
+    "Use Defaults": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar predeterminados"
+          }
+        }
+      }
+    },
+    "Word's standard margins for this paper": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los márgenes estándar de Word para este papel"
+          }
+        }
+      }
     }
   }
 }

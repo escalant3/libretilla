@@ -15,6 +15,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     var tableEditor: TableEditorSheet?
     var pictureFormatter: PictureFormatSheet?
     var headerFooterEditor: HeaderFooterSheet?
+    var marginsEditor: MarginsSheet?
 
     /// Off (the default): the paper fills the window, with the text column centred at the document's text
     /// width. On: a page with its edges on a gray canvas (View ▸ Show Page Edges).

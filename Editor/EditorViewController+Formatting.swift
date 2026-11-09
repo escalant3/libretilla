@@ -434,7 +434,9 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         guard let action = item.action else { return true }
         if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
         if action == #selector(formatPicture(_:)) { return pictureIndex(for: item) != nil && textView.isEditable }
-        if action == #selector(editHeaderAndFooter(_:)) { return textView.isEditable && document != nil }
+        if action == #selector(editHeaderAndFooter(_:)) || action == #selector(editMargins(_:)) {
+            return textView.isEditable && document != nil
+        }
         switch action {
         case #selector(zoomIn(_:)): return zoom < Self.zoomLevels.last! - 0.001
         case #selector(zoomOut(_:)): return zoom > Self.zoomLevels.first! + 0.001

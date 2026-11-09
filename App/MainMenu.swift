@@ -94,6 +94,7 @@ enum MainMenu {
         menu.addItem(item(String(localized: "Export as PDF…"), #selector(LibretillaDocument.exportPDF(_:))))
         menu.addItem(
             item(String(localized: "Page Setup…"), #selector(NSDocument.runPageLayout(_:)), "p", [.command, .shift]))
+        menu.addItem(item(String(localized: "Margins…"), #selector(EditorViewController.editMargins(_:))))
         menu.addItem(item(String(localized: "Print…"), #selector(NSDocument.printDocument(_:)), "p"))
         return menu
     }
