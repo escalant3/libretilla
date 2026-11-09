@@ -23,6 +23,19 @@ final class LibretillaTextView: NSTextView {
     /// Called when the view's appearance changes (Dark Mode on or off).
     var onEffectiveAppearanceChange: (() -> Void)?
 
+    /// The page's top margin: the space above the first line. The inset (TextKit's, the same above and below)
+    /// is the average of the top and bottom margins, and the text starts this far down, so the space below the
+    /// last line is the bottom margin. Nil uses the inset above too.
+    var topMargin: CGFloat? {
+        didSet { needsDisplay = true }
+    }
+
+    override var textContainerOrigin: NSPoint {
+        var origin = super.textContainerOrigin
+        if let topMargin { origin.y = topMargin }
+        return origin
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         onEffectiveAppearanceChange?()

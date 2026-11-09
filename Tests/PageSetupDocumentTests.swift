@@ -54,12 +54,47 @@ final class PageSetupDocumentTests: XCTestCase {
         let editor = try XCTUnwrap(a4.editor)
         XCTAssertEqual(editor.pageSetup.width, 11906)
         XCTAssertEqual(editor.textView.frame.width, a4.pageSetup.textWidth, accuracy: 0.5)
-        XCTAssertEqual(editor.textView.textContainerInset.height, 72)
+        XCTAssertEqual(editor.textView.textContainerOrigin.y, 72)
         XCTAssertFalse(a4.isDocumentEdited, "opening never marks a document edited")
         XCTAssertEqual(a4.printInfo.paperSize.width, 595.3, accuracy: 1)
 
         let letter = try open("01-plain.docx")
         XCTAssertEqual(try XCTUnwrap(letter.editor).textView.frame.width, 468)
+    }
+
+    func testTopAndBottomMarginsAreAboveTheFirstLineAndBelowTheLast() throws {
+        let doc = try open("01-plain.docx")
+        var setup = doc.pageSetup
+        (setup.top, setup.bottom) = (720, 2880)  // ½″ above, 2″ below
+        doc.setPageSetup(setup)
+        let tv = try XCTUnwrap(doc.editor?.textView)
+        XCTAssertEqual(tv.textContainerOrigin.y, 36)
+        XCTAssertEqual(tv.textContainerInset.height * 2, 36 + 144, "TextKit sizes the view by twice the inset")
+
+        // A text view laid out the same way: the first line starts at the top margin, and the view ends the
+        // bottom margin below the last line.
+        let view = LibretillaTextView(usingTextLayoutManager: true)
+        view.frame = NSRect(x: 0, y: 0, width: 400, height: 100)
+        view.isVerticallyResizable = true
+        view.textContainer?.widthTracksTextView = true
+        view.textContainer?.lineFragmentPadding = 0
+        view.string = String(repeating: "Some text to fill a few lines. ", count: 40)
+        view.textContainerInset = tv.textContainerInset
+        view.topMargin = 36
+        let layout = try XCTUnwrap(view.textLayoutManager)
+        layout.ensureLayout(for: layout.documentRange)
+        view.sizeToFit()
+        var last: CGRect = .zero
+        var first: CGRect?
+        layout.enumerateTextLayoutFragments(from: layout.documentRange.location, options: .ensuresLayout) { f in
+            first = first ?? f.layoutFragmentFrame
+            last = f.layoutFragmentFrame
+            return true
+        }
+        XCTAssertEqual(try XCTUnwrap(first).minY + view.textContainerOrigin.y, 36, accuracy: 0.5)
+        XCTAssertEqual(view.frame.height - (last.maxY + view.textContainerOrigin.y), 144, accuracy: 1)
+        // Clicks map to the text where it's drawn.
+        XCTAssertEqual(view.characterIndexForInsertion(at: NSPoint(x: 0.5, y: 38)), 0)
     }
 
     func testNewDocumentsAreA4InCharter() throws {
@@ -144,7 +179,7 @@ final class PageSetupDocumentTests: XCTestCase {
         sheet.ok()
         XCTAssertEqual(doc.undoManager?.undoActionName, String(localized: "Margins"))
         XCTAssertEqual(editor.textView.frame.width, 612 - 108 - 72, accuracy: 0.5)
-        XCTAssertEqual(editor.textView.textContainerInset.height, 54)
+        XCTAssertEqual(editor.textView.textContainerOrigin.y, 54)
         XCTAssertEqual(doc.printInfo.leftMargin, 108)
 
         let saved = try saved(doc)

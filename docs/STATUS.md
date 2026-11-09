@@ -197,7 +197,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - ~~Multi-section documents use the last section's page setup throughout~~ Print and PDF lay out each section on
   its own paper and margins, with next-page, continuous, odd- and even-page starts; page numbers run across them
   (backlog 3, 2026-11-09). The editor shows, and Page Setup and Margins edit, the final section's.
-- The space below the last line equals the top margin (TextKit's inset is symmetric).
+- ~~The space below the last line equals the top margin~~ It's the bottom margin now (backlog 4, 2026-11-09).
 - Placeholder chips (footnote, comment, text box, equation) print into PDFs as they look in the editor.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
 - Pictures are formatted from a sheet, not by dragging handles. Copying a picture within Libretilla saves the copy

@@ -10,7 +10,8 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 3. Multi-section documents use the last section's page setup everywhere. *Done for print and PDF: each
       section has its own paper, orientation and margins. The editor still shows, and Page Setup and Margins still
       edit, the final section's.*
-- [ ] 4. The space below the last line equals the top margin (TextKit's inset is symmetric).
+- [x] 4. The space below the last line equals the top margin (TextKit's inset is symmetric). *Done: it's the
+      bottom margin.*
 - [ ] 5. Superscript and subscript display at full size.
 - [ ] 6. Lists with unusual indents look approximate (TextKit 2 gap G4). They save exactly.
 

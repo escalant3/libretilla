@@ -246,8 +246,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     // MARK: Page
 
     /// Lays the page out for `setup`: the text view is the text column, the canvas draws the page around
-    /// it. The top margin is the inset above the text (TextKit's inset is symmetric, so the space below the
-    /// last line is the top margin too; continuous scroll has no page bottoms anyway).
+    /// it. The top margin is the space above the first line and the bottom margin the space below the last
+    /// (`LibretillaTextView.topMargin`); continuous scroll has no page bottoms in between.
     func apply(_ setup: PageSetup) {
         loadViewIfNeeded()
         pageSetup = setup
@@ -256,7 +256,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         canvas.pageWidth = setup.pageSize.width
         canvas.leftMargin = margins.left
         canvas.columnWidth = column
-        textView.textContainerInset = NSSize(width: 0, height: margins.top)
+        textView.textContainerInset = NSSize(width: 0, height: (margins.top + margins.bottom) / 2)
+        textView.topMargin = margins.top
         // The canvas sets the width: the document's text width, or narrower when the window is (it rewraps).
         textView.minSize = NSSize(width: PageCanvasView.minimumColumn, height: setup.pageSize.height)
         textView.maxSize = NSSize(width: column, height: .greatestFiniteMagnitude)
