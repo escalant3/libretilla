@@ -460,6 +460,11 @@ extension AttributedStringBridge {
     ) -> RunFormat? {
         let expected = displayAttributes(for: format, paragraphStyle: styleId)
         var changes: [RunChange] = []
+        func int(_ key: NSAttributedString.Key, _ a: [NSAttributedString.Key: Any]) -> Int {
+            (a[key] as? Int) ?? (a[key] as? NSNumber)?.intValue ?? 0
+        }
+        let shownScript = int(.superscript, attrs).signum()
+        let expectedScript = int(.superscript, expected).signum()
 
         if let shown = attrs[.font] as? NSFont, let want = expected[.font] as? NSFont, shown != want {
             let manager = NSFontManager.shared
@@ -469,7 +474,13 @@ extension AttributedStringBridge {
             let substituted =
                 text.map { !want.coveredCharacterSet.isSuperset(of: CharacterSet(charactersIn: $0)) } ?? false
             if shownFamily != wantFamily, !substituted { changes.append(.font(shownFamily)) }
-            if abs(shown.pointSize - want.pointSize) > 0.01 { changes.append(.size(Double(shown.pointSize))) }
+            // Superscript and subscript are drawn smaller: a shown size that is the run's own, scaled for the script
+            // the text shows (pasted text, or a script AppKit just turned on or off), isn't a size change.
+            let size = want.pointSize / (expectedScript != 0 ? Self.scriptScale : 1)
+            let scaled = size * (shownScript != 0 ? Self.scriptScale : 1)
+            if abs(shown.pointSize - want.pointSize) > 0.01, abs(shown.pointSize - scaled) > 0.01 {
+                changes.append(.size(Double(shown.pointSize)))
+            }
             let shownTraits = manager.traits(of: shown)
             let wantTraits = manager.traits(of: want)
             if shownTraits.contains(.boldFontMask) != wantTraits.contains(.boldFontMask) {
@@ -479,17 +490,13 @@ extension AttributedStringBridge {
                 changes.append(.italic(shownTraits.contains(.italicFontMask)))
             }
         }
-        func int(_ key: NSAttributedString.Key, _ a: [NSAttributedString.Key: Any]) -> Int {
-            (a[key] as? Int) ?? (a[key] as? NSNumber)?.intValue ?? 0
-        }
         if (int(.underlineStyle, attrs) != 0) != (int(.underlineStyle, expected) != 0) {
             changes.append(.underline(int(.underlineStyle, attrs) != 0))
         }
         if (int(.strikethroughStyle, attrs) != 0) != (int(.strikethroughStyle, expected) != 0) {
             changes.append(.strike(int(.strikethroughStyle, attrs) != 0))
         }
-        let shownScript = int(.superscript, attrs).signum()
-        if shownScript != int(.superscript, expected).signum() {
+        if shownScript != expectedScript {
             changes.append(.verticalAlignment(shownScript > 0 ? "superscript" : shownScript < 0 ? "subscript" : nil))
         }
         let shownColor = attrs[.foregroundColor] as? NSColor

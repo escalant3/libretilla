@@ -447,6 +447,8 @@ public struct AttributedStringBridge: Sendable {
 extension AttributedStringBridge {
     /// Word's default when a document specifies no size.
     static let defaultFontSize: CGFloat = 10
+    /// Superscript and subscript text is drawn at this fraction of its size, about what Word does.
+    public static let scriptScale: CGFloat = 2 / 3
 
     func characterAttributes(_ run: RunProperties) -> [NSAttributedString.Key: Any] {
         var attrs: [NSAttributedString.Key: Any] = [:]
@@ -469,6 +471,10 @@ extension AttributedStringBridge {
         case "superscript": attrs[.superscript] = 1
         case "subscript": attrs[.superscript] = -1
         default: break
+        }
+        if attrs[.superscript] != nil {
+            // Smaller, as Word draws them (TextKit only raises or lowers the text).
+            attrs[.font] = NSFont(descriptor: font.fontDescriptor, size: size * Self.scriptScale) ?? font
         }
         if let h = run.highlight, let color = Self.highlightColors[h] { attrs[.backgroundColor] = color }
         return attrs

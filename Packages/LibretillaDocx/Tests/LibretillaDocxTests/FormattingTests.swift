@@ -360,6 +360,44 @@ import Testing
                 == xml(try paragraph(containing: "plain paragraph", in: l.doc)))
     }
 
+    @Test func superscriptAndSubscriptAreDrawnSmallerButKeepTheirSize() throws {
+        let l = try load("01-plain.docx")
+        let r = try range(of: "plain", in: l.text)
+        let full = try #require(l.text.attribute(.font, at: r.location, effectiveRange: nil) as? NSFont).pointSize
+        l.bridge.apply(.verticalAlignment("superscript"), to: l.text, range: r)
+        let shown = try #require(l.text.attribute(.font, at: r.location, effectiveRange: nil) as? NSFont)
+        #expect(abs(shown.pointSize - full * 2 / 3) < 0.01)
+        #expect(l.text.attribute(.superscript, at: r.location, effectiveRange: nil) as? Int == 1)
+        // The format bar shows the run's size, not the drawn one.
+        let format = l.bridge.selectionFormat(l.text, range: r, typingAttributes: [:])
+        #expect(format.fontSize == Double(full))
+        // Redrawn text reconciles to itself: no size is written.
+        #expect(!l.bridge.reconcile(l.text, range: r))
+        var (back, _) = try save(l)
+        var run = try #require(
+            paragraphs(back).flatMap(\.inlines).compactMap { if case .run(let r) = $0 { r } else { nil } }
+                .first { $0.text == "plain" })
+        #expect(run.properties.size == nil && run.properties.verticalAlignment == "superscript")
+
+        // AppKit's Font ▸ Baseline ▸ Use Default removes the script but leaves the smaller font: back to full size.
+        l.text.removeAttribute(.superscript, range: r)
+        #expect(l.bridge.reconcile(l.text, range: r))
+        (back, _) = try save(l)
+        run = try #require(
+            paragraphs(back).flatMap(\.inlines).compactMap { if case .run(let r) = $0 { r } else { nil } }
+                .first { $0.text.contains("plain") }, "merged back into its neighbours")
+        #expect(run.properties.size == nil && run.properties.verticalAlignment == nil)
+
+        // Pasted subscript text, drawn small: a subscript of the paragraph's size.
+        let at = try range(of: "This is a plain paragraph", in: l.text).location
+        let font = try #require(NSFont(name: "Courier", size: 8))
+        l.text.insert(NSAttributedString(string: "2", attributes: [.font: font, .superscript: -1]), at: at)
+        l.bridge.reconcile(l.text, range: NSRange(location: at, length: 1))
+        let pasted = try #require(l.text.attribute(.libretillaRun, at: at, effectiveRange: nil) as? RunFormat)
+        #expect(pasted.properties.verticalAlignment == "subscript")
+        #expect(pasted.properties.size == 8, "a size that isn't the run's own scaled is a size")
+    }
+
     @Test func substitutedFontsForEmojiAreNotWritten() throws {
         let l = try load("01-plain.docx")
         let at = try range(of: "plain paragraph", in: l.text).location

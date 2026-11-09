@@ -24,7 +24,8 @@ changed: re-check the gap, update its status, and remove any workaround that's n
   round trip through the ruler and the bridge (M2, `FormattingTests`).
 - `NSTextList` markers are drawn by TK2 outside the text (`NSTextList.includesTextListMarkers` is false). Literal
   marker formats such as `2.3.` or `◦` show as given (M2). See G4.
-- `.superscript` is honoured by TK2 (raised, full size, as in TextEdit).
+- `.superscript` is honoured by TK2 (raised, full size, as in TextEdit). The bridge draws super- and subscript
+  text at ⅔ size itself (`AttributedStringBridge.scriptScale`).
 - Marked text (dead keys, input methods) doesn't leave formatting behind (`testDeadKeysAndInputMethodsDoNotLeaveFormatting`).
 - Find and Replace through the find bar (`testFindAndReplaceAll`).
 - Rendering attributes (`NSTextLayoutManager.renderingAttributesValidator`) recolour text for display without

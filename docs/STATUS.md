@@ -131,7 +131,7 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 - Text inside links, fields and content controls can't be reformatted yet; formatting commands skip it (M3).
 - Copy and paste inside Libretilla goes through RTF, so pasted runs get formats derived from their look. Links
   and other objects paste as plain text.
-- Superscript and subscript display at full size (TextKit 2 default), not reduced as in Word.
+- ~~Superscript and subscript display at full size~~ They're drawn at ⅔ size, as in Word (backlog 5, 2026-11-09).
 - Text colours are written as chosen. (Since M4, a dark page draws dark colours lighter, for display only.)
 - ~~No Paragraph… dialog yet~~ Format ▸ Paragraph… (⌥⌘M) sets alignment, indents (first line, hanging), spacing
   and line spacing (multiple, at least, exactly) exactly (backlog 2, 2026-11-09).

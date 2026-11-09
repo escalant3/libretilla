@@ -12,7 +12,7 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       edit, the final section's.*
 - [x] 4. The space below the last line equals the top margin (TextKit's inset is symmetric). *Done: it's the
       bottom margin.*
-- [ ] 5. Superscript and subscript display at full size.
+- [x] 5. Superscript and subscript display at full size. *Done: drawn at ⅔ size, as in Word.*
 - [ ] 6. Lists with unusual indents look approximate (TextKit 2 gap G4). They save exactly.
 
 ## Headers and footers
