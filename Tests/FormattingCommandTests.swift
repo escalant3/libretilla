@@ -111,13 +111,8 @@ final class FormattingCommandTests: XCTestCase {
     func testFontAndSizeFromTheFormatBar() throws {
         try open("01-plain.docx")
         try select("plain paragraph")
-        let family = NSPopUpButton()
-        family.addItem(withTitle: "Helvetica")
-        family.lastItem?.representedObject = "Helvetica"
-        editor.applyFontFamily(family)
-        let size = NSComboBox()
-        size.stringValue = "15"
-        editor.applyFontSize(size)
+        editor.applyFontFamily("Helvetica")
+        editor.applyFontSize("15")
         XCTAssertEqual(editor.currentFormat.fontFamily, "Helvetica")
         XCTAssertEqual(editor.currentFormat.fontSize, 15)
         let run = try XCTUnwrap(

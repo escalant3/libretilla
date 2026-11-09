@@ -52,14 +52,14 @@ extension PageSetupDocumentTests {
     // MARK: The Header and Footer sheet
 
     /// Opens Format ▸ Header and Footer… on `doc`.
-    func openHeaderFooterSheet(_ doc: LibretillaDocument) throws -> HeaderFooterController {
+    func openHeaderFooterSheet(_ doc: LibretillaDocument) throws -> HeaderFooterSheet {
         let editor = try XCTUnwrap(doc.editor)
         editor.editHeaderAndFooter(nil)
         return try XCTUnwrap(editor.headerFooterEditor)
     }
 
     /// Types `text` at the end of the sheet's header or footer.
-    func type(_ text: String, in kind: HeadersFooters.Kind, _ sheet: HeaderFooterController) throws {
+    func type(_ text: String, in kind: HeadersFooters.Kind, _ sheet: HeaderFooterSheet) throws {
         let tv = try XCTUnwrap(sheet.textViews[kind])
         sheet.window?.makeFirstResponder(tv)
         let end = max(0, tv.string.count - 1)
@@ -79,10 +79,10 @@ extension PageSetupDocumentTests {
 
         let sheet = try openHeaderFooterSheet(doc)
         try type("Page ", in: .footer, sheet)
-        sheet.insertPageNumber(nil)
+        sheet.insert(.page)
         try type(" of ", in: .footer, sheet)
-        sheet.insertPageCount(nil)
-        sheet.done(nil)
+        sheet.insert(.pageCount)
+        sheet.done()
 
         let pdf = try pdfPages(doc)
         XCTAssertEqual(pdf.pageCount, 3)
@@ -106,15 +106,13 @@ extension PageSetupDocumentTests {
     func testSheetAddsAFirstPageHeader() throws {
         let doc = try open("07-header-footer.docx")
         let sheet = try openHeaderFooterSheet(doc)
-        XCTAssertTrue(sheet.pages.isHidden)
-        sheet.differentFirstPage.performClick(nil)
-        XCTAssertFalse(sheet.pages.isHidden)
-        sheet.pages.selectedSegment = 0
-        sheet.choosePages(nil)
+        XCTAssertFalse(sheet.differentFirstPage)
+        sheet.differentFirstPage = true
+        sheet.choose(.first)
         XCTAssertEqual(sheet.slot, .first)
         XCTAssertEqual(sheet.textViews[.header]?.string, "\n", "a new, empty first-page header")
         try type("Cover", in: .header, sheet)
-        sheet.done(nil)
+        sheet.done()
 
         let pdf = try pdfPages(doc)
         XCTAssertTrue(pageText(pdf, 0).contains("Cover"))
@@ -132,7 +130,7 @@ extension PageSetupDocumentTests {
         let doc = try open("14-headers-footers.docx")
         let sheet = try openHeaderFooterSheet(doc)
         XCTAssertEqual(sheet.slot, .default)
-        XCTAssertEqual(sheet.differentFirstPage.state, .on)
+        XCTAssertTrue(sheet.differentFirstPage)
         let footer = try XCTUnwrap(sheet.textViews[.footer]?.textStorage)
         var chips = 0
         footer.enumerateAttribute(.attachment, in: NSRange(location: 0, length: footer.length)) { v, _, _ in
@@ -142,7 +140,7 @@ extension PageSetupDocumentTests {
         XCTAssertEqual(sheet.textViews[.header]?.string, "Odd page header\n")
 
         try type(" edited", in: .header, sheet)
-        sheet.cancel(nil)
+        sheet.cancel()
         XCTAssertFalse(doc.isDocumentEdited)
         XCTAssertEqual(doc.headersFooters.stories[.init(.header, .default)]?.body.plainText, "Odd page header")
     }
@@ -152,7 +150,7 @@ extension PageSetupDocumentTests {
         let before = try OOXMLCodec().read(try Data(contentsOf: try XCTUnwrap(doc.fileURL)))
         let sheet = try openHeaderFooterSheet(doc)
         try type(" (edited)", in: .header, sheet)
-        sheet.done(nil)
+        sheet.done()
         let saved = try saved(doc)
         XCTAssertEqual(
             saved.headersFooters.stories[.init(.header, .default)]?.body.plainText, "Odd page header (edited)")

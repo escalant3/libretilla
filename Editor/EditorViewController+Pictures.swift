@@ -89,7 +89,7 @@ extension EditorViewController {
         else { return NSSound.beep() }
         textView.setSelectedRange(picture.range)
         let original = storage.attribute(.attachment, at: index, effectiveRange: nil)
-        let formatter = PictureFormatController(format: picture.format, naturalSize: picture.naturalSize)
+        let formatter = PictureFormatSheet(format: picture.format, naturalSize: picture.naturalSize)
         formatter.onChange = { [weak self] format in
             self?.previewPicture(picture, format: format)
         }
@@ -100,7 +100,7 @@ extension EditorViewController {
             if let format { self.applyPicture(picture, format: format) }
         }
         pictureFormatter = formatter
-        window.beginSheet(formatter.window!) { [weak self] _ in
+        formatter.present(on: window) { [weak self] in
             self?.pictureFormatter = nil
             self.map { $0.view.window?.makeFirstResponder($0.textView) }
         }

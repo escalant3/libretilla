@@ -1,10 +1,11 @@
 import AppKit
+import SwiftUI
 
 final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMenuItemValidation {
     private let editor = EditorViewController()
     private let status = SaveStatusViewController()
     private let formatBar = FormatBarViewController()
-    private let outline = OutlineViewController()
+    private let outline = OutlineModel()
     private let split = NSSplitViewController()
     private var outlineItem: NSSplitViewItem!
     private var outlineShown = false
@@ -30,7 +31,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         window.titlebarSeparatorStyle = .automatic
         window.toolbarStyle = .unified
         // The outline is a sidebar beside the editor (View ▸ Show Outline ⌃⌘S), hidden by default.
-        let outlineItem = NSSplitViewItem(sidebarWithViewController: outline)
+        let sidebar = NSHostingController(rootView: OutlineSidebar(model: outline))
+        sidebar.sizingOptions = []
+        sidebar.view.setAccessibilityLabel(String(localized: "Outline"))
+        let outlineItem = NSSplitViewItem(sidebarWithViewController: sidebar)
         outlineItem.minimumThickness = 180
         outlineItem.maximumThickness = 360
         outlineItem.canCollapse = true

@@ -235,15 +235,21 @@ enum MainMenu {
             item(String(localized: "Automatic Text Color"), #selector(EditorViewController.applyAutomaticTextColor(_:)))
         )
         let highlight = NSMenu(title: String(localized: "Highlight"))
-        highlight.addItem(item(String(localized: "No Highlight"), #selector(EditorViewController.applyHighlight(_:))))
+        for i in highlightItems() { highlight.addItem(i) }
+        menu.addItem(submenuItem(highlight))
+        return menu
+    }
+
+    /// No Highlight, then Word's highlight colours with swatches (Format ▸ Font ▸ Highlight, the format bar).
+    static func highlightItems() -> [NSMenuItem] {
+        var items = [item(String(localized: "No Highlight"), #selector(EditorViewController.applyHighlight(_:)))]
         for (name, title) in FormatBarViewController.highlights {
             let i = item(title, #selector(EditorViewController.applyHighlight(_:)))
             i.representedObject = name
             i.image = FormatBarViewController.swatch(AttributedStringBridge.highlightColor(name))
-            highlight.addItem(i)
+            items.append(i)
         }
-        menu.addItem(submenuItem(highlight))
-        return menu
+        return items
     }
 
     static func textMenu() -> NSMenu {
@@ -272,7 +278,7 @@ enum MainMenu {
     /// Line spacing presets and paragraph spacing toggles (Format ▸ Text ▸ Spacing and the format bar).
     static func spacingItems() -> [NSMenuItem] {
         var items: [NSMenuItem] = []
-        for (title, value) in [("1", 1.0), ("1.15", 1.15), ("1.5", 1.5), ("2", 2.0)] {
+        for (title, value) in EditorViewController.lineSpacings {
             let i = item(
                 String(localized: "Line Spacing \(title)"), #selector(EditorViewController.applyLineSpacing(_:)))
             i.representedObject = value

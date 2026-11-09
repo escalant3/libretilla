@@ -23,20 +23,23 @@ final class PolishUITests: LibretillaUITestCase {
         let window = try open(file)
         let body = window.textViews["Document body"]
         body.click()
-        let outline = window.tables["outline"]
+        let outline = window.outlines["outline"]
         XCTAssertFalse(outline.exists && outline.isHittable, "the outline is hidden by default")
 
         body.typeKey("s", modifierFlags: [.command, .control])
         XCTAssertTrue(outline.waitForExistence(timeout: 5), "⌃⌘S shows the outline")
-        XCTAssertTrue(waitUntil(5) { outline.tableRows.count > 3 }, "headings are listed")
+        XCTAssertTrue(waitUntil(5) { outline.outlineRows.count > 3 }, "headings are listed")
         shoot(window, "1-outline")
 
-        // Clicking the last heading moves the caret there; typing goes into it.
-        let last = outline.tableRows.element(boundBy: outline.tableRows.count - 1)
-        last.click()
+        // Clicking a heading far down moves the caret there; typing goes into it.
+        // The last one on screen: the list makes rows below the window as they scroll into view.
+        let rows = outline.outlineRows.allElementsBoundByIndex
+        let last = try XCTUnwrap(rows.last { $0.buttons.firstMatch.isHittable })
+        // The row's heading is a button (SwiftUI's list doesn't report its rows as hittable).
+        last.buttons.firstMatch.click()
         body.typeText("Zz")
         XCTAssertTrue(
-            waitUntil(5) { (last.staticTexts.firstMatch.value as? String)?.hasPrefix("Zz") == true },
+            waitUntil(5) { last.buttons.firstMatch.label.hasPrefix("Zz") },
             "typing went into the heading the outline jumped to")
         shoot(window, "2-outline-jumped")
 
@@ -72,7 +75,7 @@ final class PolishUITests: LibretillaUITestCase {
         let window = try open(file)
         window.textViews["Document body"].click()
         window.typeKey("s", modifierFlags: [.command, .control])
-        XCTAssertTrue(window.tables["outline"].waitForExistence(timeout: 5))
+        XCTAssertTrue(window.outlines["outline"].waitForExistence(timeout: 5))
         shoot(window, "1-dark-page")
         window.textViews["Document body"].click()
         window.typeKey(",", modifierFlags: .command)
@@ -101,7 +104,7 @@ final class PolishUITests: LibretillaUITestCase {
         let window = try open(file)
         window.textViews["Document body"].click()
         window.typeKey("s", modifierFlags: [.command, .control])
-        XCTAssertTrue(window.tables["outline"].waitForExistence(timeout: 5))
+        XCTAssertTrue(window.outlines["outline"].waitForExistence(timeout: 5))
         let body = window.textViews["Document body"].frame
         // On GitHub's runners the contrast audit flags plainly readable labels: Settings' "Page in Dark Mode" and
         // "Show format bar", the title bar's "Saved". Its own crops of them show black text on white or light

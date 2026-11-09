@@ -1,5 +1,6 @@
 import AppKit
 import LibretillaDocx
+import SwiftUI
 
 /// The formatting bar under the toolbar (bootstrap §6), Office 97 style, built from standard
 /// controls: Zoom · Style · Font · Size · B I U S · Text colour · Highlight · Alignment · Lists ·
@@ -9,38 +10,22 @@ import LibretillaDocx
 /// as menus (the Format menu's own items), so a thin window works as a note-taking strip.
 final class FormatBarViewController: NSTitlebarAccessoryViewController {
     /// The bar's groups, left to right; the rightmost go into the overflow menu first.
-    enum Group: CaseIterable {
+    enum Group: CaseIterable, Hashable {
         case zoom, style, font, character, color, alignment, lists, spacing
     }
-    /// Receives the commands (the editor). Set before the bar is shown.
-    weak var target: AnyObject? {
-        didSet { if isViewLoaded { retarget() } }
+
+    /// Receives the commands. Set before the bar is shown.
+    weak var target: EditorViewController? {
+        didSet { model.editor = target }
     }
-
-    private let zoomPopup = NSPopUpButton(frame: .zero, pullsDown: false)
-    private let stylePopup = NSPopUpButton(frame: .zero, pullsDown: false)
-    private let fontPopup = NSPopUpButton(frame: .zero, pullsDown: false)
-    private let sizeBox = NSComboBox()
-    private let traits = NSSegmentedControl()
-    private let colorWell = NSColorWell(style: .minimal)
-    private let highlight = NSPopUpButton(frame: .zero, pullsDown: true)
-    private let alignment = NSSegmentedControl()
-    private let lists = NSSegmentedControl()
-    private let indent = NSSegmentedControl()
-    private let spacing = NSPopUpButton(frame: .zero, pullsDown: true)
-
-    private var styleSignature = ""
-    private var installedFamilies = Set<String>()
-
-    private var groupViews: [(group: Group, view: NSView)] = []
-    /// Each group's width when shown (measured once, all groups visible).
-    private var groupWidths: [CGFloat] = []
-    private let overflow = NSPopUpButton(frame: .zero, pullsDown: true)
-    private let stackSpacing: CGFloat = 6
-    private let sideInsets: CGFloat = 20
-    private var fitScheduled = false
+    let model = FormatBarModel()
     /// The groups currently in the overflow menu.
-    private(set) var hiddenGroups: [Group] = []
+    var hiddenGroups: [Group] { model.hiddenGroups }
+    /// Each group's width when shown (measured once).
+    private var groupWidths: [CGFloat] = []
+    private var fitScheduled = false
+    static let spacing: CGFloat = 6
+    static let sideInset: CGFloat = 10
 
     override init(nibName: NSNib.Name?, bundle: Bundle?) {
         super.init(nibName: nil, bundle: nil)
@@ -50,164 +35,15 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
-    // MARK: Building
-
     override func loadView() {
-        zoomPopup.addItem(withTitle: String(localized: "Fit"))
-        zoomPopup.lastItem?.representedObject = EditorViewController.fitZoomItem
-        zoomPopup.menu?.addItem(.separator())
-        for level in EditorViewController.zoomLevels {
-            zoomPopup.addItem(withTitle: Self.zoomText(level))
-            zoomPopup.lastItem?.representedObject = level
-        }
-        zoomPopup.setAccessibilityLabel(String(localized: "Zoom"))
-        zoomPopup.toolTip = String(localized: "Zoom")
-        zoomPopup.action = #selector(EditorViewController.applyZoom(_:))
-        zoomPopup.widthAnchor.constraint(equalToConstant: 68).isActive = true
-
-        stylePopup.setAccessibilityLabel(String(localized: "Paragraph style"))
-        stylePopup.toolTip = String(localized: "Paragraph style")
-        stylePopup.action = #selector(EditorViewController.applyParagraphStyle(_:))
-        stylePopup.widthAnchor.constraint(equalToConstant: 130).isActive = true
-
-        let families = NSFontManager.shared.availableFontFamilies.sorted {
-            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
-        }
-        installedFamilies = Set(families)
-        for family in families where !family.hasPrefix(".") {
-            fontPopup.addItem(withTitle: family)
-            fontPopup.lastItem?.representedObject = family
-        }
-        fontPopup.setAccessibilityLabel(String(localized: "Font"))
-        fontPopup.toolTip = String(localized: "Font")
-        fontPopup.action = #selector(EditorViewController.applyFontFamily(_:))
-        fontPopup.widthAnchor.constraint(equalToConstant: 150).isActive = true
-
-        sizeBox.addItems(withObjectValues: EditorViewController.standardSizes.map { Self.sizeText($0) })
-        sizeBox.numberOfVisibleItems = 16
-        sizeBox.completes = false
-        sizeBox.setAccessibilityLabel(String(localized: "Font size"))
-        sizeBox.toolTip = String(localized: "Font size")
-        sizeBox.action = #selector(EditorViewController.applyFontSize(_:))
-        sizeBox.widthAnchor.constraint(equalToConstant: 58).isActive = true
-
-        configure(
-            traits, label: String(localized: "Character style"), mode: .selectAny,
-            action: #selector(EditorViewController.formatBarToggleTrait(_:)),
-            segments: [
-                ("bold", String(localized: "Bold")), ("italic", String(localized: "Italic")),
-                ("underline", String(localized: "Underline")), ("strikethrough", String(localized: "Strikethrough")),
-            ])
-
-        colorWell.setAccessibilityLabel(String(localized: "Text color"))
-        colorWell.toolTip = String(localized: "Text color")
-        colorWell.action = #selector(EditorViewController.applyTextColor(_:))
-        colorWell.color = .textColor
-
-        highlight.isBordered = true
-        highlight.setAccessibilityLabel(String(localized: "Highlight"))
-        highlight.toolTip = String(localized: "Highlight")
-        highlight.addItem(withTitle: "")
-        highlight.lastItem?.image = NSImage(
-            systemSymbolName: "highlighter", accessibilityDescription: String(localized: "Highlight"))
-        highlight.addItem(withTitle: String(localized: "No Highlight"))
-        highlight.lastItem?.action = #selector(EditorViewController.applyHighlight(_:))
-        for (name, title) in Self.highlights {
-            highlight.addItem(withTitle: title)
-            let item = highlight.lastItem!
-            item.representedObject = name
-            item.action = #selector(EditorViewController.applyHighlight(_:))
-            item.image = Self.swatch(AttributedStringBridge.highlightColor(name))
-        }
-
-        configure(
-            alignment, label: String(localized: "Alignment"), mode: .selectOne,
-            action: #selector(EditorViewController.applyAlignment(_:)),
-            segments: [
-                ("text.alignleft", String(localized: "Align Left")),
-                ("text.aligncenter", String(localized: "Center")),
-                ("text.alignright", String(localized: "Align Right")),
-                ("text.justify", String(localized: "Justify")),
-            ])
-        configure(
-            lists, label: String(localized: "Lists"), mode: .selectAny,
-            action: #selector(EditorViewController.formatBarToggleList(_:)),
-            segments: [
-                ("list.bullet", String(localized: "Bulleted List")),
-                ("list.number", String(localized: "Numbered List")),
-            ])
-        configure(
-            indent, label: String(localized: "Indent"), mode: .momentary,
-            action: #selector(EditorViewController.formatBarIndent(_:)),
-            segments: [
-                ("decrease.indent", String(localized: "Decrease Indent")),
-                ("increase.indent", String(localized: "Increase Indent")),
-            ])
-
-        spacing.isBordered = true
-        spacing.setAccessibilityLabel(String(localized: "Line and paragraph spacing"))
-        spacing.toolTip = String(localized: "Line and paragraph spacing")
-        spacing.addItem(withTitle: "")
-        spacing.lastItem?.image = NSImage(
-            systemSymbolName: "arrow.up.and.down.text.horizontal",
-            accessibilityDescription: String(localized: "Line and paragraph spacing"))
-        for item in MainMenu.spacingItems() { spacing.menu?.addItem(item) }
-
-        overflow.isBordered = true
-        overflow.addItem(withTitle: "")
-        overflow.lastItem?.image = NSImage(
-            systemSymbolName: "chevron.right.2", accessibilityDescription: String(localized: "More formatting"))
-        overflow.setAccessibilityLabel(String(localized: "More formatting"))
-        overflow.toolTip = String(localized: "More formatting")
-        overflow.isHidden = true
-
-        // Each group carries the separator before it, so hiding a group hides its separator too.
-        func group(_ views: [NSView], separated: Bool = true) -> NSStackView {
-            let g = NSStackView(views: (separated ? [Self.separator()] : []) + views)
-            g.orientation = .horizontal
-            g.spacing = stackSpacing
-            g.alignment = .centerY
-            for v in g.arrangedSubviews { (v as? NSControl)?.controlSize = .small }
-            return g
-        }
-        groupViews = [
-            (.zoom, group([zoomPopup], separated: false)),
-            (.style, group([stylePopup])),
-            (.font, group([fontPopup, sizeBox], separated: false)),
-            (.character, group([traits])),
-            (.color, group([colorWell, highlight], separated: false)),
-            (.alignment, group([alignment])),
-            (.lists, group([lists, indent])),
-            (.spacing, group([spacing], separated: false)),
-        ]
-        let stack = NSStackView(views: groupViews.map(\.view) + [overflow])
-        stack.orientation = .horizontal
-        stack.spacing = stackSpacing
-        stack.alignment = .centerY
-        stack.edgeInsets = NSEdgeInsets(top: 4, left: sideInsets / 2, bottom: 6, right: sideInsets / 2)
-        stack.setHuggingPriority(.defaultHigh, for: .vertical)
-        // The bar never sets the window's minimum width: groups that don't fit go into the overflow menu.
-        stack.setClippingResistancePriority(.defaultLow, for: .horizontal)
-        overflow.controlSize = .small
-        sizeBox.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        stylePopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        fontPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        zoomPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-
-        let container = NSView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: container.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-        ])
-        container.setAccessibilityRole(.toolbar)
-        container.setAccessibilityLabel(String(localized: "Format bar"))
-        container.setAccessibilityIdentifier("formatBar")
-        view = container
-        retarget()
+        let hosting = NSHostingView(rootView: FormatBar(model: model))
+        // As tall as the controls; never wider than the window (groups that don't fit go into the » menu).
+        hosting.sizingOptions = [.minSize, .maxSize]
+        hosting.setAccessibilityRole(.toolbar)
+        hosting.setAccessibilityLabel(String(localized: "Format bar"))
+        hosting.setAccessibilityIdentifier("formatBar")
+        hosting.frame.size = hosting.fittingSize
+        view = hosting
     }
 
     // MARK: Fitting the width
@@ -217,7 +53,7 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         scheduleFit()
     }
 
-    /// Fits after layout, never during it: hiding views in a layout pass makes AppKit abort.
+    /// Fits after layout, never during it: changing the bar in a layout pass makes AppKit abort.
     private func scheduleFit() {
         guard !fitScheduled else { return }
         fitScheduled = true
@@ -232,40 +68,35 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
     func fit(width: CGFloat) {
         loadViewIfNeeded()
         if groupWidths.isEmpty {
-            groupWidths = groupViews.map { $0.view.fittingSize.width }
+            groupWidths = Group.allCases.map { group in
+                NSHostingView(rootView: FormatBarGroup(group: group, model: model).controlSize(.small)).fittingSize
+                    .width
+            }
         }
-        let available = width - sideInsets
-        let overflowWidth = overflow.fittingSize.width + stackSpacing
-        var shown = 0
+        let overflowWidth = NSHostingView(rootView: OverflowButton(hidden: [.spacing]).controlSize(.small))
+            .fittingSize.width
+        let shown = Self.groupsThatFit(
+            widths: groupWidths, overflowWidth: overflowWidth, in: width - 2 * Self.sideInset)
+        let hidden = Array(Group.allCases[shown...])
+        if hidden != model.hiddenGroups { model.hiddenGroups = hidden }
+    }
+
+    /// How many groups (from the left) fit in `available` points, leaving room for the » button unless all fit.
+    static func groupsThatFit(widths: [CGFloat], overflowWidth: CGFloat, in available: CGFloat) -> Int {
         var used: CGFloat = 0
-        for (i, w) in groupWidths.enumerated() {
-            let next = used + (i > 0 ? stackSpacing : 0) + w
-            let isLast = i == groupWidths.count - 1
-            guard next + (isLast ? 0 : overflowWidth) <= available else { break }
+        for (i, w) in widths.enumerated() {
+            let next = used + (i > 0 ? spacing : 0) + w
+            let isLast = i == widths.count - 1
+            guard next + (isLast ? 0 : overflowWidth + spacing) <= available else { return i }
             used = next
-            shown = i + 1
         }
-        let hidden = groupViews[shown...].map(\.group)
-        guard hidden != hiddenGroups || overflow.isHidden != hidden.isEmpty else { return }
-        hiddenGroups = Array(hidden)
-        for (i, entry) in groupViews.enumerated() where entry.view.isHidden != (i >= shown) {
-            entry.view.isHidden = i >= shown
-        }
-        overflow.isHidden = hidden.isEmpty
-        rebuildOverflowMenu()
+        return widths.count
     }
 
     /// The hidden groups as the Format menu's own submenus (Style, Font, Text, List) plus zoom.
-    private func rebuildOverflowMenu() {
-        guard let menu = overflow.menu else { return }
-        while menu.items.count > 1 { menu.removeItem(at: 1) }
+    static func overflowMenus(for hiddenGroups: [Group]) -> [NSMenu] {
         let hidden = Set(hiddenGroups)
-        func add(_ submenu: NSMenu) {
-            Self.stripKeyEquivalents(submenu)
-            let item = NSMenuItem(title: submenu.title, action: nil, keyEquivalent: "")
-            item.submenu = submenu
-            menu.addItem(item)
-        }
+        var menus: [NSMenu] = []
         if hidden.contains(.zoom) {
             let zoom = NSMenu(title: String(localized: "Zoom"))
             zoom.addItem(
@@ -277,16 +108,17 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
             zoom.addItem(
                 withTitle: String(localized: "Actual Size"),
                 action: #selector(EditorViewController.zoomToActualSize(_:)), keyEquivalent: "")
-            add(zoom)
+            menus.append(zoom)
         }
-        if hidden.contains(.style) { add(MainMenu.styleMenu()) }
-        if !hidden.isDisjoint(with: [.font, .character, .color]) { add(MainMenu.fontMenu()) }
-        if !hidden.isDisjoint(with: [.alignment, .lists, .spacing]) { add(MainMenu.textMenu()) }
-        if hidden.contains(.lists) { add(MainMenu.listMenu()) }
+        if hidden.contains(.style) { menus.append(MainMenu.styleMenu()) }
+        if !hidden.isDisjoint(with: [.font, .character, .color]) { menus.append(MainMenu.fontMenu()) }
+        if !hidden.isDisjoint(with: [.alignment, .lists, .spacing]) { menus.append(MainMenu.textMenu()) }
+        if hidden.contains(.lists) { menus.append(MainMenu.listMenu()) }
+        // The copies of menu bar items carry no shortcuts: a pop-up button in the window would answer them first.
+        for menu in menus { stripKeyEquivalents(menu) }
+        return menus
     }
 
-    /// The overflow copies menu items that already have shortcuts in the menu bar; a pop-up button in the
-    /// window would answer them first, so the copies go without.
     private static func stripKeyEquivalents(_ menu: NSMenu) {
         for item in menu.items {
             item.keyEquivalent = ""
@@ -295,71 +127,7 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         }
     }
 
-    private func configure(
-        _ control: NSSegmentedControl, label: String, mode: NSSegmentedControl.SwitchTracking, action: Selector,
-        segments: [(symbol: String, label: String)]
-    ) {
-        // VoiceOver names the group as well as each segment (accessibility audit).
-        control.setAccessibilityLabel(label)
-        control.segmentCount = segments.count
-        control.trackingMode = mode
-        control.action = action
-        control.segmentStyle = .automatic
-        for (i, s) in segments.enumerated() {
-            control.setImage(NSImage(systemSymbolName: s.symbol, accessibilityDescription: s.label), forSegment: i)
-            control.setToolTip(s.label, forSegment: i)
-            control.setWidth(26, forSegment: i)
-        }
-    }
-
-    private func retarget() {
-        for control in [zoomPopup, stylePopup, fontPopup, sizeBox, traits, colorWell, alignment, lists, indent]
-            as [NSControl]
-        {
-            control.target = target
-        }
-        for item in (highlight.menu?.items ?? []) + (spacing.menu?.items ?? []) where item.action != nil {
-            item.target = target
-        }
-    }
-
-    private static func separator() -> NSView {
-        let box = NSBox()
-        box.boxType = .separator
-        box.heightAnchor.constraint(equalToConstant: 16).isActive = true
-        return box
-    }
-
     static func zoomText(_ zoom: CGFloat) -> String { "\(Int((zoom * 100).rounded()))%" }
-
-    /// Shows the zoom (or Fit); a level from a pinch that isn't in the list is shown while it lasts.
-    func showZoom(_ zoom: CGFloat, fits: Bool = false) {
-        loadViewIfNeeded()
-        while let extra = zoomPopup.itemArray.firstIndex(where: { $0.tag == Self.pinchZoomTag }) {
-            zoomPopup.removeItem(at: extra)
-        }
-        if fits {
-            zoomPopup.selectItem(at: 0)
-            return
-        }
-        let levels = zoomPopup.itemArray.filter {
-            ($0.representedObject as? CGFloat).map { $0 != EditorViewController.fitZoomItem } ?? false
-        }
-        if let item = levels.first(where: { abs(($0.representedObject as? CGFloat ?? 0) - zoom) < 0.005 }) {
-            zoomPopup.select(item)
-            return
-        }
-        // After Fit and its separator.
-        let index =
-            2
-            + (EditorViewController.zoomLevels.firstIndex { $0 > zoom } ?? EditorViewController.zoomLevels.count)
-        zoomPopup.insertItem(withTitle: Self.zoomText(zoom), at: index)
-        let item = zoomPopup.item(at: index)!
-        item.tag = Self.pinchZoomTag
-        item.representedObject = zoom
-        zoomPopup.select(item)
-    }
-    private static let pinchZoomTag = -1
 
     static func sizeText(_ size: Double) -> String {
         size.rounded() == size ? String(Int(size)) : String(format: "%.1f", size)
@@ -383,59 +151,62 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
         }
     }
 
-    // MARK: Reflecting the selection
+    // MARK: Reflecting the editor
 
-    func update(_ format: SelectionFormat, bridge: AttributedStringBridge, editable: Bool) {
-        loadViewIfNeeded()
-        rebuildStyles(bridge.styles)
-        let key =
-            StyleChoice.standard.first {
-                StyleChoice.builtIn($0.name).matches(format.styleId, in: bridge.styles)
-            }.map { StyleChoice.builtIn($0.name).key } ?? format.styleId.map { StyleChoice.document($0).key }
-        if let key, let i = stylePopup.menu?.items.firstIndex(where: { $0.representedObject as? String == key }) {
-            stylePopup.selectItem(at: i)
-        } else if let id = format.styleId, let style = bridge.styles.styles[id] {
-            // A style that isn't in the list (not a quick style): show it while it's selected.
-            stylePopup.addItem(withTitle: style.name)
-            stylePopup.lastItem?.representedObject = StyleChoice.document(id).key
-            stylePopup.lastItem?.target = target
-            stylePopup.select(stylePopup.lastItem)
-            styleSignature = ""
-        } else {
-            stylePopup.select(nil)
-        }
-
-        if let family = format.fontFamily {
-            if fontPopup.item(withTitle: family) == nil {
-                // A font the document names but this Mac doesn't have: show it anyway.
-                fontPopup.insertItem(withTitle: family, at: 0)
-                fontPopup.item(at: 0)?.representedObject = family
-            }
-            fontPopup.selectItem(withTitle: family)
-        } else {
-            fontPopup.select(nil)
-        }
-        if sizeBox.currentEditor() == nil {
-            sizeBox.stringValue = format.fontSize.map(Self.sizeText) ?? ""
-        }
-        for (i, on) in [format.bold, format.italic, format.underline, format.strike].enumerated() {
-            traits.setSelected(on, forSegment: i)
-        }
-        colorWell.color = format.color ?? .textColor
-        let a = format.alignment.flatMap { EditorViewController.alignments.firstIndex(of: $0) } ?? -1
-        alignment.selectedSegment = a
-        lists.setSelected(format.list == .bullet, forSegment: 0)
-        lists.setSelected(format.list == .numbered, forSegment: 1)
-        for control in [
-            stylePopup, fontPopup, sizeBox, traits, colorWell, highlight, alignment, lists, indent, spacing,
-        ]
-            as [NSControl]
-        {
-            control.isEnabled = editable
-        }
+    /// Shows the zoom (or Fit).
+    func showZoom(_ zoom: CGFloat, fits: Bool = false) {
+        model.zoom = fits ? EditorViewController.fitZoomItem : zoom
     }
 
-    private func rebuildStyles(_ styles: StyleSheet) {
+    func update(_ format: SelectionFormat, bridge: AttributedStringBridge, editable: Bool) {
+        model.update(format, styles: bridge.styles, editable: editable)
+    }
+}
+
+/// What the format bar shows: the selection's formatting, the document's styles and the zoom.
+@MainActor @Observable
+final class FormatBarModel {
+    struct StyleItem: Hashable {
+        var key: String
+        var title: String
+    }
+
+    @ObservationIgnored weak var editor: EditorViewController?
+    var format = SelectionFormat()
+    var editable = true
+    /// The zoom, or `EditorViewController.fitZoomItem` for Fit.
+    var zoom: CGFloat = 1
+    var hiddenGroups: [FormatBarViewController.Group] = []
+    /// The document's quick styles besides the standard ones.
+    private(set) var extraStyles: [StyleItem] = []
+    /// A style that isn't in the list (not a quick style), shown while it's selected.
+    private(set) var otherStyle: StyleItem?
+    private(set) var styleKey: String?
+
+    /// The installed font families, and a font the document names but this Mac doesn't have (shown anyway).
+    static let installedFamilies = NSFontManager.shared.availableFontFamilies
+        .filter { !$0.hasPrefix(".") }
+        .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    private(set) var missingFamily: String?
+
+    /// The zoom menu's levels, with a level from a pinch that isn't one of them while it lasts.
+    var zoomLevels: [CGFloat] {
+        let levels = EditorViewController.zoomLevels
+        guard zoom != EditorViewController.fitZoomItem, !levels.contains(where: { abs($0 - zoom) < 0.005 }) else {
+            return levels
+        }
+        return (levels + [zoom]).sorted()
+    }
+
+    /// The level the zoom menu shows (the listed level a pinch landed close to).
+    var zoomSelection: CGFloat {
+        zoomLevels.first { abs($0 - zoom) < 0.005 } ?? zoom
+    }
+
+    func update(_ format: SelectionFormat, styles: StyleSheet, editable: Bool) {
+        if self.format != format { self.format = format }
+        if self.editable != editable { self.editable = editable }
+
         // Standard styles, then the document's other quick styles.
         let extra = styles.styles.values
             .filter { s in
@@ -444,19 +215,331 @@ final class FormatBarViewController: NSTitlebarAccessoryViewController {
                     && s.name.caseInsensitiveCompare("List Paragraph") != .orderedSame
             }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        let signature = extra.map(\.id).joined(separator: "\u{1}")
-        guard signature != styleSignature || stylePopup.numberOfItems == 0 else { return }
-        styleSignature = signature
-        stylePopup.removeAllItems()
-        for (name, title) in StyleChoice.standard {
-            stylePopup.addItem(withTitle: title)
-            stylePopup.lastItem?.representedObject = StyleChoice.builtIn(name).key
+            .map { StyleItem(key: StyleChoice.document($0.id).key, title: $0.name) }
+        if extra != extraStyles { extraStyles = extra }
+
+        let key =
+            StyleChoice.standard.first { StyleChoice.builtIn($0.name).matches(format.styleId, in: styles) }
+            .map { StyleChoice.builtIn($0.name).key } ?? format.styleId.map { StyleChoice.document($0).key }
+        var other: StyleItem?
+        if let key, !extra.contains(where: { $0.key == key }), !key.hasPrefix("builtin:"),
+            let id = format.styleId, let style = styles.styles[id]
+        {
+            other = StyleItem(key: key, title: style.name)
         }
-        if !extra.isEmpty { stylePopup.menu?.addItem(.separator()) }
-        for s in extra {
-            stylePopup.addItem(withTitle: s.name)
-            stylePopup.lastItem?.representedObject = StyleChoice.document(s.id).key
+        let shownKey = key.flatMap { k in
+            k.hasPrefix("builtin:") || extra.contains { $0.key == k } || other != nil ? k : nil
         }
-        retarget()
+        if other != otherStyle { otherStyle = other }
+        if shownKey != styleKey { styleKey = shownKey }
+
+        let missing = format.fontFamily.flatMap { Self.installedFamilies.contains($0) ? nil : $0 }
+        if missing != missingFamily { missingFamily = missing }
+    }
+}
+
+struct FormatBar: View {
+    let model: FormatBarModel
+
+    var body: some View {
+        HStack(spacing: FormatBarViewController.spacing) {
+            ForEach(FormatBarViewController.Group.allCases.filter { !model.hiddenGroups.contains($0) }, id: \.self) {
+                FormatBarGroup(group: $0, model: model)
+            }
+            if !model.hiddenGroups.isEmpty { OverflowButton(hidden: model.hiddenGroups) }
+        }
+        .controlSize(.small)
+        .padding(.horizontal, FormatBarViewController.sideInset)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+        .clipped()
+    }
+}
+
+/// One group of the format bar, with the separator before it (so hiding a group hides its separator too).
+struct FormatBarGroup: View {
+    let group: FormatBarViewController.Group
+    let model: FormatBarModel
+
+    private var editor: EditorViewController? { model.editor }
+    private var format: SelectionFormat { model.format }
+
+    var body: some View {
+        HStack(spacing: FormatBarViewController.spacing) {
+            switch group {
+            case .zoom: zoom
+            case .style:
+                separator
+                style
+            case .font: font
+            case .character:
+                separator
+                character
+            case .color: color
+            case .alignment:
+                separator
+                alignment
+            case .lists:
+                separator
+                lists
+            case .spacing: spacing
+            }
+        }
+        .disabled(group != .zoom && !model.editable)
+        .fixedSize()
+    }
+
+    private var separator: some View { Divider().frame(height: 16) }
+
+    private var zoom: some View {
+        PopUpPicker(
+            label: String(localized: "Zoom"),
+            items: [.option(String(localized: "Fit"), EditorViewController.fitZoomItem), .separator]
+                + model.zoomLevels.map { .option(FormatBarViewController.zoomText($0), $0) },
+            selection: model.zoomSelection
+        ) { editor?.applyZoom($0) }
+        .frame(width: 68)
+    }
+
+    private var style: some View {
+        let standard = StyleChoice.standard.map { PopUpItem.option($0.title, StyleChoice.builtIn($0.name).key) }
+        let extra = model.extraStyles.map { PopUpItem.option($0.title, $0.key) }
+        let other = model.otherStyle.map { [PopUpItem.option($0.title, $0.key)] } ?? []
+        return PopUpPicker(
+            label: String(localized: "Paragraph style"),
+            items: standard + (extra.isEmpty ? [] : [.separator] + extra) + other, selection: model.styleKey
+        ) { editor?.applyParagraphStyle(key: $0) }
+        .frame(width: 130)
+    }
+
+    @ViewBuilder private var font: some View {
+        PopUpPicker(
+            label: String(localized: "Font"),
+            items: ([model.missingFamily].compactMap { $0 } + FormatBarModel.installedFamilies).map { .option($0, $0) },
+            selection: format.fontFamily
+        ) { editor?.applyFontFamily($0) }
+        .frame(width: 150)
+        FontSizeBox(size: format.fontSize) { editor?.applyFontSize($0) }
+            .help(String(localized: "Font size"))
+            .frame(width: 58)
+    }
+
+    private var character: some View {
+        ControlGroup {
+            toggle(String(localized: "Bold"), "bold", format.bold) { editor?.toggleBold(nil) }
+            toggle(String(localized: "Italic"), "italic", format.italic) { editor?.toggleItalic(nil) }
+            toggle(String(localized: "Underline"), "underline", format.underline) { editor?.toggleUnderline(nil) }
+            toggle(String(localized: "Strikethrough"), "strikethrough", format.strike) {
+                editor?.toggleStrikethrough(nil)
+            }
+        }
+        .accessibilityLabel(String(localized: "Character style"))
+    }
+
+    @ViewBuilder private var color: some View {
+        ColorPicker(
+            String(localized: "Text color"),
+            selection: Binding(
+                get: { Color(nsColor: format.color ?? .textColor) }, set: { editor?.applyTextColor(NSColor($0)) }),
+            supportsOpacity: false
+        )
+        .labelsHidden()
+        .help(String(localized: "Text color"))
+        PullDownButton(
+            label: String(localized: "Highlight"), symbol: "highlighter", items: MainMenu.highlightItems,
+            target: editor)
+    }
+
+    private var alignment: some View {
+        let symbols = ["text.alignleft", "text.aligncenter", "text.alignright", "text.justify"]
+        let labels = [
+            String(localized: "Align Left"), String(localized: "Center"), String(localized: "Align Right"),
+            String(localized: "Justify"),
+        ]
+        return Picker(
+            String(localized: "Alignment"),
+            selection: Binding(
+                get: { format.alignment.flatMap { EditorViewController.alignments.firstIndex(of: $0) } },
+                set: { $0.map { editor?.applyAlignment(at: $0) } })
+        ) {
+            ForEach(symbols.indices, id: \.self) { i in
+                Image(systemName: symbols[i]).accessibilityLabel(labels[i]).help(labels[i]).tag(i as Int?)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .accessibilityLabel(String(localized: "Alignment"))
+    }
+
+    @ViewBuilder private var lists: some View {
+        ControlGroup {
+            toggle(String(localized: "Bulleted List"), "list.bullet", format.list == .bullet) {
+                editor?.toggleBulletedList(nil)
+            }
+            toggle(String(localized: "Numbered List"), "list.number", format.list == .numbered) {
+                editor?.toggleNumberedList(nil)
+            }
+        }
+        .accessibilityLabel(String(localized: "Lists"))
+        ControlGroup {
+            button(String(localized: "Decrease Indent"), "decrease.indent") { editor?.decreaseIndent(nil) }
+            button(String(localized: "Increase Indent"), "increase.indent") { editor?.increaseIndent(nil) }
+        }
+        .accessibilityLabel(String(localized: "Indent"))
+    }
+
+    private var spacing: some View {
+        PullDownButton(
+            label: String(localized: "Line and paragraph spacing"), symbol: "arrow.up.and.down.text.horizontal",
+            items: MainMenu.spacingItems, target: editor)
+    }
+
+    private func toggle(_ label: String, _ symbol: String, _ isOn: Bool, action: @escaping () -> Void) -> some View {
+        Toggle(isOn: Binding(get: { isOn }, set: { _ in action() })) {
+            Label(label, systemImage: symbol)
+        }
+        .toggleStyle(.button)
+        .labelStyle(.iconOnly)
+        .help(label)
+    }
+
+    private func button(_ label: String, _ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Label(label, systemImage: symbol) }.labelStyle(.iconOnly).help(label)
+    }
+}
+
+enum PopUpItem<Value: Hashable>: Hashable {
+    case option(String, Value)
+    case separator
+}
+
+/// A pop-up menu of values. Not SwiftUI's menu `Picker`: that exposes no action to VoiceOver (accessibility audit).
+private struct PopUpPicker<Value: Hashable>: NSViewRepresentable {
+    let label: String
+    var items: [PopUpItem<Value>]
+    var selection: Value?
+    var onSelect: (Value) -> Void
+
+    func makeNSView(context: Context) -> NSPopUpButton {
+        let button = NSPopUpButton(frame: .zero, pullsDown: false)
+        button.controlSize = .small
+        button.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        button.setAccessibilityLabel(label)
+        button.toolTip = label
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.picked(_:))
+        return button
+    }
+
+    func updateNSView(_ button: NSPopUpButton, context: Context) {
+        context.coordinator.onSelect = onSelect
+        button.isEnabled = context.environment.isEnabled
+        if context.coordinator.items != items {
+            context.coordinator.items = items
+            button.removeAllItems()
+            for item in items {
+                switch item {
+                case .option(let title, _):
+                    // Through the menu: NSPopUpButton's addItem(withTitle:) drops repeated titles.
+                    button.menu?.addItem(withTitle: title, action: nil, keyEquivalent: "")
+                case .separator: button.menu?.addItem(.separator())
+                }
+            }
+        }
+        let index = selection.flatMap { s in items.firstIndex { if case .option(_, s) = $0 { true } else { false } } }
+        if let index { button.selectItem(at: index) } else { button.select(nil) }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(onSelect: onSelect) }
+
+    @MainActor final class Coordinator: NSObject {
+        var items: [PopUpItem<Value>] = []
+        var onSelect: (Value) -> Void
+        init(onSelect: @escaping (Value) -> Void) { self.onSelect = onSelect }
+        @objc func picked(_ sender: NSPopUpButton) {
+            if case .option(_, let value) = items[safe: sender.indexOfSelectedItem] { onSelect(value) }
+        }
+    }
+}
+
+/// The font size box: a list of standard sizes, or any size typed in. SwiftUI has no combo box.
+private struct FontSizeBox: NSViewRepresentable {
+    var size: Double?
+    var apply: (String) -> Void
+
+    func makeNSView(context: Context) -> NSComboBox {
+        let box = NSComboBox()
+        box.addItems(withObjectValues: EditorViewController.standardSizes.map(FormatBarViewController.sizeText))
+        box.numberOfVisibleItems = 16
+        box.completes = false
+        box.controlSize = .small
+        box.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        box.setAccessibilityLabel(String(localized: "Font size"))
+        box.target = context.coordinator
+        box.action = #selector(Coordinator.changed(_:))
+        return box
+    }
+
+    func updateNSView(_ box: NSComboBox, context: Context) {
+        context.coordinator.apply = apply
+        box.isEnabled = context.environment.isEnabled
+        // Not while it's being typed in.
+        if box.currentEditor() == nil { box.stringValue = size.map(FormatBarViewController.sizeText) ?? "" }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(apply: apply) }
+
+    @MainActor final class Coordinator: NSObject {
+        var apply: (String) -> Void
+        init(apply: @escaping (String) -> Void) { self.apply = apply }
+        @objc func changed(_ sender: NSComboBox) { apply(sender.stringValue) }
+    }
+}
+
+/// A button that pulls down a menu of `NSMenuItem`s: the menu bar's own items, which keep their checkmarks and
+/// titles up to date as the selection changes. Not SwiftUI's `Menu`: that exposes no action to VoiceOver
+/// (accessibility audit).
+struct PullDownButton: NSViewRepresentable {
+    let label: String
+    let symbol: String
+    var items: () -> [NSMenuItem]
+    /// Receives the items' actions; nil sends them up the responder chain.
+    weak var target: AnyObject?
+
+    func makeNSView(context: Context) -> NSPopUpButton {
+        let button = NSPopUpButton(frame: .zero, pullsDown: true)
+        button.isBordered = true
+        button.controlSize = .small
+        button.setAccessibilityLabel(label)
+        button.toolTip = label
+        return button
+    }
+
+    func updateNSView(_ button: NSPopUpButton, context: Context) {
+        let menu = NSMenu()
+        menu.addItem(withTitle: "", action: nil, keyEquivalent: "")
+        menu.items[0].image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+        for item in items() {
+            if item.action != nil, let target { item.target = target }
+            menu.addItem(item)
+        }
+        button.menu = menu
+        button.isEnabled = context.environment.isEnabled
+    }
+}
+
+/// The » button: the groups that don't fit, as the menu bar's menus.
+struct OverflowButton: View {
+    var hidden: [FormatBarViewController.Group]
+
+    var body: some View {
+        PullDownButton(label: String(localized: "More formatting"), symbol: "chevron.right.2") {
+            FormatBarViewController.overflowMenus(for: hidden).map { submenu in
+                let item = NSMenuItem(title: submenu.title, action: nil, keyEquivalent: "")
+                item.submenu = submenu
+                return item
+            }
+        }
     }
 }

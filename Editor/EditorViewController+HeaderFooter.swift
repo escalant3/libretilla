@@ -12,14 +12,14 @@ extension EditorViewController {
         for kind in HeadersFooters.Kind.allCases {
             styleIds[kind] = bridge.styles.styleId(named: kind.styleName)
         }
-        let editor = HeaderFooterController(
+        let editor = HeaderFooterSheet(
             headersFooters: document.headersFooters, differentFirstPage: document.differentFirstPage,
             bridge: bridge, styleIds: styleIds)
         editor.onDone = { [weak document] headersFooters, differentFirstPage in
             document?.setHeadersFooters(headersFooters, differentFirstPage: differentFirstPage)
         }
         headerFooterEditor = editor
-        window.beginSheet(editor.window!) { [weak self] _ in
+        editor.present(on: window) { [weak self] in
             guard let self else { return }
             self.headerFooterEditor = nil
             self.view.window?.makeFirstResponder(self.textView)

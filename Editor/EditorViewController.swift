@@ -11,10 +11,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     private(set) var textView: LibretillaTextView!
     private var canvas: PageCanvasView!
     private var scrollView: NSScrollView!
-    /// The cell editor sheet while it's open.
-    var tableEditor: TableEditorController?
-    var pictureFormatter: PictureFormatController?
-    var headerFooterEditor: HeaderFooterController?
+    /// The sheets while they're open.
+    var tableEditor: TableEditorSheet?
+    var pictureFormatter: PictureFormatSheet?
+    var headerFooterEditor: HeaderFooterSheet?
 
     /// Off (the default): the paper fills the window, with the text column centred at the document's text
     /// width. On: a page with its edges on a gray canvas (View ▸ Show Page Edges).
@@ -169,15 +169,12 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         applyFit(force: true)
     }
 
-    /// The format bar's zoom menu's Fit item (its represented object).
+    /// The format bar's zoom menu's Fit item.
     static let fitZoomItem: CGFloat = 0
 
-    /// The format bar's zoom menu (the item's represented object is the zoom, or `fitZoomItem`).
-    @objc func applyZoom(_ sender: Any?) {
-        let item = (sender as? NSPopUpButton)?.selectedItem ?? sender as? NSMenuItem
-        if let value = item?.representedObject as? CGFloat {
-            if value == Self.fitZoomItem { zoomToFit(sender) } else { zoom = value }
-        }
+    /// The format bar's zoom menu: a zoom, or `fitZoomItem`.
+    func applyZoom(_ value: CGFloat) {
+        if value == Self.fitZoomItem { zoomToFit(nil) } else { zoom = value }
         view.window?.makeFirstResponder(textView)
     }
 

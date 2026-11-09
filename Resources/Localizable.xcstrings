@@ -1752,6 +1752,16 @@
         }
       }
     },
+    "Save status": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado de guardado"
+          }
+        }
+      }
+    },
     "Saved": {
       "localizations": {
         "es": {
