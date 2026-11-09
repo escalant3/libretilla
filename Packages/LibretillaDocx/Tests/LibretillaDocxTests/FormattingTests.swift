@@ -229,23 +229,45 @@ import Testing
 
     @Test func nestedListMarkersFollowWordNumbering() throws {
         let l = try load("03-nested-lists.docx")
-        var markers: [String: String] = [:]
-        var depths: [String: Int] = [:]
+        var markers: [String: ListMarker] = [:]
+        var styles: [String: NSParagraphStyle] = [:]
         let ns = l.text.string as NSString
         for p in AttributedStringBridge.paragraphRanges(in: l.text, touching: NSRange(location: 0, length: ns.length)) {
-            let style = l.text.attribute(.paragraphStyle, at: p.location, effectiveRange: nil) as? NSParagraphStyle
-            if let m = style?.textLists.last?.markerFormat.rawValue {
-                markers[ns.substring(with: p).trimmingCharacters(in: .newlines)] = m
-                depths[ns.substring(with: p).trimmingCharacters(in: .newlines)] = style?.textLists.count
-            }
+            let key = ns.substring(with: p).trimmingCharacters(in: .newlines)
+            if let m = AttributedStringBridge.listMarker(in: l.text, paragraph: p) { markers[key] = m }
+            styles[key] = l.text.attribute(.paragraphStyle, at: p.location, effectiveRange: nil) as? NSParagraphStyle
         }
-        #expect(markers["Fruit"] == "•")
-        #expect(markers["Apples"] == "◦")
-        #expect(markers["Granny Smith"] == "▪")
-        #expect(markers["Prepare"] == "1.")
+        #expect(markers["Fruit"]?.text == "•")
+        #expect(markers["Apples"]?.text == "◦")
+        #expect(markers["Granny Smith"]?.text == "▪")
+        #expect(markers["Prepare"]?.text == "1.")
         #expect(markers.count >= 10)
-        // TextKit 2 indents list items by nesting depth (gap G4).
-        #expect(depths["Fruit"] == 1 && depths["Apples"] == 2 && depths["Granny Smith"] == 3)
+        // Word's default list indents: the marker at the hanging indent, the text at the left indent (gap G4: no
+        // NSTextList, which TextKit 2 would indent by depth instead).
+        #expect(markers["Fruit"]?.x == 18 && markers["Fruit"]?.textStart == 36)
+        #expect(markers["Apples"]?.x == 54 && markers["Apples"]?.textStart == 72)
+        #expect(markers["Granny Smith"]?.x == 90 && markers["Granny Smith"]?.textStart == 108)
+        #expect(styles["Apples"]?.headIndent == 72 && styles["Apples"]?.firstLineHeadIndent == 72)
+        #expect(styles["Apples"]?.textLists.isEmpty == true)
+
+        // An unusual indent shows exactly: the marker 70 pt in, the text at 100 pt, wrapped lines too.
+        let fruit = try range(of: "Fruit", in: l.text)
+        l.bridge.apply(.indents(left: 100, right: 0, firstLine: -30), to: l.text, range: fruit)
+        let paragraph = ns.paragraphRange(for: fruit)
+        let marker = try #require(AttributedStringBridge.listMarker(in: l.text, paragraph: paragraph))
+        #expect(marker.text == "•" && marker.x == 70 && marker.textStart == 100)
+        let style = l.text.attribute(.paragraphStyle, at: fruit.location, effectiveRange: nil) as? NSParagraphStyle
+        #expect(style?.headIndent == 100 && style?.firstLineHeadIndent == 100)
+        // A marker wider than the hanging indent pushes the text to the next tab stop.
+        let wide = AttributedStringBridge.listMarker(
+            "10.10.10.",
+            paragraph: {
+                var p = ParagraphProperties(); p.indentLeft = 36; p.firstLine = -18; return p
+            }(),
+            font: .systemFont(ofSize: 12))
+        #expect(wide.x == 18 && wide.textStart == 72)
+        // The display reconciles to itself: nothing is written for the marker's text start.
+        #expect(!l.bridge.reconcile(l.text, range: NSRange(location: 0, length: l.text.length)))
     }
 
     @Test func startingABulletListInADocumentWithoutNumberingCreatesThePart() throws {
@@ -258,7 +280,9 @@ import Testing
         l.bridge.apply(.list(numId: numId, level: 0), to: l.text, range: r)
         l.bridge.renumber(l.text)
         let style = l.text.attribute(.paragraphStyle, at: r.location, effectiveRange: nil) as? NSParagraphStyle
-        #expect(style?.textLists.last?.markerFormat.rawValue == "•")
+        #expect(
+            AttributedStringBridge.listMarker(
+                in: l.text, paragraph: (l.text.string as NSString).paragraphRange(for: r))?.text == "•")
         #expect(style?.headIndent == 36)
         let (back, data) = try save(l)
         let p = try paragraph(containing: "plain paragraph", in: back)
@@ -281,8 +305,9 @@ import Testing
         bridge.apply(.list(numId: second, level: 0), to: l.text, range: try range(of: "Centered", in: l.text))
         bridge.renumber(l.text)
         func marker(_ s: String) throws -> String? {
-            (l.text.attribute(.paragraphStyle, at: try range(of: s, in: l.text).location, effectiveRange: nil)
-                as? NSParagraphStyle)?.textLists.last?.markerFormat.rawValue
+            let r = try range(of: s, in: l.text)
+            return AttributedStringBridge.listMarker(
+                in: l.text, paragraph: (l.text.string as NSString).paragraphRange(for: r))?.text
         }
         #expect(try marker("plain paragraph") == "1.")
         #expect(try marker("A second") == "2.")

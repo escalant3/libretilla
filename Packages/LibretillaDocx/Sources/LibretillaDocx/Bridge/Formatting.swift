@@ -352,9 +352,8 @@ extension AttributedStringBridge {
         let format = format(of: text, paragraph: paragraph)
         let styleId = format.properties.styleId
         let effective = effectiveParagraph(format.properties)
-        let oldStyle = text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-        let marker = effective.hasNumbering ? (Self.listMarker(oldStyle)?.marker ?? "") : nil
-        let paragraphStyle = Self.paragraphStyle(effective, marker: marker)
+        let marker = effective.hasNumbering ? (Self.listMarker(in: text, paragraph: paragraph)?.text ?? "") : nil
+        let paragraphStyle = Self.paragraphStyle(effective)
         let ns = text.string as NSString
         text.enumerateAttributes(in: paragraph, options: []) { attrs, span, _ in
             if attrs[.libretillaBlock] != nil { return }
@@ -377,6 +376,7 @@ extension AttributedStringBridge {
             Self.setDisplay(display, on: text, range: span)
         }
         text.addAttribute(.paragraphStyle, value: paragraphStyle, range: paragraph)
+        setListMarker(marker, on: text, paragraph: paragraph)
     }
 
     /// Recomputes every list marker (numbers depend on all earlier items). Returns the ranges changed.
@@ -388,15 +388,14 @@ extension AttributedStringBridge {
             guard let format = Self.paragraphFormat(text, paragraph) else { continue }
             let effective = effectiveParagraph(format.properties)
             let marker = effective.hasNumbering ? counter.next(numId: effective.numId!, ilvl: effective.ilvl ?? 0) : nil
-            let current =
+            let shown = Self.listMarker(in: text, paragraph: paragraph)
+            let style =
                 text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-            let lists = marker.map { Self.textLists(marker: $0, indent: effective.indentLeft) } ?? []
-            let shown = Self.listMarker(current)
-            guard shown?.marker != marker || (shown?.depth ?? 0) != lists.count else { continue }
-            let style = (current?.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
-            style.textLists = lists
-            text.addAttribute(.paragraphStyle, value: style, range: paragraph)
-            changed.append(paragraph)
+            setListMarker(marker, on: text, paragraph: paragraph)
+            let now = Self.listMarker(in: text, paragraph: paragraph)
+            let nowStyle =
+                text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+            if shown != now || style !== nowStyle { changed.append(paragraph) }
         }
         return changed
     }
@@ -414,7 +413,9 @@ extension AttributedStringBridge {
             let current = Self.paragraphFormat(text, paragraph)
             var format = current ?? ParagraphFormat(properties: ParagraphProperties(), xml: nil)
             if let shown = text.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil)
-                as? NSParagraphStyle, let derived = reconciled(format, shown: shown)
+                as? NSParagraphStyle,
+                let derived = reconciled(
+                    format, shown: shown, listTextStart: Self.listMarker(in: text, paragraph: paragraph)?.textStart)
             {
                 format = derived
             }
@@ -516,9 +517,11 @@ extension AttributedStringBridge {
     }
 
     /// The paragraph format that explains `shown`, or nil if `format` already does.
-    func reconciled(_ format: ParagraphFormat, shown: NSParagraphStyle) -> ParagraphFormat? {
+    func reconciled(_ format: ParagraphFormat, shown: NSParagraphStyle, listTextStart: CGFloat? = nil)
+        -> ParagraphFormat?
+    {
         let effective = effectiveParagraph(format.properties)
-        let want = Self.paragraphStyle(effective)
+        let want = Self.paragraphStyle(effective, listTextStart: listTextStart)
         var changes: [ParagraphChange] = []
         func differ(_ a: CGFloat, _ b: CGFloat) -> Bool { abs(a - b) > 0.01 }
         let shownAlignment = shown.alignment == .natural ? NSTextAlignment.left : shown.alignment

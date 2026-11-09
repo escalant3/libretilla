@@ -328,10 +328,9 @@ final class FormattingCommandTests: XCTestCase {
         let b = try paragraph("A second paragraph", in: saved).properties.numId
         XCTAssertNotNil(a)
         XCTAssertEqual(a, b)
-        let style =
-            textView.textStorage?.attribute(.paragraphStyle, at: textView.selectedRange().location, effectiveRange: nil)
-            as? NSParagraphStyle
-        XCTAssertEqual(style?.textLists.last?.markerFormat.rawValue, "2.")
+        let storage = try XCTUnwrap(textView.textStorage)
+        let paragraph = (storage.string as NSString).paragraphRange(for: textView.selectedRange())
+        XCTAssertEqual(AttributedStringBridge.listMarker(in: storage, paragraph: paragraph)?.text, "2.")
     }
 
     func testDeadKeysAndInputMethodsDoNotLeaveFormatting() throws {

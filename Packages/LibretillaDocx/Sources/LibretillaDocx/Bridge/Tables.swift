@@ -184,9 +184,9 @@ extension AttributedStringBridge {
                     style.minimumLineHeight = lined.minimumLineHeight
                     style.maximumLineHeight = lined.maximumLineHeight
                 }
-                // List markers are drawn by TextKit 2 in the body; inside a drawn cell they'd be lost.
-                style.textLists = []
                 text.addAttribute(.paragraphStyle, value: style, range: all)
+                // List markers are drawn by the body's layout (`ListMarkerLayout`); inside a drawn cell they'd be lost.
+                text.removeAttribute(.libretillaListMarker, range: all)
             }
             out.append(text)
         }

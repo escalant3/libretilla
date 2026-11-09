@@ -63,6 +63,7 @@ final class HeaderFooterSheet {
         _ kind: HeadersFooters.Kind, bridge: AttributedStringBridge, delegate: StoryDelegate
     ) -> NSTextView {
         let tv = PlainPasteTextView(usingTextLayoutManager: true)
+        tv.textLayoutManager?.delegate = ListMarkerLayout.shared
         // The page is white, as in the editor's default; text colours are the document's.
         tv.appearance = NSAppearance(named: .aqua)
         tv.backgroundColor = .white

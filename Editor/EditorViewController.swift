@@ -102,6 +102,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         // TextKit 2, deliberately (ADR 0001). Never touch `textView.layoutManager`: it forces a
         // permanent fallback to TextKit 1. Known TK2 gaps: docs/TEXTKIT2_GAPS.md.
         let textView = LibretillaTextView(usingTextLayoutManager: true)
+        // List paragraphs at their Word indents, with their markers drawn in front (gap G4).
+        textView.textLayoutManager?.delegate = ListMarkerLayout.shared
         // The text view is the page's text column; the canvas draws the page around it. (A horizontal
         // textContainerInset would misplace the ruler's right-indent marker.)
         textView.frame = NSRect(x: 0, y: 0, width: pageSetup.textWidth, height: pageSetup.pageSize.height)

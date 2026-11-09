@@ -126,8 +126,8 @@ DOCX layer gradually; unnamed documents are system drafts until named (ADR 0003)
 
 **Known M2 limitations**
 
-- TextKit 2 positions list items by nesting depth, so lists with unusual indents look approximate. They're
-  saved exactly (gap G4).
+- ~~TextKit 2 positions list items by nesting depth~~ List items show at their exact Word indents; markers are
+  drawn by `ListMarkerLayout` (gap G4 worked around, backlog 6, 2026-11-09).
 - Text inside links, fields and content controls can't be reformatted yet; formatting commands skip it (M3).
 - Copy and paste inside Libretilla goes through RTF, so pasted runs get formats derived from their look. Links
   and other objects paste as plain text.

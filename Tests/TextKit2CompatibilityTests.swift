@@ -147,6 +147,36 @@ final class TextKit2CompatibilityTests: XCTestCase {
         XCTAssertTrue(abs(c00.minY - c01.minY) < 1 && c01.minX > c00.maxX)
     }
 
+    // MARK: - Gap G4: list paragraphs ignore their indents
+
+    /// TK2 places a paragraph with `textLists` by nesting depth, ignoring `headIndent` and
+    /// `firstLineHeadIndent`: wrapped lines start at 36 pt per level. Libretilla doesn't use `NSTextList` for
+    /// display (`ListMarkerLayout`). When this fails, TK2 honours the indents: re-check G4.
+    func testGapListParagraphsIgnoreTheirIndents() throws {
+        let style = NSMutableParagraphStyle()
+        style.headIndent = 100
+        style.firstLineHeadIndent = 80
+        style.textLists = [NSTextList(markerFormat: .init("•"), options: 0)]
+        let tv = NSTextView(usingTextLayoutManager: true)
+        tv.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
+        tv.textContainer?.lineFragmentPadding = 0
+        tv.textStorage?.setAttributedString(
+            NSAttributedString(
+                string: String(repeating: "Words that wrap onto more lines. ", count: 6) + "\n",
+                attributes: [.paragraphStyle: style, .font: NSFont.systemFont(ofSize: 12)]))
+        let layout = try XCTUnwrap(tv.textLayoutManager)
+        layout.ensureLayout(for: layout.documentRange)
+        var second: CGFloat?
+        layout.enumerateTextLayoutFragments(from: layout.documentRange.location, options: .ensuresLayout) { f in
+            second = f.textLineFragments.dropFirst().first.map {
+                $0.typographicBounds.minX + f.layoutFragmentFrame.minX
+            }
+            return false
+        }
+        XCTAssertEqual(try XCTUnwrap(second), 36, accuracy: 0.5, "by depth, not at headIndent 100")
+        report("G4 list wrapped line x = \(second ?? -1) (headIndent 100)")
+    }
+
     // MARK: - Gap G2: one text container per layout manager
 
     /// G2: an NSTextLayoutManager has a single `textContainer`. With a container one page tall,

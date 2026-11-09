@@ -71,7 +71,7 @@ public struct AttributedStringBridge: Sendable {
     {
         let effective = effectiveParagraph(p.properties)
         let marker = effective.hasNumbering ? counter.next(numId: effective.numId!, ilvl: effective.ilvl ?? 0) : nil
-        let paragraphStyle = Self.paragraphStyle(effective, marker: marker)
+        let paragraphStyle = Self.paragraphStyle(effective)
         let format = ParagraphFormat(properties: p.properties, xml: p.propertiesXML)
         let text = NSMutableAttributedString()
         var pendingMarkers: [OpaqueInline] = []
@@ -147,6 +147,7 @@ public struct AttributedStringBridge: Sendable {
         text.addAttribute(.libretillaParagraph, value: origin, range: all)
         text.addAttribute(.libretillaParagraphFormat, value: format, range: all)
         if effective.pageBreakBefore == true { text.addAttribute(.libretillaPageBreakBefore, value: true, range: all) }
+        setListMarker(marker, on: text, paragraph: all)
         return text
     }
 
@@ -519,26 +520,12 @@ extension AttributedStringBridge {
         return merged
     }
 
-    /// TextKit 2 lays out list items itself: it ignores the paragraph's indents and indents by
-    /// nesting depth (`textLists.count`), half an inch per level, the same as Word's default lists.
-    /// So the depth is the list indent in half inches (gap G4 in docs/TEXTKIT2_GAPS.md). Only the
-    /// innermost list's marker is drawn; it's the literal marker text Word would show.
-    static func textLists(marker: String, indent: Double?) -> [NSTextList] {
-        let depth = min(9, max(1, Int(((indent ?? 36) / 36).rounded())))
-        let parents = (1..<depth).map { _ in NSTextList(markerFormat: NSTextList.MarkerFormat(""), options: 0) }
-        return parents + [NSTextList(markerFormat: NSTextList.MarkerFormat(marker), options: 0)]
-    }
-
-    /// The marker a paragraph style shows, and its list depth.
-    static func listMarker(_ style: NSParagraphStyle?) -> (marker: String, depth: Int)? {
-        guard let style, let last = style.textLists.last else { return nil }
-        return (last.markerFormat.rawValue, style.textLists.count)
-    }
-
     /// Default tab stops every half inch, as in Word's `w:defaultTabStop` default.
     static let defaultTabInterval: CGFloat = 36
 
-    static func paragraphStyle(_ p: ParagraphProperties, marker: String? = nil) -> NSParagraphStyle {
+    /// The paragraph's display style. A list paragraph's first line starts at `listTextStart`, after its marker
+    /// (`ListMarker`).
+    static func paragraphStyle(_ p: ParagraphProperties, listTextStart: CGFloat? = nil) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.tabStops = (p.tabs ?? []).map { tab in
             let alignment: NSTextAlignment =
@@ -553,7 +540,6 @@ extension AttributedStringBridge {
             return NSTextTab(textAlignment: alignment, location: CGFloat(tab.position), options: options)
         }
         style.defaultTabInterval = defaultTabInterval
-        if let marker { style.textLists = textLists(marker: marker, indent: p.indentLeft) }
         switch p.alignment {
         case "center": style.alignment = .center
         case "right", "end": style.alignment = .right
@@ -562,7 +548,7 @@ extension AttributedStringBridge {
         }
         let left = CGFloat(p.indentLeft ?? 0)
         style.headIndent = left
-        style.firstLineHeadIndent = max(0, left + CGFloat(p.firstLine ?? 0))
+        style.firstLineHeadIndent = listTextStart ?? max(0, left + CGFloat(p.firstLine ?? 0))
         if let right = p.indentRight, right > 0 { style.tailIndent = -CGFloat(right) }
         style.paragraphSpacingBefore = CGFloat(p.spaceBefore ?? 0)
         style.paragraphSpacing = CGFloat(p.spaceAfter ?? 0)

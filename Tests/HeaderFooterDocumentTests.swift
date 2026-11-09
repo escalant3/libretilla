@@ -16,6 +16,26 @@ extension PageSetupDocumentTests {
         return selection.bounds(for: page)
     }
 
+    /// Gap G4: list markers are drawn at Word's hanging indent and the text starts at the left indent, in print as in
+    /// the editor (the same layout).
+    func testListMarkersPrintAtWordsIndents() throws {
+        let doc = try open("03-nested-lists.docx")
+        let pdf = try pdfPages(doc)
+        let margin = doc.pageSetup.margins.left
+        let fruit = try bounds(of: "Fruit", on: 0, in: pdf)
+        let apples = try bounds(of: "Apples", on: 0, in: pdf)
+        XCTAssertEqual(fruit.minX, margin + 36, accuracy: 1.5)
+        XCTAssertEqual(apples.minX, margin + 72, accuracy: 1.5)
+        let page = try XCTUnwrap(pdf.page(at: 0))
+        let bullets = pdf.findString("•", withOptions: []).map { $0.bounds(for: page) }
+        XCTAssertTrue(
+            bullets.contains { abs($0.minX - (margin + 18)) < 1.5 && abs($0.midY - fruit.midY) < 3 },
+            "the bullet before Fruit, at the hanging indent: \(bullets)")
+        let numbers = pdf.findString("1.", withOptions: []).map { $0.bounds(for: page) }
+        let prepare = try bounds(of: "Prepare", on: 0, in: pdf)
+        XCTAssertTrue(numbers.contains { abs($0.midY - prepare.midY) < 3 && $0.maxX <= prepare.minX })
+    }
+
     func testHeadersAndFootersPrintOnTheirPagesWithPageNumbers() throws {
         let pdf = try pdfPages(try open("14-headers-footers.docx"))
         XCTAssertEqual(pdf.pageCount, 5)
