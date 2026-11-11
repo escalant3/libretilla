@@ -236,23 +236,9 @@ extension AttributedStringBridge {
             }
             let text = NSMutableAttributedString(
                 attributedString: paragraphText(p, leadingBlocks: [], counter: &counter))
-            let sets = styles.paragraphStyleSetsSpacing(p.properties.styleId)
             let all = NSRange(location: 0, length: text.length)
-            if let style = (text.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)?
-                .mutableCopy() as? NSMutableParagraphStyle
-            {
-                if p.properties.spaceAfter == nil, !sets.after, let after = tableParagraph.spaceAfter {
-                    style.paragraphSpacing = CGFloat(after)
-                }
-                if p.properties.line == nil, !sets.line, let line = tableParagraph.line {
-                    var adjusted = p.properties
-                    adjusted.line = line
-                    adjusted.lineRule = tableParagraph.lineRule
-                    let lined = Self.paragraphStyle(adjusted)
-                    style.lineHeightMultiple = lined.lineHeightMultiple
-                    style.minimumLineHeight = lined.minimumLineHeight
-                    style.maximumLineHeight = lined.maximumLineHeight
-                }
+            if let shown = text.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
+                let style = cellParagraphStyle(shown, for: p.properties, tableParagraph: tableParagraph)
                 text.addAttribute(.paragraphStyle, value: style, range: all)
                 // List markers are drawn by the body's layout (`ListMarkerLayout`); inside a drawn cell they'd be lost.
                 text.removeAttribute(.libretillaListMarker, range: all)
@@ -299,6 +285,37 @@ extension AttributedStringBridge {
         let out = NSMutableAttributedString(string: "\u{FFFC}", attributes: attrs)
         out.append(NSAttributedString(string: "\n", attributes: attributes))
         return out
+    }
+
+    /// A cell paragraph's style as drawn: the table style's paragraph spacing where the paragraph and its style don't
+    /// set their own (Word's order: defaults, table style, paragraph style).
+    func cellParagraphStyle(
+        _ shown: NSParagraphStyle, for properties: ParagraphProperties, tableParagraph: ParagraphProperties
+    ) -> NSParagraphStyle {
+        guard let style = shown.mutableCopy() as? NSMutableParagraphStyle else { return shown }
+        let sets = styles.paragraphStyleSetsSpacing(properties.styleId)
+        if properties.spaceAfter == nil, !sets.after, let after = tableParagraph.spaceAfter {
+            style.paragraphSpacing = CGFloat(after)
+        }
+        if properties.line == nil, !sets.line, let line = tableParagraph.line {
+            var adjusted = properties
+            adjusted.line = line
+            adjusted.lineRule = tableParagraph.lineRule
+            let lined = Self.paragraphStyle(adjusted)
+            style.lineHeightMultiple = lined.lineHeightMultiple
+            style.minimumLineHeight = lined.minimumLineHeight
+            style.maximumLineHeight = lined.maximumLineHeight
+        }
+        return style
+    }
+
+    /// `shown` as a paragraph in a cell of `model` is drawn (for an editor laid over the cell, backlog 15).
+    public func cellParagraphStyle(_ shown: NSParagraphStyle, for properties: ParagraphProperties, in model: TableModel)
+        -> NSParagraphStyle
+    {
+        let props = model.properties.over(styles.tableProperties(model.properties.styleId))
+        return cellParagraphStyle(
+            shown, for: properties, tableParagraph: styles.tableParagraphProperties(props.styleId))
     }
 
     /// Gives text without its own bold, italic or colour (direct or from its character style) those of a table

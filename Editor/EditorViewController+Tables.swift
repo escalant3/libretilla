@@ -2,7 +2,8 @@ import AppKit
 import LibretillaDocx
 import SwiftUI
 
-/// Tables (ADR 0006): Insert ▸ Table…, Format ▸ Edit Table…, double-click to edit.
+/// Tables (ADR 0006): Insert ▸ Table…, Format ▸ Edit Table…, and double-click a cell that can't be typed into
+/// (cells that can are typed into in place, ADR 0008).
 extension EditorViewController {
     /// The table at `location` (a row character, or the line break after a row): its whole range (rows and
     /// the line breaks between them), its block, and the row.
@@ -64,7 +65,9 @@ extension EditorViewController {
     }
 
     /// Replaces a table with edited XML as one undoable edit (its rows and the line break after them).
-    func replaceTable(_ range: NSRange, box: OpaqueBlockBox, with xml: Data) {
+    func replaceTable(
+        _ range: NSRange, box: OpaqueBlockBox, with xml: Data, actionName: String = String(localized: "Edit Table")
+    ) {
         guard let storage = textView.textStorage,
             let block = OpaqueBlock(xml: xml, leadingTrivia: box.block.leadingTrivia),
             let text = bridge.tableText(block, leadingBlocks: box.leadingBlocks)
@@ -73,7 +76,7 @@ extension EditorViewController {
         guard textView.shouldChangeText(in: whole, replacementString: text.string) else { return }
         storage.replaceCharacters(in: whole, with: text)
         textView.didChangeText()
-        textView.undoManager?.setActionName(String(localized: "Edit Table"))
+        textView.undoManager?.setActionName(actionName)
     }
 
     /// Redraws every table for the current text width, after a page setup change (backlog 20): a table wider

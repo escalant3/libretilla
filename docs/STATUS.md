@@ -202,8 +202,8 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - Floating pictures (`wp:anchor`) show inline where they're anchored, without text wrapping.
 - Pictures are formatted from a sheet, not by dragging handles. Copying a picture within Libretilla saves the copy
   as a new image.
-- Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
-  text.
+- Tables: typed into in place (ADR 0008), but find doesn't search them and arrow keys don't enter them; the
+  sheet edits rows and columns.
   (Tables are redrawn for a new text width when the page setup changes, backlog 20, table styles' header rows
   and bands are drawn, backlog 17, merged cells' text spans their rows, backlog 19,
   and nested tables are drawn as tables, backlog 18.)

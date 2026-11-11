@@ -153,8 +153,10 @@ extension EditorViewController {
     func pictureFrame(at index: Int) -> CGRect? {
         guard let layout = textView.textLayoutManager, let content = layout.textContentManager,
             let location = content.location(content.documentRange.location, offsetBy: index),
-            let range = NSTextRange(location: location, end: content.location(location, offsetBy: 1))
+            let range = NSTextRange(
+                location: content.documentRange.location, end: content.location(location, offsetBy: 1))
         else { return nil }
+        // From the start: TextKit 2 only estimates where text it hasn't laid out goes.
         layout.ensureLayout(for: range)
         guard let fragment = layout.textLayoutFragment(for: location) else { return nil }
         let frame = fragment.frameForTextAttachment(at: location)

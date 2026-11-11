@@ -137,4 +137,87 @@ final class TableCommandTests: XCTestCase {
         XCTAssertEqual(model.rows[1].cells[0].text, "Green apples")
         XCTAssertEqual(model.rows.count, 8)
     }
+
+    // MARK: Typing into cells (backlog 15)
+
+    /// Starts typing in cell (row, cell) of the first table, with its text selected.
+    func editCell(_ row: Int, _ cell: Int) throws -> NSTextView {
+        XCTAssertTrue(editor.beginCellEditing(tableLocation: firstRow, position: .init(row: row, cell: cell)))
+        let cellView = try XCTUnwrap(editor.cellEditor?.textView)
+        XCTAssertTrue(cellView.superview === tv, "laid over the page")
+        return cellView
+    }
+
+    func cellText(_ row: Int, _ cell: Int) throws -> String? { try tables(saved()).first?.rows[row].cells[cell].text }
+
+    func testTypingIntoACellIsSavedAtOnceAndUndoneAsOneStep() throws {
+        try open("04-tables.docx")
+        let cell = try editCell(1, 2)
+        XCTAssertEqual(cell.string, "Green\n")
+        cell.setSelectedRange(NSRange(location: 5, length: 0))
+        cell.insertText(" and crisp", replacementRange: cell.selectedRange())
+        XCTAssertEqual(try cellText(1, 2), "Green and crisp", "a save while typing has it")
+        XCTAssertTrue(doc.isDocumentEdited)
+        XCTAssertEqual(try cellText(1, 1), "3", "other cells untouched")
+
+        cell.undoManager?.undo()
+        XCTAssertEqual(cell.string, "Green\n", "undo inside the cell while typing")
+        XCTAssertEqual(try cellText(1, 2), "Green")
+        cell.undoManager?.redo()
+        XCTAssertEqual(cell.string, "Green and crisp\n")
+
+        editor.endCellEditing()
+        XCTAssertNil(editor.cellEditor)
+        XCTAssertNil(cell.superview)
+        XCTAssertEqual(try cellText(1, 2), "Green and crisp")
+        XCTAssertEqual(doc.undoManager?.undoActionName, "Typing")
+        doc.undoManager?.undo()
+        XCTAssertEqual(try cellText(1, 2), "Green", "one step for the whole table")
+        doc.undoManager?.redo()
+        XCTAssertEqual(try cellText(1, 2), "Green and crisp")
+    }
+
+    func testFormattingCommandsActOnTheCell() throws {
+        try open("04-tables.docx")
+        let cell = try editCell(2, 0)  // "Pears"
+        cell.setSelectedRange(NSRange(location: 0, length: 5))
+        XCTAssertFalse(editor.currentFormat.bold)
+        editor.toggleBold(nil)
+        XCTAssertTrue(editor.currentFormat.bold, "the format bar shows the cell's")
+        editor.endCellEditing()
+        let xml = String(decoding: try XCTUnwrap(try tables(saved()).first?.xml), as: UTF8.self)
+        XCTAssertTrue(xml.contains("<w:b/></w:rPr><w:t>Pears</w:t>"), xml)
+        XCTAssertFalse(tv.textStorage?.string.contains("Pears") ?? true, "the body text is untouched")
+    }
+
+    func testTabMovesBetweenCellsAndLeavesAfterTheLast() throws {
+        try open("04-tables.docx")
+        let first = try editCell(0, 2)  // "Notes"
+        XCTAssertTrue(first.delegate?.textView?(first, doCommandBy: #selector(NSResponder.insertTab(_:))) ?? false)
+        XCTAssertEqual(editor.cellEditor?.position, .init(row: 1, cell: 0))
+        XCTAssertEqual(editor.cellEditor?.textView.string, "Apples\n")
+        _ = first.delegate?.textView?(first, doCommandBy: #selector(NSResponder.insertBacktab(_:)))
+        XCTAssertEqual(editor.cellEditor?.position, .init(row: 0, cell: 2))
+        // The last cell that can be typed into ("d"), then out of the table.
+        editor.endCellEditing()
+        let last = try editCell(6, 2)
+        _ = last.delegate?.textView?(last, doCommandBy: #selector(NSResponder.insertTab(_:)))
+        XCTAssertNil(editor.cellEditor)
+        XCTAssertGreaterThan(tv.selectedRange().location, firstRow + 12, "the caret after the table")
+    }
+
+    func testAClickInACellStartsTyping() throws {
+        try open("04-tables.docx")
+        let row = try XCTUnwrap(editor.pictureFrame(at: firstRow + 2))  // "Apples" row
+        let model = try XCTUnwrap(editor.table(at: firstRow).flatMap { TableModel(xml: $0.box.block.xml) })
+        let cell = try XCTUnwrap(editor.bridge.cellGeometry(of: model)[1].first { $0.position.cell == 2 })
+        let point = NSPoint(x: row.minX + cell.textFrame.midX, y: row.minY + cell.textFrame.midY)
+        XCTAssertTrue(editor.textView(tv, clickedAt: point))
+        XCTAssertEqual(editor.cellEditor?.position, .init(row: 1, cell: 2))
+        // Links, pictures and page breaks can't go in a cell.
+        let link = NSMenuItem(title: "Link", action: #selector(EditorViewController.editLink(_:)), keyEquivalent: "")
+        XCTAssertFalse(editor.validateMenuItem(link))
+        editor.endCellEditing()
+        XCTAssertFalse(editor.textView(tv, clickedAt: NSPoint(x: 5, y: 5)), "not in a table")
+    }
 }

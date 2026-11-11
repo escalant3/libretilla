@@ -43,12 +43,14 @@
 		7D17AE28BC3BE7691FA29A14 /* PolishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B5D15043E73883EF1C49BA /* PolishTests.swift */; };
 		813BAA025051CB839AEFCCD9 /* PictureHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */; };
 		9152D6084F537D20DC9219AE /* MarginsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */; };
+		9C40E76EEBECCA63514CD4E6 /* TableCellEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D608A566F9E98E170AE68672 /* TableCellEditor.swift */; };
 		A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */; };
 		A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A3ADE5C01027AF83420172 /* PolishUITests.swift */; };
 		A32E9DA737A9F369A379DC2A /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = DDAC94F106BD02A44A365D23 /* Sparkle */; };
 		A7EAE71EBBC3B45A20BD7F52 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BA4329D6F3940D15193509 /* MainToolbar.swift */; };
 		AA7C46DB0946D6E20AF40CDA /* Blank.docx in Resources */ = {isa = PBXBuildFile; fileRef = C3995CF0646BC821F5D8E314 /* Blank.docx */; };
 		AA89D58D874D6599DE634DA5 /* DocumentOutline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAFDE5C21B250C30A8F63DFC /* DocumentOutline.swift */; };
+		AF0BD76D51C9B96577D7C913 /* EditorViewController+TableCells.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A5873750D581FE19B1FEA6 /* EditorViewController+TableCells.swift */; };
 		B0C5C645CFB2571CC72C824F /* HeaderFooterDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CADCFF3C7359CBF29DD03E3 /* HeaderFooterDocumentTests.swift */; };
 		B57597D9D9547766175906C5 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA6866795AD37DA6D40AA724 /* Preferences.swift */; };
 		B88C0619A4ECD174472EBD10 /* PersistenceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC9E479FE7EB5741F385EAC /* PersistenceUITests.swift */; };
@@ -127,11 +129,13 @@
 		A4DE1811376AD9A51C6C1BB4 /* OutlineSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineSidebar.swift; sourceTree = "<group>"; };
 		A84872E8613509F547BA1D59 /* OriginalsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalsStore.swift; sourceTree = "<group>"; };
 		AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarginsSheet.swift; sourceTree = "<group>"; };
+		B7A5873750D581FE19B1FEA6 /* EditorViewController+TableCells.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorViewController+TableCells.swift"; sourceTree = "<group>"; };
 		BE7C25902D4AA65EA63A5397 /* HeaderFooterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderFooterSheet.swift; sourceTree = "<group>"; };
 		BF22DD48F1146F23726E92C3 /* LibretillaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibretillaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C265588B8F5CD56D46001C1F /* Libretilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Libretilla.entitlements; sourceTree = "<group>"; };
 		C3995CF0646BC821F5D8E314 /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
 		C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorSheet.swift; sourceTree = "<group>"; };
+		D608A566F9E98E170AE68672 /* TableCellEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCellEditor.swift; sourceTree = "<group>"; };
 		D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureHandles.swift; sourceTree = "<group>"; };
 		D68B841A8AADEC4B87EF5D0E /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		D732D08D256C51C1D5415580 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -250,6 +254,7 @@
 				300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */,
 				66C283BB1015590B837D2E5E /* EditorViewController+Paragraph.swift */,
 				14857363B1D8D9B1DAC58F34 /* EditorViewController+Pictures.swift */,
+				B7A5873750D581FE19B1FEA6 /* EditorViewController+TableCells.swift */,
 				F05D4198353F4FD42382BD86 /* EditorViewController+Tables.swift */,
 				BE7C25902D4AA65EA63A5397 /* HeaderFooterSheet.swift */,
 				F354D24E15ADC3B3A9B409B2 /* LibretillaTextView.swift */,
@@ -258,6 +263,7 @@
 				0BA71DE3FCA81496A95F9048 /* PictureFormatSheet.swift */,
 				D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */,
 				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
+				D608A566F9E98E170AE68672 /* TableCellEditor.swift */,
 				C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */,
 			);
 			path = Editor;
@@ -462,6 +468,7 @@
 				7AACAB5CA70B42C68CE24855 /* EditorViewController+Margins.swift in Sources */,
 				4C1DC4C24DA1E97044B4BC20 /* EditorViewController+Paragraph.swift in Sources */,
 				5777B317B5C45194FD887D43 /* EditorViewController+Pictures.swift in Sources */,
+				AF0BD76D51C9B96577D7C913 /* EditorViewController+TableCells.swift in Sources */,
 				550D01DBB137B0DA766656DF /* EditorViewController+Tables.swift in Sources */,
 				3DB69BC191D95821D78EEC35 /* EditorViewController.swift in Sources */,
 				BAAA2736C9FD7E41FB7F9A49 /* FormatBar.swift in Sources */,
@@ -481,6 +488,7 @@
 				1211AC31E2B4D5F83D020C3A /* SaveStatus.swift in Sources */,
 				631CDE59FC31D21774FAFC51 /* SettingsWindowController.swift in Sources */,
 				0BC898C14154E15D520A6B39 /* Sheet.swift in Sources */,
+				9C40E76EEBECCA63514CD4E6 /* TableCellEditor.swift in Sources */,
 				1271B0FB0DD475973FF3DE31 /* TableEditorSheet.swift in Sources */,
 				4585E143CD274D8142094E69 /* Updater.swift in Sources */,
 				D4850E42B00B800124198887 /* main.swift in Sources */,

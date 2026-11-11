@@ -318,6 +318,36 @@ import Testing
         #expect(rows.first == "Name, Quantity, Notes")
         #expect(rows[1] == "Apples, 3, Green")
     }
+
+    // MARK: Typing into cells (backlog 15)
+
+    @Test func cellsRoundTripThroughTheBridge() throws {
+        let (doc, _, o) = try firstTable()
+        let table = try model(o.xml)
+        let bridge = AttributedStringBridge(doc)
+        let pos = TableModel.CellPosition(row: 1, cell: 2)  // "Green"
+        let body = try #require(table.cellBody(pos))
+        let text = NSMutableAttributedString(attributedString: bridge.attributedString(for: body))
+        #expect(text.string == "Green\n")
+        // Unchanged: the table's bytes are too.
+        let same = try #require(table.replacingCell(pos, with: bridge.body(from: text, base: body).body))
+        #expect(same == table.xml)
+
+        text.replaceCharacters(in: NSRange(location: 5, length: 0), with: " and crisp")
+        bridge.apply(.bold(true), to: text, range: NSRange(location: 0, length: 5))
+        let edited = try model(try #require(table.replacingCell(pos, with: bridge.body(from: text, base: body).body)))
+        #expect(edited.rows[1].cells[2].text == "Green and crisp")
+        #expect(edited.rows[1].cells[2].paragraphs.first?.inlines.count == 2, "a bold run, then a plain one")
+        let xml = String(decoding: edited.xml, as: UTF8.self)
+        #expect(xml.contains("<w:b/>"))
+        // Every other cell keeps its bytes.
+        for (r, row) in table.rows.enumerated() {
+            for (c, cell) in row.cells.enumerated() where (r, c) != (1, 2) {
+                #expect(cell.text == edited.rows[r].cells[c].text)
+            }
+        }
+        #expect(!table.canEditInPlace(.init(row: 6, cell: 0)), "a merge's continuation")
+    }
 }
 
 extension NSColor {

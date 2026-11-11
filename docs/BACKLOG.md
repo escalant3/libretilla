@@ -54,7 +54,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 ## Tables
 
-- [ ] 15. No typing straight into cells; the sheet edits them.
+- [x] 15. No typing straight into cells; the sheet edits them. *Done (ADR 0008): a click in a cell opens an editor
+      over it; Tab moves between cells, formatting commands work there, and leaving the table is one undo step.
+      Arrow keys don't enter a table, find doesn't search it, and cells with nested tables aren't typed into.*
 - [ ] 16. Find, spell check and VoiceOver don't see cell text. *Partly done: each table row's picture is described
       by its cells' text ("Apples, 3, Green"), as chips are by their labels; not yet tried with VoiceOver. Find
       and spell check still don't see it.*
@@ -126,6 +128,10 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
       last attempt's accessibility audit reported "Contrast failed". Run them locally and check. *Done
       (2026-11-11): all 18 UI tests pass, the accessibility audit included.*
+- [ ] 41. The accessibility audit fails again (2026-11-11 evening) on the Settings window's "Page in Dark Mode"
+      label ("Contrast failed"), the same with and without that day's later changes. It passed twice earlier the
+      same day; the saved window frames suggest a different display (1920 × 1050) was connected. Check on the
+      built-in display, and whether the label's contrast really is low.
 
 ## Suggested starting points
 

@@ -7,38 +7,41 @@ import LibretillaDocx
 extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate {
     // MARK: - Edit plumbing
 
+    /// The text formatting commands act on: the table cell being typed into (backlog 15), or the document.
+    var editingTextView: NSTextView { cellEditor?.textView ?? textView }
+
     var currentFormat: SelectionFormat {
         bridge.selectionFormat(
-            textView.textStorage ?? NSTextStorage(), range: textView.selectedRange(),
-            typingAttributes: textView.typingAttributes)
+            editingTextView.textStorage ?? NSTextStorage(), range: editingTextView.selectedRange(),
+            typingAttributes: editingTextView.typingAttributes)
     }
 
-    private var selectedRanges: [NSRange] { textView.selectedRanges.map(\.rangeValue) }
+    private var selectedRanges: [NSRange] { editingTextView.selectedRanges.map(\.rangeValue) }
 
     /// Character formatting: on the selection, or on the typing attributes for a caret.
     func editRuns(_ change: RunChange, actionName: String) {
-        guard textView.isEditable, let storage = textView.textStorage else { return NSSound.beep() }
+        guard editingTextView.isEditable, let storage = editingTextView.textStorage else { return NSSound.beep() }
         let bridge = self.bridge
         let ranges = selectedRanges.filter { $0.length > 0 }
         if ranges.isEmpty {
-            let caret = textView.selectedRange().location
+            let caret = editingTextView.selectedRange().location
             let paragraph = AttributedStringBridge.paragraphRanges(
                 in: storage, touching: NSRange(location: caret, length: 0)
             ).first
             let styleId = paragraph.flatMap { AttributedStringBridge.paragraphFormatOf(storage, $0) }?.properties
                 .styleId
-            textView.typingAttributes = bridge.typingAttributes(
-                textView.typingAttributes, applying: change, paragraphStyle: styleId)
+            editingTextView.typingAttributes = bridge.typingAttributes(
+                editingTextView.typingAttributes, applying: change, paragraphStyle: styleId)
             scheduleSelectionUpdate()
             return
         }
         let values = ranges.map { NSValue(range: $0) }
-        guard textView.shouldChangeText(inRanges: values, replacementStrings: nil) else { return }
+        guard editingTextView.shouldChangeText(inRanges: values, replacementStrings: nil) else { return }
         storage.beginEditing()
         for r in ranges { bridge.apply(change, to: storage, range: r) }
         storage.endEditing()
-        textView.didChangeText()
-        textView.undoManager?.setActionName(actionName)
+        editingTextView.didChangeText()
+        editingTextView.undoManager?.setActionName(actionName)
     }
 
     /// Paragraph formatting on every paragraph the selection touches.
@@ -50,24 +53,26 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     func editParagraphs(
         _ changes: [ParagraphChange], actionName: String, bridge override: AttributedStringBridge? = nil
     ) {
-        guard textView.isEditable, let storage = textView.textStorage, storage.length > 0 else { return NSSound.beep() }
+        guard editingTextView.isEditable, let storage = editingTextView.textStorage, storage.length > 0 else {
+            return NSSound.beep()
+        }
         let bridge = override ?? self.bridge
         let paragraphs = selectedRanges.flatMap { AttributedStringBridge.paragraphRanges(in: storage, touching: $0) }
         guard let first = paragraphs.first else { return }
         let affected = paragraphs.reduce(first) { NSUnionRange($0, $1) }
-        guard textView.shouldChangeText(in: affected, replacementString: nil) else { return }
+        guard editingTextView.shouldChangeText(in: affected, replacementString: nil) else { return }
         storage.beginEditing()
         for change in changes { bridge.apply(change, to: storage, range: affected) }
         storage.endEditing()
-        textView.didChangeText()
-        textView.undoManager?.setActionName(actionName)
+        editingTextView.didChangeText()
+        editingTextView.undoManager?.setActionName(actionName)
         renumberNow(bridge)
         refreshTypingAttributes()
     }
 
     /// List markers are display only: updated outside the undoable edit.
     func renumberNow(_ bridge: AttributedStringBridge) {
-        guard let storage = textView.textStorage else { return }
+        guard let storage = editingTextView.textStorage else { return }
         withoutReconciling {
             storage.beginEditing()
             bridge.renumber(storage)
@@ -77,10 +82,11 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     /// After a paragraph change at a caret, typed text should look like the paragraph now does.
     private func refreshTypingAttributes() {
-        guard let storage = textView.textStorage, textView.selectedRange().length == 0, storage.length > 0 else {
+        guard let storage = editingTextView.textStorage, editingTextView.selectedRange().length == 0, storage.length > 0
+        else {
             return
         }
-        let caret = min(textView.selectedRange().location, storage.length - 1)
+        let caret = min(editingTextView.selectedRange().location, storage.length - 1)
         var attrs = storage.attributes(
             at: caret > 0 && caret == storage.length ? caret - 1 : caret, effectiveRange: nil)
         for key in NSAttributedString.Key.libretillaNonInheritable { attrs[key] = nil }
@@ -94,8 +100,14 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
             before[.libretillaParagraphFormat] = attrs[.libretillaParagraphFormat]
             attrs = before
         }
-        textView.typingAttributes = attrs
+        editingTextView.typingAttributes = attrs
     }
+
+    static let unavailableInCells: Set<Selector> = [
+        #selector(insertTable(_:)), #selector(insertImage(_:)), #selector(editLink(_:)),
+        #selector(insertDocumentPageBreak(_:)), #selector(editTable(_:)), #selector(formatPicture(_:)),
+        #selector(updateStyleToMatchSelection(_:)),
+    ]
 
     // MARK: - Character commands
 
@@ -127,10 +139,10 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     private var currentScript: String? {
         let attrs: [NSAttributedString.Key: Any]
-        if textView.selectedRange().length > 0, let storage = textView.textStorage {
-            attrs = storage.attributes(at: textView.selectedRange().location, effectiveRange: nil)
+        if editingTextView.selectedRange().length > 0, let storage = editingTextView.textStorage {
+            attrs = storage.attributes(at: editingTextView.selectedRange().location, effectiveRange: nil)
         } else {
-            attrs = textView.typingAttributes
+            attrs = editingTextView.typingAttributes
         }
         let v = (attrs[.superscript] as? Int) ?? 0
         return v > 0 ? "superscript" : v < 0 ? "subscript" : nil
@@ -154,7 +166,7 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     func applyFontFamily(_ family: String) {
         guard !family.isEmpty else { return }
         editRuns(.font(family), actionName: String(localized: "Font"))
-        view.window?.makeFirstResponder(textView)
+        view.window?.makeFirstResponder(editingTextView)
     }
 
     /// The format bar's size box: what was typed, in points ("10,5" as well as "10.5").
@@ -164,7 +176,7 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         }
         // Word stores half points.
         editRuns(.size((value * 2).rounded() / 2), actionName: String(localized: "Font Size"))
-        view.window?.makeFirstResponder(textView)
+        view.window?.makeFirstResponder(editingTextView)
     }
 
     /// The format bar's colour well.
@@ -186,22 +198,24 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     }
 
     @objc func clearFormatting(_ sender: Any?) {
-        guard textView.isEditable, let storage = textView.textStorage, storage.length > 0 else { return NSSound.beep() }
+        guard editingTextView.isEditable, let storage = editingTextView.textStorage, storage.length > 0 else {
+            return NSSound.beep()
+        }
         let ranges = selectedRanges.filter { $0.length > 0 }
         let paragraphs = selectedRanges.flatMap { AttributedStringBridge.paragraphRanges(in: storage, touching: $0) }
         guard let first = paragraphs.first else { return }
         let affected = paragraphs.reduce(first) { NSUnionRange($0, $1) }
-        guard textView.shouldChangeText(in: affected, replacementString: nil) else { return }
+        guard editingTextView.shouldChangeText(in: affected, replacementString: nil) else { return }
         let bridge = self.bridge
         storage.beginEditing()
         for r in ranges { bridge.apply(RunChange.clear, to: storage, range: r) }
         bridge.apply(ParagraphChange.clear, to: storage, range: affected)
         storage.endEditing()
-        textView.didChangeText()
-        textView.undoManager?.setActionName(String(localized: "Clear Formatting"))
+        editingTextView.didChangeText()
+        editingTextView.undoManager?.setActionName(String(localized: "Clear Formatting"))
         if ranges.isEmpty {
-            textView.typingAttributes = bridge.typingAttributes(
-                textView.typingAttributes, applying: .clear,
+            editingTextView.typingAttributes = bridge.typingAttributes(
+                editingTextView.typingAttributes, applying: .clear,
                 paragraphStyle: AttributedStringBridge.paragraphFormatOf(storage, first)?.properties.styleId)
         }
     }
@@ -262,14 +276,16 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
     @objc func toggleNumberedList(_ sender: Any?) { toggleList(.numbered) }
 
     func toggleList(_ kind: Numbering.ListKind) {
-        guard textView.isEditable, let storage = textView.textStorage, let document else { return NSSound.beep() }
+        guard editingTextView.isEditable, let storage = editingTextView.textStorage, let document else {
+            return NSSound.beep()
+        }
         let name = kind == .bullet ? String(localized: "Bulleted List") : String(localized: "Numbered List")
         if currentFormat.list == kind {
             editParagraphs(.list(numId: nil, level: nil), actionName: name)
             return
         }
         // Continue the list just above, as Word and Google Docs do; otherwise start a new one.
-        let first = AttributedStringBridge.paragraphRanges(in: storage, touching: textView.selectedRange()).first
+        let first = AttributedStringBridge.paragraphRanges(in: storage, touching: editingTextView.selectedRange()).first
         var numId: Int?
         if let first, first.location > 0 {
             let above = (storage.string as NSString).paragraphRange(
@@ -305,7 +321,7 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         let normal = document.bridge.styles.defaultParagraphStyleId
         editParagraphs(
             .style(id == normal ? nil : id), actionName: String(localized: "Paragraph Style"), bridge: document.bridge)
-        view.window?.makeFirstResponder(textView)
+        view.window?.makeFirstResponder(editingTextView)
     }
 
     /// Word's "Update Style to Match Selection": the selection's direct formatting moves into its
@@ -415,6 +431,10 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
         textView.typingAttributes = attrs
     }
 
+    func textView(_ textView: LibretillaTextView, clickedAt point: NSPoint) -> Bool {
+        beginCellEditing(at: point)
+    }
+
     func textView(_ textView: LibretillaTextView, doubleClickedAt index: Int, on hit: Int?) -> Bool {
         if let hit, isPicture(at: hit) {
             openPictureFormatter(at: hit)
@@ -439,6 +459,9 @@ extension EditorViewController: NSMenuItemValidation, LibretillaTextViewDelegate
 
     func validateMenuItem(_ item: NSMenuItem) -> Bool {
         guard let action = item.action else { return true }
+        // Inside a table cell (backlog 15): no objects, links or page breaks (the cell is written back into its
+        // table's XML, which new parts and relationships don't reach), and no style updates.
+        if cellEditor != nil, Self.unavailableInCells.contains(action) { return false }
         if action == #selector(editTable(_:)) { return tableAtSelection != nil && textView.isEditable }
         if action == #selector(formatPicture(_:)) { return pictureIndex(for: item) != nil && textView.isEditable }
         if action == #selector(editHeaderAndFooter(_:)) || action == #selector(editMargins(_:))

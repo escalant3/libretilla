@@ -2024,6 +2024,16 @@
         }
       }
     },
+    "Table cell": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celda de tabla"
+          }
+        }
+      }
+    },
     "Table, %lld × %lld": {
       "comment": "Placeholder for a table: rows × columns",
       "localizations": {

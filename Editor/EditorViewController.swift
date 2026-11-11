@@ -16,6 +16,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     var pictureFormatter: PictureFormatSheet?
     /// Resize handles on the selected picture (backlog 12).
     let pictureHandles = PictureHandles()
+    /// The table cell being typed into (backlog 15).
+    var cellEditor: TableCellEditor?
     var headerFooterEditor: HeaderFooterSheet?
     var marginsEditor: MarginsSheet?
     var paragraphEditor: ParagraphSheet?
@@ -393,12 +395,13 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         guard !selectionUpdateScheduled else { return }
         selectionUpdateScheduled = true
         DispatchQueue.main.async { [weak self] in
-            guard let self, let storage = self.textView.textStorage else { return }
+            guard let self, let storage = self.editingTextView.textStorage else { return }
             self.selectionUpdateScheduled = false
             self.updatePictureHandles()
             let bridge = self.bridge
+            let target = self.editingTextView
             let format = bridge.selectionFormat(
-                storage, range: self.textView.selectedRange(), typingAttributes: self.textView.typingAttributes)
+                storage, range: target.selectedRange(), typingAttributes: target.typingAttributes)
             self.onSelectionFormatChange?(format, bridge)
         }
     }
