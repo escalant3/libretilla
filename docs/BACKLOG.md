@@ -74,7 +74,7 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [ ] 22. Text inside fields and content controls can't be reformatted. Links containing fields, bookmarks or
       tracked changes stay opaque.
 - [x] 23. Copy and paste inside Libretilla goes through RTF, so pasted formats are derived from their look, and
-      links and objects paste as plain text. *Done within one document, for text without objects other than pictures: the paste keeps
+      links and objects paste as plain text. *Done within one document, for text and pictures: the paste keeps
       the Word paragraph and run formats, styles, links and list numbering (new paragraphs and links; bookmarks
       and comment ranges stay put). Copies with fields, tables or chips, and pastes into another document, still
       go through RTF.*
