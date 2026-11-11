@@ -288,9 +288,10 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertTrue(text(1).contains("Section three"), "a continuous section stays on the page")
         XCTAssertFalse(text(2).contains("Section"), "blank: an even-page section can't start on page 3")
         XCTAssertTrue(text(3).contains("Section four"))
-        // Footers number the pages across sections.
-        XCTAssertTrue(text(0).contains("Page 1"))
-        XCTAssertTrue(text(1).contains("Page 2"))
+        // Only the final section has a footer (backlog 7: the sections before it have none to inherit). It
+        // numbers the pages across sections.
+        XCTAssertFalse(text(0).contains("Page 1"))
+        XCTAssertFalse(text(1).contains("Page 2"))
         XCTAssertTrue(text(3).contains("Page 4"))
 
         // The A4 section's 2″ left margin.

@@ -760,9 +760,48 @@ def f15_sections(out: Path):
     pkg.write(out / "15-sections.docx", document("".join(body), final))
 
 
+def f16_section_headers(out: Path):
+    """Each section's own headers and footers (backlog 7). Prints on 5 pages: section one (2 pages, a different
+    first page) has its first-page header and then its own; section two has no references and inherits section
+    one's default header; section three has its own header and no footer, so it inherits section one's footer;
+    the final section has its own header and footer."""
+    pkg = Package("Section headers")
+    wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
+
+    def part(kind: str, name: str, text: str) -> str:
+        rid = pkg.rel(kind, name)
+        tag = "w:hdr" if kind == "header" else "w:ftr"
+        style = "Header" if kind == "header" else "Footer"
+        pkg.add(f"word/{name}", f"{XML_DECL}<{tag} {ROOT_NS}>{p(text, style=style)}</{tag}>", f"{wml}.{kind}+xml")
+        return rid
+
+    first = part("header", "header1.xml", "Section one first-page header")
+    one = part("header", "header2.xml", "Section one header")
+    one_f = part("footer", "footer1.xml", "Section one footer")
+    three = part("header", "header3.xml", "Section three header")
+    final_h = part("header", "header4.xml", "Final section header")
+    final_f = part("footer", "footer2.xml", "Final section footer")
+
+    def sect(*refs: tuple[str, str, str], title_pg: bool = False) -> str:
+        xml = "".join(f'<w:{kind}Reference w:type="{slot}" r:id="{rid}"/>' for kind, slot, rid in refs)
+        return sect_pr(title_pg=title_pg).replace("<w:sectPr>", "<w:sectPr>" + xml)
+
+    body = [
+        p("Section one, page one.", style="Heading1"),
+        p("Section one, page two.", page_break_before="",
+          sect=sect(("header", "first", first), ("header", "default", one), ("footer", "default", one_f),
+                    title_pg=True)),
+        p("Section two: inherits section one's header and footer.", sect=sect()),
+        p("Section three: its own header, section one's footer.", sect=sect(("header", "default", three))),
+        p("Final section.", style="Heading1"),
+    ]
+    final = sect(("header", "default", final_h), ("footer", "default", final_f))
+    pkg.write(out / "16-section-headers.docx", document("".join(body), final))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
             f08_spanish, f09_large, f10_word_features, f13_page_break_before,
-            f14_headers_footers, f15_sections]
+            f14_headers_footers, f15_sections, f16_section_headers]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a

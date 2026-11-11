@@ -5,10 +5,19 @@ public struct PageSection: Sendable, Equatable {
     /// The section's text, its last paragraph (the one holding its `w:sectPr`) included.
     public var range: NSRange
     public var setup: PageSetup
+    /// Its own header and footer references (it inherits the others from the sections before it), and whether it
+    /// has `w:titlePg`. Nil for the final section, whose headers and footers are the document's `headersFooters`.
+    public var headerFooterReferences: [HeadersFooters.Key: String]?
+    public var differentFirstPage = false
 
-    public init(range: NSRange, setup: PageSetup) {
+    public init(
+        range: NSRange, setup: PageSetup, headerFooterReferences: [HeadersFooters.Key: String]? = nil,
+        differentFirstPage: Bool = false
+    ) {
         self.range = range
         self.setup = setup
+        self.headerFooterReferences = headerFooterReferences
+        self.differentFirstPage = differentFirstPage
     }
 }
 
@@ -33,7 +42,10 @@ extension AttributedStringBridge {
             let end = NSMaxRange(paragraph)
             if end > start {
                 sections.append(
-                    PageSection(range: NSRange(location: start, length: end - start), setup: PageSetup(sectPr: sectPr)))
+                    PageSection(
+                        range: NSRange(location: start, length: end - start), setup: PageSetup(sectPr: sectPr),
+                        headerFooterReferences: HeadersFooters.references(in: sectPr),
+                        differentFirstPage: sectPr.firstChild(named: "w:titlePg").map(RunProperties.toggle) ?? false))
             }
             start = end
         }
@@ -41,5 +53,21 @@ extension AttributedStringBridge {
             sections.append(PageSection(range: NSRange(location: start, length: text.length - start), setup: last))
         }
         return sections
+    }
+}
+
+extension HeadersFooters {
+    /// The headers and footers each of `sections` prints with, and whether its first page has its own (backlog 7):
+    /// its own references and those it inherits from the sections before it. The final section uses these, as
+    /// edited, and `differentFirstPage`.
+    public func bySection(_ sections: [PageSection], differentFirstPage: Bool) -> [(
+        headersFooters: HeadersFooters, differentFirstPage: Bool
+    )] {
+        var inherited: [Key: String] = [:]
+        return sections.map { section in
+            guard let own = section.headerFooterReferences else { return (self, differentFirstPage) }
+            inherited.merge(own) { $1 }
+            return (resolving(inherited), section.differentFirstPage)
+        }
     }
 }

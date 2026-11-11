@@ -206,4 +206,46 @@ import Testing
         #expect(
             String(decoding: body.serialized(), as: UTF8.self).hasSuffix("<w:p><w:r><w:t>x</w:t></w:r></w:p></w:hdr>"))
     }
+
+    // MARK: Sections (backlog 7)
+
+    /// Each section's headers and footers: its own, those it inherits, and the final section's as edited.
+    @Test func eachSectionHasItsOwnHeadersAndFooters() throws {
+        let doc = try codec.read(try Corpus.data("16-section-headers.docx"))
+        let bridge = AttributedStringBridge(doc)
+        let body = bridge.attributedString(for: doc.body)
+        let sections = AttributedStringBridge.sections(in: body, last: doc.body.pageSetup)
+        #expect(sections.count == 4)
+        let printed = doc.headersFooters.bySection(sections, differentFirstPage: doc.body.differentFirstPage)
+        func header(_ i: Int, page: Int, first: Bool = false) -> String? {
+            text(
+                printed[i].headersFooters.story(
+                    .header, page: page, differentFirstPage: printed[i].differentFirstPage,
+                    isFirstPage: first))
+        }
+        func footer(_ i: Int) -> String? {
+            text(printed[i].headersFooters.story(.footer, page: 2, differentFirstPage: false))
+        }
+        #expect(header(0, page: 1, first: true) == "Section one first-page header")
+        #expect(header(0, page: 2) == "Section one header")
+        #expect(footer(0) == "Section one footer")
+        #expect(header(1, page: 3, first: true) == "Section one header", "no w:titlePg: inherits the default")
+        #expect(footer(1) == "Section one footer")
+        #expect(header(2, page: 4, first: true) == "Section three header")
+        #expect(footer(2) == "Section one footer")
+        #expect(header(3, page: 5, first: true) == "Final section header")
+        #expect(footer(3) == "Final section footer")
+
+        // A part the final section shares is printed as edited in every section that uses it.
+        var edited = doc.headersFooters
+        let key = Key(.footer, .default)
+        var story = try #require(edited.stories[key])
+        story = edit(story, in: doc) { $0.replaceCharacters(in: NSRange(location: 0, length: 0), with: "New ") }
+        edited.stories[key] = story
+        var shared = sections
+        shared[0].headerFooterReferences?[key] = doc.headersFooters.references[key]
+        let again = edited.bySection(shared, differentFirstPage: false)
+        #expect(text(again[0].headersFooters.stories[key]) == "New Final section footer")
+        #expect(text(again[3].headersFooters.stories[key]) == "New Final section footer")
+    }
 }

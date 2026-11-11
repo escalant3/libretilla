@@ -387,7 +387,11 @@ final class LibretillaDocument: NSDocument {
     {
         let parts = printParts()
         guard parts.count > 1 else {
-            let part = parts.first ?? PrintPart(text: initialText, setup: pageSetup)
+            let part =
+                parts.first
+                ?? PrintPart(
+                    text: initialText, setup: pageSetup, headersFooters: headersFooters,
+                    differentFirstPage: differentFirstPage)
             return operation(printing: part, pageOffset: 0, totalPages: nil, settings: printSettings)
         }
         // Sections with their own paper: print the PDF made of each one's pages.
@@ -398,30 +402,40 @@ final class LibretillaDocument: NSDocument {
         return op
     }
 
-    /// Text printed on pages of one setup: a section, with any continuous sections after it.
+    /// Text printed on pages of one setup: a section, with any continuous sections after it, and the first
+    /// section's headers and footers.
     struct PrintPart {
         var text: NSAttributedString
         var setup: PageSetup
+        var headersFooters = HeadersFooters()
+        var differentFirstPage = false
     }
 
     /// The text to print, by section (`AttributedStringBridge.sections`). A section that starts on a new page
     /// (or an odd or even one) starts a part; a continuous one joins the part before it, on the same pages.
     func printParts() -> [PrintPart] {
         let text = editor?.textSnapshot() ?? initialText
-        var ranges: [(range: NSRange, setup: PageSetup)] = []
-        for section in AttributedStringBridge.sections(in: text, last: pageSetup) {
-            if let last = ranges.indices.last, [.continuous, .nextColumn].contains(section.setup.start) {
-                ranges[last].range = NSUnionRange(ranges[last].range, section.range)
+        let sections = AttributedStringBridge.sections(in: text, last: pageSetup)
+        let decorations = headersFooters.bySection(sections, differentFirstPage: differentFirstPage)
+        var parts: [(range: NSRange, part: PrintPart)] = []
+        for (section, decoration) in zip(sections, decorations) {
+            if let last = parts.indices.last, [.continuous, .nextColumn].contains(section.setup.start) {
+                parts[last].range = NSUnionRange(parts[last].range, section.range)
             } else {
-                ranges.append((section.range, section.setup))
+                let part = PrintPart(
+                    text: NSAttributedString(), setup: section.setup, headersFooters: decoration.headersFooters,
+                    differentFirstPage: decoration.differentFirstPage)
+                parts.append((section.range, part))
             }
         }
         let ns = text.string as NSString
-        return ranges.map { range, setup in
+        return parts.map { range, part in
             var r = range
             // A section's last paragraph mark would add an empty line, and maybe an empty page.
             if r.length > 1, NSMaxRange(r) < ns.length, ns.character(at: NSMaxRange(r) - 1) == 0x0A { r.length -= 1 }
-            return PrintPart(text: text.attributedSubstring(from: r), setup: setup)
+            var part = part
+            part.text = text.attributedSubstring(from: r)
+            return part
         }
     }
 
@@ -433,9 +447,9 @@ final class LibretillaDocument: NSDocument {
         let info = Self.printInfo(for: part.setup, basedOn: printInfo)
         info.dictionary().addEntries(from: settings)
         let view = PrintTextView(text: part.text, width: part.setup.textWidth)
-        if let base, !base.headersFooters.stories.isEmpty {
+        if !part.headersFooters.stories.isEmpty {
             view.decorations = PrintTextView.Decorations(
-                headersFooters: base.headersFooters, differentFirstPage: base.body.differentFirstPage, bridge: bridge,
+                headersFooters: part.headersFooters, differentFirstPage: part.differentFirstPage, bridge: bridge,
                 setup: part.setup, pageOffset: pageOffset, totalPages: totalPages)
         }
         return NSPrintOperation(view: view, printInfo: info)
@@ -448,7 +462,7 @@ final class LibretillaDocument: NSDocument {
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-print-\(UUID())")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: scratch) }
-        let passes = base.map { $0.headersFooters.stories.isEmpty } == false ? 2 : 1
+        let passes = parts.contains { !$0.headersFooters.stories.isEmpty } ? 2 : 1
         var total: Int?
         var pdf = PDFDocument()
         for _ in 0..<passes {

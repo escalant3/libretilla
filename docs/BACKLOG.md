@@ -21,7 +21,11 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 ## Headers and footers
 
-- [ ] 7. A multi-section document prints the last section's headers and footers on every page.
+- [x] 7. A multi-section document prints the last section's headers and footers on every page. *Done: each
+      section prints its own or inherited ones, with its own `w:titlePg`. The sheet still edits only the final
+      section's (see 32).*
+- [ ] 38. Page numbers in headers and footers ignore `w:pgNumType` (a section restarting its numbering, or
+      numbering in roman numerals), and `SECTIONPAGES` shows the document's page count.
 - [ ] 8. A header taller than the top margin overlaps the body instead of pushing it down.
 - [ ] 9. Even-page headers and footers can't be edited in the sheet.
 - [ ] 10. The editor doesn't show headers and footers inline; they're edited only in the sheet (deliberate, ADR 0007).

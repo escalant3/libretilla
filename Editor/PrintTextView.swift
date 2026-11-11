@@ -191,7 +191,7 @@ final class PrintTextView: NSTextView {
             for kind in HeadersFooters.Kind.allCases {
                 guard
                     let text = Self.decorationText(
-                        kind, page: page, of: pages, decorations: decorations)
+                        kind, page: page, of: pages, isFirstPage: op.currentPage == 1, decorations: decorations)
                 else { continue }
                 let setup = decorations.setup
                 let size = NSSize(width: setup.textWidth, height: .greatestFiniteMagnitude)
@@ -208,13 +208,15 @@ final class PrintTextView: NSTextView {
         }
     }
 
-    /// The header or footer text for page `page` of `pages`, or nil if the page has none.
-    static func decorationText(_ kind: HeadersFooters.Kind, page: Int, of pages: Int, decorations: Decorations)
-        -> NSAttributedString?
-    {
+    /// The header or footer text for page `page` of `pages`, or nil if the page has none. `isFirstPage`: whether
+    /// it's the first page of its section (by default, of the document).
+    static func decorationText(
+        _ kind: HeadersFooters.Kind, page: Int, of pages: Int, isFirstPage: Bool? = nil, decorations: Decorations
+    ) -> NSAttributedString? {
         guard
             let story = decorations.headersFooters.story(
-                kind, page: page, differentFirstPage: decorations.differentFirstPage), !story.isEmpty
+                kind, page: page, differentFirstPage: decorations.differentFirstPage, isFirstPage: isFirstPage),
+            !story.isEmpty
         else { return nil }
         let text = NSMutableAttributedString(
             attributedString: printable(

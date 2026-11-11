@@ -24,9 +24,9 @@ public enum PageField: String, Sendable, Equatable {
 /// The headers and footers the document's last section uses (ECMA-376 Part 1, §17.10), each parsed like the
 /// body so it round-trips losslessly and edits rewrite only the paragraphs that changed.
 ///
-/// A document with several sections uses the last section's headers and footers for the whole document in
-/// Libretilla, as it does for page setup. A section without a reference of some type inherits it from the
-/// sections before it, as in Word.
+/// The editor edits the last section's headers and footers, as it does its page setup. Printing gives each section
+/// its own (`resolving`). A section without a reference of some type inherits it from the sections before it, as in
+/// Word.
 public struct HeadersFooters: Sendable {
     public enum Kind: String, Sendable, CaseIterable {
         case header
@@ -111,17 +111,55 @@ public struct HeadersFooters: Sendable {
     public var unreadable: Set<Key> = []
     /// `w:evenAndOddHeaders` in the settings: even pages use the even header and footer.
     public var evenAndOddPages = false
+    /// Every section's header and footer parts as read, by relationship id, for printing (`resolving`).
+    var partsById: [String: Story] = [:]
+    /// The relationship id behind each of `stories` read from the file.
+    var references: [Key: String] = [:]
 
     public init() {}
 
-    /// The header or footer printed on page `page` (from 1), or nil for none.
-    public func story(_ kind: Kind, page: Int, differentFirstPage: Bool) -> Story? {
-        stories[Key(kind, slot(page: page, differentFirstPage: differentFirstPage))]
+    /// The header or footer printed on page `page` (from 1), or nil for none. `isFirstPage` is whether it's the
+    /// first page of its section (by default, of the document).
+    public func story(_ kind: Kind, page: Int, differentFirstPage: Bool, isFirstPage: Bool? = nil) -> Story? {
+        stories[Key(kind, slot(page: page, differentFirstPage: differentFirstPage, isFirstPage: isFirstPage))]
     }
 
-    public func slot(page: Int, differentFirstPage: Bool) -> Slot {
-        if page == 1 && differentFirstPage { return .first }
+    public func slot(page: Int, differentFirstPage: Bool, isFirstPage: Bool? = nil) -> Slot {
+        if isFirstPage ?? (page == 1), differentFirstPage { return .first }
         return evenAndOddPages && page % 2 == 0 ? .even : .default
+    }
+
+    /// The headers and footers of a section with these references (its own and those it inherits, `PageSection`):
+    /// a part the last section also uses is printed as edited, any other as read.
+    public func resolving(_ sectionReferences: [Key: String]) -> HeadersFooters {
+        var out = HeadersFooters()
+        out.evenAndOddPages = evenAndOddPages
+        for (key, id) in sectionReferences {
+            if let edited = references.first(where: { $0.value == id }).flatMap({ stories[$0.key] }) {
+                out.stories[key] = edited
+            } else if let story = partsById[id] {
+                out.stories[key] = story
+            }
+        }
+        return out
+    }
+
+    /// The header and footer references in a `w:sectPr`, by kind and slot.
+    static func references(in sectPr: RawXML.Element) -> [Key: String] {
+        var refs: [Key: String] = [:]
+        for e in sectPr.childElements {
+            let kind: Kind
+            switch e.name {
+            case "w:headerReference": kind = .header
+            case "w:footerReference": kind = .footer
+            default: continue
+            }
+            guard let slot = Slot(rawValue: e.attribute("w:type") ?? "default"),
+                let id = e.attributes.first(where: { $0.name.hasSuffix(":id") })?.value
+            else { continue }
+            refs[Key(kind, slot)] = id
+        }
+        return refs
     }
 
     /// A new header or footer: one empty paragraph in `styleId` (Word's "header" or "footer" style).
@@ -244,13 +282,13 @@ extension OOXMLCodec {
         {
             result.evenAndOddPages = root.firstChild(named: "w:evenAndOddHeaders").map(RunProperties.toggle) ?? false
         }
-        for (key, id) in body.headerFooterReferences {
+        /// The story in the part with relationship id `id`: nil if there's none, `.failure` if it can't be read.
+        func story(_ id: String) -> Result<HeadersFooters.Story, CocoaError>? {
             guard let rel = rels.first(where: { $0.id == id && !$0.isExternal }), let name = rel.resolvedPartName,
                 let data = package[name]
-            else { continue }
+            else { return nil }
             guard var story = try? DocumentBody(data: data, part: name), story.readOnlyReason == nil else {
-                result.unreadable.insert(key)
-                continue
+                return .failure(CocoaError(.fileReadCorruptFile))
             }
             story.blocks = story.blocks.map {
                 if case .paragraph(let p) = $0 { .paragraph(HeadersFooters.collapsingPageFields(p)) } else { $0 }
@@ -263,7 +301,19 @@ extension OOXMLCodec {
                     s.images[r.id] = d
                 }
             }
-            result.stories[key] = s
+            return .success(s)
+        }
+        for (key, id) in body.headerFooterReferences {
+            switch story(id) {
+            case .success(let s):
+                result.stories[key] = s
+                result.references[key] = id
+            case .failure: result.unreadable.insert(key)
+            case nil: break
+            }
+        }
+        for id in Set(body.allSectionProperties.flatMap { HeadersFooters.references(in: $0).values }) {
+            if case .success(let s) = story(id) { result.partsById[id] = s }
         }
         return result
     }
@@ -298,7 +348,7 @@ extension OOXMLCodec {
 
 extension DocumentBody {
     /// Every section's `w:sectPr`, in order: those in paragraph properties, then the final one.
-    private var allSectionProperties: [RawXML.Element] {
+    var allSectionProperties: [RawXML.Element] {
         blocks.compactMap { block in
             switch block {
             case .paragraph(let p) where p.propertiesXMLWithoutSectionBreak != nil:
@@ -315,18 +365,7 @@ extension DocumentBody {
     var headerFooterReferences: [(HeadersFooters.Key, String)] {
         var refs: [HeadersFooters.Key: String] = [:]
         for sect in allSectionProperties {
-            for e in sect.childElements {
-                let kind: HeadersFooters.Kind
-                switch e.name {
-                case "w:headerReference": kind = .header
-                case "w:footerReference": kind = .footer
-                default: continue
-                }
-                guard let slot = HeadersFooters.Slot(rawValue: e.attribute("w:type") ?? "default"),
-                    let id = e.attributes.first(where: { $0.name.hasSuffix(":id") })?.value
-                else { continue }
-                refs[HeadersFooters.Key(kind, slot)] = id
-            }
+            refs.merge(HeadersFooters.references(in: sect)) { $1 }
         }
         return HeadersFooters.Kind.allCases.flatMap { kind in
             HeadersFooters.Slot.allCases.compactMap { slot in

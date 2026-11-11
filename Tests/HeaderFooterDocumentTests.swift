@@ -54,6 +54,26 @@ extension PageSetupDocumentTests {
         XCTAssertFalse(pdf.string?.contains("\u{FFFC}") ?? true, "no chips in the PDF's text")
     }
 
+    /// Backlog 7: each section prints its own headers and footers, or those it inherits.
+    func testEachSectionPrintsItsOwnHeadersAndFooters() throws {
+        let pdf = try pdfPages(try open("16-section-headers.docx"))
+        XCTAssertEqual(pdf.pageCount, 5)
+        let expected = [
+            ("Section one, page one.", "Section one first-page header", nil),
+            ("Section one, page two.", "Section one header", "Section one footer"),
+            ("Section two", "Section one header", "Section one footer"),
+            ("Section three", "Section three header", "Section one footer"),
+            ("Final section.", "Final section header", "Final section footer"),
+        ]
+        for (i, (body, header, footer)) in expected.enumerated() {
+            let page = pageText(pdf, i)
+            XCTAssertTrue(page.contains(body), "page \(i + 1): \(page)")
+            let lines = page.split(whereSeparator: \.isNewline).map(String.init)
+            XCTAssertEqual(lines.filter { $0.hasSuffix("header") }, [header], "page \(i + 1)")
+            XCTAssertEqual(lines.filter { $0.hasSuffix("footer") }, footer.map { [$0] } ?? [], "page \(i + 1)")
+        }
+    }
+
     func testHeaderAndFooterSitAtTheirDistancesFromTheEdges() throws {
         let pdf = try pdfPages(try open("14-headers-footers.docx"))
         let page = try XCTUnwrap(pdf.page(at: 2)).bounds(for: .mediaBox)
