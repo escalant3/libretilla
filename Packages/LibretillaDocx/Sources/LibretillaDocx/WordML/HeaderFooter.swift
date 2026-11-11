@@ -79,14 +79,15 @@ public struct HeadersFooters: Sendable {
             }
         }
 
-        /// The story as printed on page `page` of `pages`: page fields show the real numbers, and the content of
-        /// block content controls (Word's Page Number gallery wraps page numbers in one) shows as text.
-        public func printableBody(page: Int, pages: Int) -> DocumentBody {
+        /// The story as printed on page `page` of `pages`: page fields show the real numbers (the page's in
+        /// `format`, a `w:pgNumType` format, decimal by default), and the content of block content controls (Word's
+        /// Page Number gallery wraps page numbers in one) shows as text.
+        public func printableBody(page: Int, pages: Int, format: String? = nil) -> DocumentBody {
             func substituted(_ p: Paragraph) -> Paragraph {
                 var p = p
                 for (i, inline) in p.inlines.enumerated() {
                     guard case .opaque(var o) = inline, let field = o.pageField else { continue }
-                    o.display = .text(String(field == .page ? page : pages))
+                    o.display = .text(field == .page ? Numbering.format(page, format ?? "decimal") : String(pages))
                     p.inlines[i] = .opaque(o)
                 }
                 return p

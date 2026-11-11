@@ -392,7 +392,9 @@ final class LibretillaDocument: NSDocument {
                 ?? PrintPart(
                     text: initialText, setup: pageSetup, headersFooters: headersFooters,
                     differentFirstPage: differentFirstPage)
-            return operation(printing: part, pageOffset: 0, totalPages: nil, settings: printSettings)
+            return operation(
+                printing: part, pageOffset: 0, totalPages: nil, firstPageNumber: part.setup.pageNumberStart,
+                settings: printSettings)
         }
         // Sections with their own paper: print the PDF made of each one's pages.
         let info = Self.printInfo(for: pageSetup, basedOn: printInfo)
@@ -442,7 +444,8 @@ final class LibretillaDocument: NSDocument {
     /// The print operation for one part: its paper size and margins, its headers and footers numbered from
     /// `pageOffset + 1` out of `totalPages` (or the part's own count).
     private func operation(
-        printing part: PrintPart, pageOffset: Int, totalPages: Int?, settings: [NSPrintInfo.AttributeKey: Any]
+        printing part: PrintPart, pageOffset: Int, totalPages: Int?, firstPageNumber: Int? = nil,
+        settings: [NSPrintInfo.AttributeKey: Any]
     ) -> NSPrintOperation {
         let info = Self.printInfo(for: part.setup, basedOn: printInfo)
         info.dictionary().addEntries(from: settings)
@@ -450,7 +453,7 @@ final class LibretillaDocument: NSDocument {
         if !part.headersFooters.stories.isEmpty {
             let decorations = PrintTextView.Decorations(
                 headersFooters: part.headersFooters, differentFirstPage: part.differentFirstPage, bridge: bridge,
-                setup: part.setup, pageOffset: pageOffset, totalPages: totalPages)
+                setup: part.setup, pageOffset: pageOffset, totalPages: totalPages, firstPageNumber: firstPageNumber)
             view.decorations = decorations
             (info.topMargin, info.bottomMargin) = PrintTextView.margins(clearing: decorations)
         }
@@ -469,6 +472,8 @@ final class LibretillaDocument: NSDocument {
         var pdf = PDFDocument()
         for _ in 0..<passes {
             pdf = PDFDocument()
+            // The number shown on the next page: a section can restart it (w:pgNumType); a blank page counts.
+            var nextNumber = 1
             for (i, part) in parts.enumerated() {
                 let nextPage = pdf.pageCount + 1
                 let wrongSide =
@@ -481,10 +486,12 @@ final class LibretillaDocument: NSDocument {
                     let blank = PDFPage()
                     blank.setBounds(NSRect(origin: .zero, size: part.setup.pageSize), for: .mediaBox)
                     pdf.insert(blank, at: pdf.pageCount)
+                    nextNumber += 1
                 }
+                let firstNumber = part.setup.pageNumberStart ?? nextNumber
                 let url = scratch.appendingPathComponent("\(i).pdf")
                 let op = operation(
-                    printing: part, pageOffset: pdf.pageCount, totalPages: total,
+                    printing: part, pageOffset: pdf.pageCount, totalPages: total, firstPageNumber: firstNumber,
                     settings: [.jobDisposition: NSPrintInfo.JobDisposition.save, .jobSavingURL: url])
                 op.showsPrintPanel = false
                 op.showsProgressPanel = false
@@ -494,6 +501,7 @@ final class LibretillaDocument: NSDocument {
                 for p in 0..<pages.pageCount {
                     if let page = pages.page(at: p) { pdf.insert(page, at: pdf.pageCount) }
                 }
+                nextNumber = firstNumber + pages.pageCount
             }
             total = pdf.pageCount
         }

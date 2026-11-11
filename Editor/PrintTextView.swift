@@ -15,6 +15,13 @@ final class PrintTextView: NSTextView {
         /// this view's own.
         var pageOffset = 0
         var totalPages: Int?
+        /// The number shown on this view's first page (`w:pgNumType`'s start, or where the previous section left
+        /// off); nil for its position in the document, `pageOffset + 1`.
+        var firstPageNumber: Int?
+
+        /// The number shown on the view's page `page` (from 1), and how to write it.
+        func pageNumber(_ page: Int) -> Int { (firstPageNumber ?? pageOffset + 1) + page - 1 }
+        var pageNumberFormat: String? { setup.pageNumberFormat }
     }
 
     var decorations: Decorations?
@@ -236,7 +243,8 @@ final class PrintTextView: NSTextView {
     /// number and the page count.
     override func drawPageBorder(with borderSize: NSSize) {
         guard let decorations, let op = NSPrintOperation.current else { return }
-        let page = op.currentPage + decorations.pageOffset
+        // As in Word, the page's number (which can restart in a section) picks odd or even headers and footers.
+        let page = decorations.pageNumber(op.currentPage)
         let pages = decorations.totalPages ?? NSMaxRange(op.pageRange) - 1
         let saved = frame
         // As AppKit's documentation says: the page border is drawn in a frame the size of the paper.
@@ -301,16 +309,18 @@ final class PrintTextView: NSTextView {
                 kind, page: page, differentFirstPage: decorations.differentFirstPage, isFirstPage: isFirstPage),
             !story.isEmpty
         else { return nil }
-        return text(of: story, page: page, of: pages, bridge: decorations.bridge)
+        return text(
+            of: story, page: page, of: pages, format: decorations.pageNumberFormat, bridge: decorations.bridge)
     }
 
     /// A header or footer as printed on page `page` of `pages`.
-    static func text(of story: HeadersFooters.Story, page: Int, of pages: Int, bridge: AttributedStringBridge)
-        -> NSAttributedString
-    {
+    static func text(
+        of story: HeadersFooters.Story, page: Int, of pages: Int, format: String? = nil, bridge: AttributedStringBridge
+    ) -> NSAttributedString {
         let text = NSMutableAttributedString(
             attributedString: printable(
-                bridge.forStory(story).attributedString(for: story.printableBody(page: page, pages: pages))))
+                bridge.forStory(story).attributedString(
+                    for: story.printableBody(page: page, pages: pages, format: format))))
         // The last paragraph's terminator would add an empty line.
         if text.string.hasSuffix("\n") { text.deleteCharacters(in: NSRange(location: text.length - 1, length: 1)) }
         return text

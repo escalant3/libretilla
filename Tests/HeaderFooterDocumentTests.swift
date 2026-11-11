@@ -253,4 +253,14 @@ extension PageSetupDocumentTests {
             saved.headersFooters.stories[.init(.header, .even)]?.body.plainText, "Even page header (edited)")
         XCTAssertEqual(saved.headersFooters.stories[.init(.header, .even)]?.partName, "word/header3.xml")
     }
+
+    /// Backlog 38: sections number their pages in their own format, restarting or continuing (w:pgNumType).
+    func testSectionsNumberTheirPages() throws {
+        let pdf = try pdfPages(try open("18-page-numbers.docx"))
+        XCTAssertEqual(pdf.pageCount, 5)
+        let numbers = (0..<5).map { i in
+            pageText(pdf, i).split(whereSeparator: \.isNewline).first { $0.hasPrefix("Page ") }.map(String.init)
+        }
+        XCTAssertEqual(numbers, ["Page i", "Page ii", "Page 1", "Page 2", "Page 3"])
+    }
 }

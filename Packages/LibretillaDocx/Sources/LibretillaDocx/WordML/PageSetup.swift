@@ -19,6 +19,10 @@ public struct PageSetup: Sendable, Equatable {
     public var footer = 720
     /// How the section starts (`w:type`). Read only.
     public var start = SectionStart.nextPage
+    /// The section's page numbering (`w:pgNumType`): the number of its first page if it restarts, and the number
+    /// format (`lowerRoman`, …; nil for decimal). Read only.
+    public var pageNumberStart: Int?
+    public var pageNumberFormat: String?
 
     /// `w:type` (ECMA-376 Part 1, §17.18.77): where a section starts.
     public enum SectionStart: String, Sendable, Equatable {
@@ -123,6 +127,9 @@ public struct PageSetup: Sendable, Equatable {
         setup.footer = int(margins, "w:footer").map(abs) ?? setup.footer
         setup.start =
             sectPr?.firstChild(named: "w:type")?.attribute("w:val").flatMap(SectionStart.init(rawValue:)) ?? .nextPage
+        let numbering = sectPr?.firstChild(named: "w:pgNumType")
+        setup.pageNumberStart = int(numbering, "w:start")
+        setup.pageNumberFormat = numbering?.attribute("w:fmt")
         self = setup
     }
 }

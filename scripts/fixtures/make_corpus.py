@@ -847,9 +847,34 @@ def f17_table_styles(out: Path):
     pkg.write(out / "17-table-styles.docx", document(body))
 
 
+def f18_page_numbers(out: Path):
+    """Section page numbering (w:pgNumType, backlog 38). Prints on 5 pages numbered i, ii, 1, 2, 3: section one in
+    lower roman, section two restarting at 1, and the final section continuing. All use section one's footer."""
+    pkg = Package("Page numbers")
+    wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
+    fid = pkg.rel("footer", "footer1.xml")
+    pkg.add("word/footer1.xml",
+            f"{XML_DECL}<w:ftr {ROOT_NS}>{p('Page ', page_field(), style='Footer', jc='center')}</w:ftr>",
+            f"{wml}.footer+xml")
+
+    def sect(numbering: str, footer: str | None = None) -> str:
+        return sect_pr(footer=footer).replace('<w:cols ', numbering + '<w:cols ')
+
+    body = [
+        p("Front matter, page i.", style="Heading1"),
+        p("Front matter, page ii.", page_break_before="",
+          sect=sect('<w:pgNumType w:fmt="lowerRoman" w:start="1"/>', footer=fid)),
+        p("Chapter one, page 1.", style="Heading1"),
+        p("Chapter one, page 2.", page_break_before="", sect=sect('<w:pgNumType w:start="1"/>')),
+        p("Chapter two, page 3.", style="Heading1"),
+    ]
+    pkg.write(out / "18-page-numbers.docx", document("".join(body), sect("")))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
             f08_spanish, f09_large, f10_word_features, f13_page_break_before,
-            f14_headers_footers, f15_sections, f16_section_headers, f17_table_styles]
+            f14_headers_footers, f15_sections, f16_section_headers, f17_table_styles,
+            f18_page_numbers]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a

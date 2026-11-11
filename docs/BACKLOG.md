@@ -24,8 +24,10 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 7. A multi-section document prints the last section's headers and footers on every page. *Done: each
       section prints its own or inherited ones, with its own `w:titlePg`. The sheet still edits only the final
       section's (see 32).*
-- [ ] 38. Page numbers in headers and footers ignore `w:pgNumType` (a section restarting its numbering, or
-      numbering in roman numerals), and `SECTIONPAGES` shows the document's page count.
+- [x] 38. Page numbers in headers and footers ignore `w:pgNumType` (a section restarting its numbering, or
+      numbering in roman numerals), and `SECTIONPAGES` shows the document's page count. *Done for `w:pgNumType`:
+      sections restart or continue their numbering in their own format, and the page's number picks odd or even
+      headers, as in Word. `SECTIONPAGES` still shows the document's page count.*
 - [x] 8. A header taller than the top margin overlaps the body instead of pushing it down. *Done: the tallest
       header (footer) of a section moves its top (bottom) margin, unless the margin is negative ("exactly").
       Word does it page by page; Libretilla per section.*
