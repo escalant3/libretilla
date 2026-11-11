@@ -251,12 +251,15 @@ extension AttributedStringBridge {
     /// A row drawn on demand (vector, so it prints sharply).
     static func rowImage(_ row: TableLayout.Row, width: CGFloat) -> NSImage {
         let image = NSImage(size: NSSize(width: max(1, width), height: max(1, row.height)), flipped: true) { _ in
+            // On a dark page (Dark Mode), colours chosen for white paper are drawn readable (backlog 28).
+            let dark = ReadableColor.isDrawingDark
             for cell in row.cells {
                 if let fill = cell.fill {
                     fill.setFill()
                     cell.frame.fill()
                 }
-                if let text = cell.text {
+                if let original = cell.text {
+                    let text = dark ? shownOnDarkPage(original, fill: cell.fill) : original
                     let r = CGRect(
                         x: cell.frame.minX + cell.textInsets.left, y: cell.frame.minY + cell.textInsets.top,
                         width: max(1, cell.frame.width - cell.textInsets.left - cell.textInsets.right),
@@ -271,7 +274,9 @@ extension AttributedStringBridge {
                     path.lineWidth = max(0.5, CGFloat(border.width))
                     if border.style == "dashed" { path.setLineDash([3, 2], count: 2, phase: 0) }
                     if border.style == "dotted" { path.setLineDash([1, 1], count: 2, phase: 0) }
-                    (border.color.flatMap(color(hex:)) ?? .black).setStroke()
+                    let stroke = border.color.flatMap(color(hex:))
+                    ((dark ? ReadableColor.onDarkPage(stroke ?? .black, onHighlight: false) : nil) ?? stroke ?? .black)
+                        .setStroke()
                     path.stroke()
                 }
                 let f = cell.frame
@@ -288,6 +293,23 @@ extension AttributedStringBridge {
             return true
         }
         image.accessibilityDescription = nil
+        // Drawn again for each appearance (Dark Mode), not cached.
+        image.cacheMode = .never
         return image
+    }
+
+    /// A cell's text as drawn on a dark page: colours made readable, automatic (black) text light, and text on a
+    /// light cell fill kept dark.
+    static func shownOnDarkPage(_ text: NSAttributedString, fill: NSColor?) -> NSAttributedString {
+        let out = NSMutableAttributedString(attributedString: text)
+        let onFill = fill?.usingColorSpace(.sRGB).map { ReadableColor.luminance($0) > 0.4 } ?? false
+        out.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: out.length)) { value, range, _ in
+            let color = (value as? NSColor) ?? .black
+            let highlighted = onFill || out.attribute(.backgroundColor, at: range.location, effectiveRange: nil) != nil
+            if let shown = ReadableColor.onDarkPage(color, onHighlight: highlighted) {
+                out.addAttribute(.foregroundColor, value: shown, range: range)
+            }
+        }
+        return out
     }
 }

@@ -565,32 +565,12 @@ extension EditorViewController {
         }
     }
 
-    /// The colour to draw `color` in on a dark page, or nil to draw it as it is.
+    /// The colour to draw `color` in on a dark page, or nil to draw it as it is (`ReadableColor`).
     nonisolated static func readableColor(_ color: NSColor?, onHighlight: Bool) -> NSColor? {
-        // Highlights keep their light colours, so the text on them is drawn dark, as in Word's Dark Mode.
-        if onHighlight {
-            guard let rgb = color?.usingColorSpace(.sRGB), color?.type != .catalog else { return .black }
-            return luminance(rgb) > 0.4 ? .black : nil
-        }
-        // Automatic colour (a system colour) already adapts.
-        guard let color, color.type != .catalog, let rgb = color.usingColorSpace(.sRGB) else { return nil }
-        // 4.5:1 against the dark page (luminance ≈ 0.015) needs a luminance of about 0.25.
-        let wanted: CGFloat = 0.25
-        guard luminance(rgb) < wanted else { return nil }
-        if rgb.saturationComponent < 0.15 { return .textColor }
-        var t: CGFloat = 0.1
-        while t < 1 {
-            if let mixed = rgb.blended(withFraction: t, of: .white), luminance(mixed) >= wanted { return mixed }
-            t += 0.1
-        }
-        return .textColor
+        ReadableColor.onDarkPage(color, onHighlight: onHighlight)
     }
 
-    /// WCAG relative luminance of an sRGB colour.
-    nonisolated static func luminance(_ c: NSColor) -> CGFloat {
-        func linear(_ v: CGFloat) -> CGFloat { v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
-        return 0.2126 * linear(c.redComponent) + 0.7152 * linear(c.greenComponent) + 0.0722 * linear(c.blueComponent)
-    }
+    nonisolated static func luminance(_ c: NSColor) -> CGFloat { ReadableColor.luminance(c) }
 }
 
 /// Document view that keeps the page horizontally centred and grows with it. Without page edges the whole

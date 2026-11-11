@@ -85,7 +85,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 ## Dark Mode and accessibility
 
-- [ ] 28. Text inside tables, chips and pictures isn't recoloured on a dark page.
+- [x] 28. Text inside tables, chips and pictures isn't recoloured on a dark page. *Done for tables (text and
+      automatic borders made readable; text on a light cell fill stays dark) and chips (no longer cached in one
+      appearance). Pictures show as they are, as in Word.*
 - [ ] 29. No real VoiceOver session yet; only the rotor unit test and the audit.
 - [ ] 30. Manual look at the colour well popover, the highlight menu and the font popup with uninstalled fonts.
 - [x] 35. List markers aren't recoloured on a dark page (they're drawn outside TextKit's rendering attributes).

@@ -162,6 +162,43 @@ final class PolishTests: XCTestCase {
         XCTAssertFalse(doc.isDocumentEdited)
     }
 
+    /// Backlog 28: table text is drawn readable on a dark page.
+    func testTablesAreReadableOnADarkPage() throws {
+        try open("04-tables.docx")
+        editor.view.appearance = NSAppearance(named: .darkAqua)
+        editor.textView.viewDidChangeEffectiveAppearance()
+        editor.view.layoutSubtreeIfNeeded()
+        let tv = try XCTUnwrap(editor.textView)
+        let first = (tv.string as NSString).range(of: "\u{FFFC}").location
+        let layout = try XCTUnwrap(tv.textLayoutManager)
+        let content = try XCTUnwrap(layout.textContentManager)
+        layout.ensureLayout(for: layout.documentRange)
+        func frame(_ offset: Int) throws -> CGRect {
+            let location = try XCTUnwrap(content.location(content.documentRange.location, offsetBy: offset))
+            return try XCTUnwrap(layout.textLayoutFragment(for: location)).layoutFragmentFrame
+                .offsetBy(dx: tv.textContainerOrigin.x, dy: tv.textContainerOrigin.y)
+        }
+        let table = try frame(first).union(try frame(first + 6))
+        let rep = try XCTUnwrap(tv.bitmapImageRepForCachingDisplay(in: table))
+        // The page behind the text view, then the text.
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSColor(white: 0.12, alpha: 1).setFill()
+        NSRect(x: 0, y: 0, width: rep.pixelsWide, height: rep.pixelsHigh).fill()
+        NSGraphicsContext.restoreGraphicsState()
+        tv.cacheDisplay(in: table, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(
+            to: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("dark-table.png"))
+        var bright = 0
+        for x in 0..<rep.pixelsWide {
+            for y in 0..<rep.pixelsHigh {
+                guard let c = rep.colorAt(x: x, y: y), c.alphaComponent > 0.9 else { continue }
+                if c.brightnessComponent > 0.7 && c.saturationComponent < 0.2 { bright += 1 }
+            }
+        }
+        XCTAssertGreaterThan(bright, 200, "light text and lines on the dark page")
+    }
+
     func testLightPageSettingKeepsThePageAsPrinted() throws {
         try open("02-headings.docx")
         editor.view.appearance = NSAppearance(named: .darkAqua)

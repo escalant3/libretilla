@@ -196,6 +196,51 @@ import Testing
         #expect(look.firstRow && look.firstColumn && !look.lastRow && !look.lastColumn)
         #expect(look.rowBands && !look.columnBands)
     }
+
+    // MARK: Dark Mode (backlog 28)
+
+    @Test func cellTextIsReadableOnADarkPage() {
+        let black = NSAttributedString(string: "a", attributes: [.foregroundColor: NSColor.black])
+        let automatic = NSAttributedString(string: "a")
+        for text in [black, automatic] {
+            let shown = AttributedStringBridge.shownOnDarkPage(text, fill: nil)
+            #expect(shown.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .textColor)
+        }
+        let onLight = AttributedStringBridge.shownOnDarkPage(
+            black, fill: NSColor(srgbRed: 1, green: 0.95, blue: 0.8, alpha: 1))
+        #expect(onLight.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .black)
+    }
+
+    /// The brightest pixel of a table row drawn in `appearance` (its text, on a transparent background).
+    func brightest(_ image: NSImage, in appearance: NSAppearance.Name) -> CGFloat {
+        let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(image.size.width), pixelsHigh: Int(image.size.height),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+            bytesPerRow: 0, bitsPerPixel: 0)!
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSAppearance(named: appearance)!.performAsCurrentDrawingAppearance {
+            image.draw(in: NSRect(origin: .zero, size: image.size))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        var best: CGFloat = 0
+        for x in 0..<rep.pixelsWide {
+            for y in 0..<rep.pixelsHigh {
+                guard let c = rep.colorAt(x: x, y: y), c.alphaComponent > 0.9 else { continue }
+                best = max(best, c.brightnessComponent)
+            }
+        }
+        return best
+    }
+
+    @Test func tableRowsAreDrawnForTheAppearance() throws {
+        let doc = try codec.read(try Corpus.data("04-tables.docx"))
+        let (_, _, o) = try firstTable()
+        let layout = AttributedStringBridge(doc).tableLayout(try model(o.xml))
+        let row = AttributedStringBridge.rowImage(layout.rows[1], width: layout.width)  // "Apples", no fill
+        #expect(brightest(row, in: .aqua) < 0.3, "black text and borders on white paper")
+        #expect(brightest(row, in: .darkAqua) > 0.7, "light text and borders on a dark page")
+    }
 }
 
 extension NSColor {

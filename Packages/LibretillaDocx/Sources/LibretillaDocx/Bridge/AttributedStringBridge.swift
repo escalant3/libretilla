@@ -604,6 +604,8 @@ extension AttributedStringBridge {
             return true
         }
         image.accessibilityDescription = label
+        // Drawn again in each appearance: its system colours follow Dark Mode (backlog 28).
+        image.cacheMode = .never
         let attachment = NSTextAttachment()
         attachment.image = image
         attachment.bounds = NSRect(x: 0, y: font.descender - 2, width: size.width, height: size.height)
