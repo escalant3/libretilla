@@ -68,6 +68,10 @@ xcodebuild test -project Libretilla.xcodeproj -scheme Libretilla -destination 'p
 (cd Packages/LibretillaDocx && swift test)
 ```
 
+UI tests put their windows on the Mac's built-in display, whichever display has the menu bar (an external 1×
+monitor makes the accessibility audit's contrast checks fail). Choose another with
+`TEST_RUNNER_LIBRETILLA_UI_TEST_SCREEN="<display name>"` (or `main`) before `xcodebuild test`.
+
 Lint: `find App Document Editor UI Tests UITests Packages/LibretillaDocx -name '*.swift' -not -path '*/.build/*' -print0 | xargs -0 swift format lint --strict`
 (swift-format ships with Xcode; config in `.swift-format`). Format files one at a time with
 `swift format format --in-place <file>`: in swift-format 6.3, `--in-place` only rewrites the first file when given several.

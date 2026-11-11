@@ -21,6 +21,11 @@ class LibretillaUITestCase: XCTestCase {
         app.launchArguments += ["-LibretillaOutlineShown", "NO"]
         // And at the default window size, not a frame some earlier run saved (an empty frame is rejected).
         app.launchArguments += ["-NSWindow Frame LibretillaDocumentWindow", ""]
+        // On the Mac's built-in display (if it has one), whichever display has the menu bar: screenshots and the
+        // accessibility audit's contrast checks then don't depend on an external monitor. Another display:
+        // TEST_RUNNER_LIBRETILLA_UI_TEST_SCREEN="<its name>" (or "main" for the menu bar's) with xcodebuild.
+        let screen = ProcessInfo.processInfo.environment["LIBRETILLA_UI_TEST_SCREEN"] ?? "builtin"
+        if screen != "main" { app.launchArguments += ["-LibretillaUITestScreen", screen] }
         work = FileManager.default.temporaryDirectory.appendingPathComponent("libretilla-ui-\(UUID())")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
     }

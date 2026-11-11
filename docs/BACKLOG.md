@@ -128,10 +128,11 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
       last attempt's accessibility audit reported "Contrast failed". Run them locally and check. *Done
       (2026-11-11): all 18 UI tests pass, the accessibility audit included.*
-- [ ] 41. The accessibility audit fails again (2026-11-11 evening) on the Settings window's "Page in Dark Mode"
-      label ("Contrast failed"), the same with and without that day's later changes. It passed twice earlier the
-      same day; the saved window frames suggest a different display (1920 × 1050) was connected. Check on the
-      built-in display, and whether the label's contrast really is low.
+- [x] 41. The accessibility audit fails again (2026-11-11 evening) on the Settings window's "Page in Dark Mode"
+      label ("Contrast failed"). *Done: it failed only on an external 1× display (an LG Full HD, which had the menu
+      bar), where the audit measures text contrast lower; it passes on the built-in Retina display. UI tests now put
+      their windows on the built-in display whichever display has the menu bar (`-LibretillaUITestScreen`; set
+      `TEST_RUNNER_LIBRETILLA_UI_TEST_SCREEN` to a display's name, or `main`, to choose another).*
 
 ## Suggested starting points
 

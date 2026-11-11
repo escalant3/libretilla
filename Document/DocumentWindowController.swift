@@ -66,6 +66,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             window.setContentSize(Self.defaultContentSize)
             window.center()
         }
+        Self.placeForUITests(window)
         Self.fitOnScreen(window)
         window.toolbar = MainToolbar.make()
         window.addTitlebarAccessoryViewController(status)
@@ -169,6 +170,23 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
                 status.show(doc.saveState, isDraft: doc.fileURL == nil)
             }
         }
+    }
+
+    /// UI tests only: centre new windows on the display `-LibretillaUITestScreen` names (`builtin`, or a display's
+    /// name), whichever display has the menu bar, so their screenshots and contrast checks don't depend on it.
+    static func placeForUITests(_ window: NSWindow) {
+        guard let wanted = UserDefaults.standard.string(forKey: "LibretillaUITestScreen"),
+            let screen = NSScreen.screens.first(where: { screen in
+                if wanted == "builtin" {
+                    let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+                    return number.map { CGDisplayIsBuiltin($0.uint32Value) != 0 } ?? false
+                }
+                return screen.localizedName == wanted
+            })
+        else { return }
+        let area = screen.visibleFrame
+        let size = window.frame.size
+        window.setFrameOrigin(NSPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))
     }
 
     /// Text edits register with the document's undo manager, which is what marks it edited.
