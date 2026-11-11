@@ -55,10 +55,11 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 ## Print and PDF
 
-- [ ] 25. The text of a paragraph that starts a new page also appears in the previous page's PDF text (search,
-      copy, accessibility see it).
-- [ ] 26. The page-break-before mark is set when the document opens; changing a paragraph's style doesn't affect
-      printing until the document is reopened.
+- [x] 25. The text of a paragraph that starts a new page also appears in the previous page's PDF text (search,
+      copy, accessibility see it). *Done: it was any paragraph split across pages too (a page's PDF text held
+      the whole paragraph). Printing now draws each page's own lines.*
+- [x] 26. The page-break-before mark is set when the document opens; changing a paragraph's style doesn't affect
+      printing until the document is reopened. *Done: restyling a paragraph updates the mark.*
 - [ ] 27. Placeholder chips print into PDFs as they look in the editor.
 
 ## Dark Mode and accessibility

@@ -139,6 +139,20 @@ import Testing
         #expect(documentXML(back).components(separatedBy: "<w:pageBreakBefore").count - 1 == 4)
     }
 
+    /// Backlog 26: changing a paragraph's style updates the mark, so printing follows at once.
+    @Test func changingTheStyleUpdatesPageBreakBefore() throws {
+        let (_, bridge, text) = try load(try Corpus.data("13-page-break-before.docx"))
+        let ns = text.string as NSString
+        let interlude = ns.range(of: "Interlude style")
+        bridge.apply(.style("Chapter"), to: text, range: interlude)
+        #expect(pageBreakBeforeParagraphs(in: text).contains { $0.hasPrefix("Interlude style") })
+        bridge.apply(.style(nil), to: text, range: ns.range(of: "Chapter style: starts page 3."))
+        #expect(!pageBreakBeforeParagraphs(in: text).contains("Chapter style: starts page 3."))
+        // Direct `w:pageBreakBefore w:val="0"` still wins over the style.
+        #expect(!pageBreakBeforeParagraphs(in: text).contains { $0.hasPrefix("Chapter style, turned off") })
+        #expect(pageBreakBeforeParagraphs(in: text).contains("Direct: starts page 2."))
+    }
+
     @Test func pageBreakBeforeIsNotInheritedByTypedText() {
         #expect(NSAttributedString.Key.libretillaNonInheritable.contains(.libretillaPageBreakBefore))
     }

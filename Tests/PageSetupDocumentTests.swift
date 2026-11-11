@@ -399,6 +399,47 @@ final class PageSetupDocumentTests: XCTestCase {
         let pdf = try pdfPages(doc)
         XCTAssertEqual(pdf.pageCount, 2)
         XCTAssertEqual(firstLine(of: 1, in: pdf), "Centered paragraph.")
+        XCTAssertFalse(
+            pdf.page(at: 0)?.string?.contains("Centered paragraph.") ?? true,
+            "the paragraph's text is only on the page it prints on (backlog 25)")
+    }
+
+    /// Backlog 26: a style change that turns `w:pageBreakBefore` on or off is printed without reopening.
+    func testChangingAParagraphsStyleChangesWhereItsPageStarts() throws {
+        let doc = try open("13-page-break-before.docx")
+        let editor = try XCTUnwrap(doc.editor)
+        let tv = try XCTUnwrap(editor.textView)
+        func select(_ text: String) {
+            tv.setSelectedRange(NSRange(location: (tv.string as NSString).range(of: text).location, length: 0))
+        }
+        select("Chapter style: starts page 3.")
+        editor.applyParagraphStyle(key: "id:Interlude")
+        XCTAssertEqual(try pdfPages(doc).pageCount, 3)
+        select("Interlude style (based on Chapter")
+        editor.applyParagraphStyle(key: "id:Chapter")
+        let pdf = try pdfPages(doc)
+        XCTAssertEqual(pdf.pageCount, 4)
+        XCTAssertTrue(
+            firstLine(of: 2, in: pdf)?.hasPrefix("Interlude style") ?? false, "now in Chapter style, it starts page 3")
+    }
+
+    /// A paragraph split across two pages: each page's PDF text holds only the lines printed on it.
+    func testPDFTextOfEachPageHoldsOnlyItsOwnLines() throws {
+        let doc = try open("01-plain.docx")
+        let storage = try XCTUnwrap(doc.editor?.textView.textStorage)
+        let words = (1...900).map { "w\($0)" }.joined(separator: " ")
+        storage.replaceCharacters(in: NSRange(location: 0, length: 0), with: words + "\n")
+        let pdf = try pdfPages(doc)
+        XCTAssertGreaterThan(pdf.pageCount, 1)
+        var seen: [String: Int] = [:]
+        for i in 0..<pdf.pageCount {
+            for word in (pdf.page(at: i)?.string ?? "").split(whereSeparator: \.isWhitespace)
+            where word.hasPrefix("w") && Int(word.dropFirst()) != nil {
+                seen[String(word), default: 0] += 1
+            }
+        }
+        XCTAssertEqual(seen.count, 900)
+        XCTAssertEqual(seen.filter { $0.value > 1 }.keys.sorted(), [], "no word is on two pages")
     }
 
     func testPageBreakBeforeAfterAPageBreakAddsNoBlankPage() throws {

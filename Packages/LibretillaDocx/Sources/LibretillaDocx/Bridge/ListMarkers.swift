@@ -172,10 +172,32 @@ final class ListMarkerFragment: NSTextLayoutFragment, @unchecked Sendable {
 
     override func draw(at point: CGPoint, in context: CGContext) {
         super.draw(at: point, in: context)
+        drawMarker(at: point, in: context)
+    }
+
+    func drawMarker(at point: CGPoint, in context: CGContext) {
         guard let markerRect else { return }
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
         marker.draw(at: NSPoint(x: point.x + markerRect.minX, y: point.y + markerRect.minY))
         NSGraphicsContext.restoreGraphicsState()
+    }
+}
+
+extension NSTextLayoutFragment {
+    /// Draws the lines `include` accepts, as `draw(at:in:)` draws them, and a list marker with the first line.
+    /// Printing draws a paragraph split across pages this way: clipping hides the other page's lines but leaves
+    /// their text in the PDF, where search, copy and VoiceOver find it (backlog 25).
+    public func drawLines(at point: CGPoint, in context: CGContext, where include: (NSTextLineFragment) -> Bool) {
+        let lines = textLineFragments
+        let drawn = lines.filter(include)
+        if drawn.count == lines.count { return draw(at: point, in: context) }
+        for line in drawn {
+            let origin = line.typographicBounds.origin
+            line.draw(at: CGPoint(x: point.x + origin.x, y: point.y + origin.y), in: context)
+        }
+        if let first = lines.first, include(first), let list = self as? ListMarkerFragment {
+            list.drawMarker(at: point, in: context)
+        }
     }
 }

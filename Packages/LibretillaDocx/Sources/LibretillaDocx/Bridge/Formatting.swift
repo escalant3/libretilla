@@ -376,6 +376,12 @@ extension AttributedStringBridge {
             Self.setDisplay(display, on: text, range: span)
         }
         text.addAttribute(.paragraphStyle, value: paragraphStyle, range: paragraph)
+        // A style change can turn `w:pageBreakBefore` on or off.
+        if effective.pageBreakBefore == true {
+            text.addAttribute(.libretillaPageBreakBefore, value: true, range: paragraph)
+        } else {
+            text.removeAttribute(.libretillaPageBreakBefore, range: paragraph)
+        }
         setListMarker(marker, on: text, paragraph: paragraph)
     }
 

@@ -296,12 +296,12 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 
 **Known issues**
 
-- When a page ends early at a paragraph that starts a new page, TextKit still draws that paragraph on the page
-  before, clipped out of sight: the paper is right, but the paragraph's text is also in that page's PDF text
-  (search, copy, accessibility). The tests read each page's first line, which is right.
+- ~~A paragraph split across pages, or starting a new page early, was also in the previous page's PDF text.~~
+  Fixed (backlog 25): printing draws each page's own lines, in place of TextKit's views, which drew whole
+  paragraphs clipped.
 - Headers and footers: a multi-section document prints the last section's on every page (as for page setup).
   Header text taller than the top margin overlaps the body instead of pushing it down. The editor doesn't show
   them (edit them in the sheet). Even-page headers and footers can't be edited in the sheet yet. New ones use the
   document's Header and Footer styles if it has them, plain paragraphs if not.
-- The page-break-before mark is set when the document opens: giving a paragraph another style in the editor
-  doesn't change whether it starts a page in print until the document is reopened (the saved file is right).
+- ~~The page-break-before mark was set only when the document opened.~~ Fixed (backlog 26): restyling a
+  paragraph updates it.

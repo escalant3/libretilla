@@ -3,7 +3,7 @@ import LibretillaDocx
 
 /// The view printing and PDF export lay the document out in (TextKit 2, like the editor). It starts a
 /// new page after every page break and before every paragraph marked `w:pageBreakBefore`, doesn't draw
-/// the editor's page break chips, and draws each page's header and footer.
+/// the editor's page break chips, and draws each page's header and footer. Each page draws only its own lines.
 final class PrintTextView: NSTextView {
     /// The headers and footers to draw in the page margins, and how.
     struct Decorations {
@@ -18,6 +18,9 @@ final class PrintTextView: NSTextView {
     }
 
     var decorations: Decorations?
+
+    /// Draws the text while printing, in place of TextKit's own views (`PageText`).
+    private let pageText = PageText()
 
     /// Bottom edges (view coordinates) of the lines that end in a page break, top to bottom.
     private var breakLineBottoms: [CGFloat] = []
@@ -47,6 +50,51 @@ final class PrintTextView: NSTextView {
                 return nil
             }
             return (top, previous)
+        }
+        pageText.textView = self
+        pageText.frame = bounds
+        pageText.autoresizingMask = [.width, .height]
+        addSubview(pageText)
+    }
+
+    // MARK: Drawing the text
+
+    /// TextKit 2 draws each paragraph whole, in its own views, so a paragraph split across pages would be drawn
+    /// on both, clipped. Clipping hides the other page's lines but keeps their text in the PDF, where search, copy
+    /// and VoiceOver find it (backlog 25). This view draws, for each page, only the lines on it.
+    private final class PageText: NSView {
+        weak var textView: PrintTextView?
+        override var isFlipped: Bool { true }
+        override func draw(_ dirtyRect: NSRect) { textView?.drawLines(in: dirtyRect) }
+    }
+
+    override func beginDocument() {
+        super.beginDocument()
+        pageText.frame = bounds
+        for view in subviews where view !== pageText { view.isHidden = true }
+    }
+
+    override func endDocument() {
+        for view in subviews where view !== pageText { view.isHidden = false }
+        super.endDocument()
+    }
+
+    /// Draws the lines whose middle is in `rect` (a page, in view coordinates).
+    private func drawLines(in rect: NSRect) {
+        guard let layout = textLayoutManager, let context = NSGraphicsContext.current?.cgContext else { return }
+        let origin = textContainerOrigin
+        layout.enumerateTextLayoutFragments(from: layout.documentRange.location, options: [.ensuresLayout]) {
+            fragment in
+            let frame = fragment.layoutFragmentFrame.offsetBy(dx: origin.x, dy: origin.y)
+            guard frame.minY < rect.maxY else { return false }
+            guard frame.maxY > rect.minY || fragment.renderingSurfaceBounds.maxY + frame.minY > rect.minY else {
+                return true
+            }
+            fragment.drawLines(at: frame.origin, in: context) { line in
+                let middle = frame.minY + line.typographicBounds.midY
+                return middle >= rect.minY && middle < rect.maxY
+            }
+            return true
         }
     }
 
