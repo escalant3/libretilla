@@ -174,6 +174,7 @@ extension EditorViewController {
 
     private func showAttachment(_ attachment: Any, at range: NSRange) {
         guard let storage = textView.textStorage, NSMaxRange(range) <= storage.length else { return }
+        retireAttachments(in: range)
         storage.beginEditing()
         storage.addAttribute(.attachment, value: attachment, range: range)
         storage.endEditing()

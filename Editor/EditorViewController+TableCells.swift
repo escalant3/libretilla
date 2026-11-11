@@ -84,6 +84,7 @@ extension EditorViewController {
             replacement = table
         }
         let whole = TableCellEditor.wholeRange(found.range, in: storage)
+        retireAttachments(in: whole)
         withoutReconciling {
             storage.beginEditing()
             storage.replaceCharacters(in: whole, with: replacement)

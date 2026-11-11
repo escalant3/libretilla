@@ -18,6 +18,9 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     let pictureHandles = PictureHandles()
     /// The table cell being typed into (backlog 15).
     var cellEditor: TableCellEditor?
+    /// Attachments just replaced without an undo step (previews, refits): kept a moment, because TextKit 2 may still
+    /// draw a line laid out with one, and it doesn't keep it alive (backlog 36).
+    var retiredAttachments: [AnyObject] = []
     var headerFooterEditor: HeaderFooterSheet?
     var marginsEditor: MarginsSheet?
     var paragraphEditor: ParagraphSheet?
@@ -384,6 +387,21 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     }
 
     /// Storage edits that are the bridge's own (display only) and need no reconciling.
+    /// Keeps the attachments in `range` alive until TextKit has laid that text out again (see `retiredAttachments`).
+    func retireAttachments(in range: NSRange) {
+        guard let storage = textView.textStorage, NSMaxRange(range) <= storage.length, range.length > 0 else { return }
+        var retired: [AnyObject] = []
+        storage.enumerateAttribute(.attachment, in: range) { value, _, _ in
+            if let value = value as AnyObject? { retired.append(value) }
+        }
+        guard !retired.isEmpty else { return }
+        retiredAttachments += retired
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            guard let self else { return }
+            self.retiredAttachments.removeFirst(min(retired.count, self.retiredAttachments.count))
+        }
+    }
+
     func withoutReconciling(_ body: () -> Void) {
         let was = isLoading
         isLoading = true

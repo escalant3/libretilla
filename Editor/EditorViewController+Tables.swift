@@ -103,6 +103,7 @@ extension EditorViewController {
                 (text.string as NSString).substring(to: range.length)
                     == (storage.string as NSString).substring(with: range)
             else { continue }
+            retireAttachments(in: range)
             for i in 0..<range.length {
                 let attrs = text.attributes(at: i, effectiveRange: nil)
                 let at = NSRange(location: range.location + i, length: 1)
