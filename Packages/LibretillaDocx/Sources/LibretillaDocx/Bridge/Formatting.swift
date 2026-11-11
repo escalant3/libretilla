@@ -111,11 +111,30 @@ extension AttributedStringBridge {
     public func apply(_ change: RunChange, to text: NSMutableAttributedString, range: NSRange) {
         guard range.length > 0 else { return }
         var replaced: [ObjectIdentifier: RunFormat] = [:]
+        var reformatted: Set<ObjectIdentifier> = []
         for paragraph in Self.paragraphRanges(in: text, touching: range) {
             let styleId = format(of: text, paragraph: paragraph).properties.styleId
             let r = NSIntersectionRange(paragraph, range)
             guard r.length > 0 else { continue }
             text.enumerateAttributes(in: r, options: []) { attrs, span, _ in
+                // A field, content control or other text Libretilla keeps whole is reformatted whole (backlog 22).
+                if let box = attrs[.libretillaOpaque] as? OpaqueInlineBox,
+                    reformatted.insert(ObjectIdentifier(box)).inserted,
+                    let inline = applying(change, to: box.inline, paragraphStyle: styleId)
+                {
+                    var whole = NSRange()
+                    _ = text.attribute(
+                        .libretillaOpaque, at: span.location, longestEffectiveRange: &whole, in: paragraph)
+                    var display = characterAttributes(
+                        styles.resolveRun(paragraphStyle: styleId, direct: inline.displayProperties))
+                    if inline.isHyperlink {
+                        display[.foregroundColor] = NSColor.linkColor
+                        display[.underlineStyle] = NSUnderlineStyle.single.rawValue
+                    }
+                    Self.setDisplay(display, on: text, range: whole)
+                    text.addAttribute(.libretillaOpaque, value: OpaqueInlineBox(inline), range: whole)
+                    return
+                }
                 guard attrs[.libretillaOpaque] == nil, attrs[.libretillaBlock] == nil else { return }
                 // The paragraph terminator carries no run.
                 if span.length == 1, (text.string as NSString).character(at: span.location) == 0x0A { return }
@@ -127,6 +146,48 @@ extension AttributedStringBridge {
                 text.addAttribute(.libretillaRun, value: new, range: span)
             }
         }
+    }
+
+    /// Content shown as text that Libretilla keeps whole but can reformat: every run inside takes the change.
+    static let reformattableInlines: Set<String> = [
+        "w:sdt", "w:fldSimple", "w:hyperlink", "w:ins", "w:smartTag", "w:customXml",
+    ]
+
+    /// `inline` (a field, content control, …) with `change` made to every run in it, only the changed property of
+    /// each run's `w:rPr` rewritten; nil if it isn't text Libretilla can reformat.
+    func applying(_ change: RunChange, to inline: OpaqueInline, paragraphStyle styleId: String?) -> OpaqueInline? {
+        guard case .text = inline.display, Self.reformattableInlines.contains(inline.kind),
+            let doc = try? RawXML.Document(data: Data([UInt8](inline.xml)), part: inline.kind)
+        else { return nil }
+        let old = RunFormat(properties: inline.displayProperties, xml: nil)
+        let new = applying(change, to: old, paragraphStyle: styleId).properties
+        let fields = Set(
+            RunProperties.Field.allCases.filter { field in
+                var a = RunProperties()
+                a.take([field], from: old.properties)
+                var b = RunProperties()
+                b.take([field], from: new)
+                return a != b
+            })
+        guard !fields.isEmpty else { return nil }
+        var edits: [(Range<Int>, Data)] = []
+        for run in doc.root.descendants(named: "w:r") where !run.endTagRange.isEmpty {
+            if let rPr = run.firstChild(named: "w:rPr") {
+                edits.append((rPr.range, new.patching(doc.slice(rPr.range), fields: fields) ?? Data()))
+            } else if let rPr = new.patching(nil, fields: fields) {
+                let at = run.startTagRange.upperBound
+                edits.append((at..<at, rPr))
+            }
+        }
+        guard !edits.isEmpty else { return nil }
+        var bytes = Data([UInt8](inline.xml))
+        for (range, data) in edits.sorted(by: { $0.0.lowerBound > $1.0.lowerBound }) {
+            bytes.replaceSubrange(range, with: data)
+        }
+        guard let reparsed = try? RawXML.Document(data: bytes, part: inline.kind) else { return nil }
+        var out = OpaqueInline(parsing: reparsed.root, in: reparsed)
+        out.pageField = inline.pageField
+        return out
     }
 
     /// Typing attributes after `change` (a formatting command with an empty selection).

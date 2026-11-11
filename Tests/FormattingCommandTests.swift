@@ -424,4 +424,32 @@ final class FormattingCommandTests: XCTestCase {
         XCTAssertEqual(ids.count, 3)
         XCTAssertEqual(Set(ids).count, 3, "drawing ids stay unique")
     }
+
+    // MARK: Fields and content controls (backlog 22)
+
+    func testFieldsAndContentControlsCanBeReformatted() throws {
+        try open("10-word-features.docx")
+        try select("Libretilla fixture generator")
+        editor.toggleBold(nil)
+        let ns = textView.string as NSString
+        let control = ns.range(of: "Libretilla.", options: .backwards)
+        textView.setSelectedRange(NSRange(location: control.location, length: control.length - 1))
+        editor.toggleItalic(nil)
+        let font = try XCTUnwrap(
+            textView.textStorage?.attribute(.font, at: control.location, effectiveRange: nil) as? NSFont)
+        XCTAssertTrue(NSFontManager.shared.traits(of: font).contains(.italicFontMask), "shown italic")
+
+        let xml = String(decoding: try saved().body.serialized(), as: UTF8.self)
+        XCTAssertTrue(
+            xml.contains(
+                #"<w:fldSimple w:instr=" AUTHOR "><w:r><w:rPr><w:b/></w:rPr><w:t>Libretilla fixture generator</w:t>"#),
+            "the field's run is bold, its instruction untouched")
+        XCTAssertTrue(xml.contains(#"<w:sdtContent><w:r><w:rPr><w:i/></w:rPr><w:t>Libretilla</w:t>"#))
+        XCTAssertTrue(xml.contains(#"<w:alias w:val="Project name"/>"#), "the control's properties untouched")
+
+        doc.undoManager?.undo()
+        XCTAssertTrue(
+            String(decoding: try saved().body.serialized(), as: UTF8.self).contains(
+                #"<w:sdtContent><w:r><w:t>Libretilla</w:t>"#))
+    }
 }
