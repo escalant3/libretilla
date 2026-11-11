@@ -106,6 +106,64 @@ extension EditorViewController {
         }
     }
 
+    // MARK: Resize handles (backlog 12)
+
+    /// Shows the handles on the selected picture, or hides them.
+    func updatePictureHandles() {
+        let selection = textView.selectedRange()
+        guard textView.isEditable, pictureFormatter == nil, selection.length == 1,
+            let storage = textView.textStorage,
+            let picture = bridge.editablePicture(in: storage, at: selection.location),
+            let frame = pictureFrame(at: selection.location)
+        else {
+            pictureHandles.removeFromSuperview()
+            return
+        }
+        if pictureHandles.superview !== textView { textView.addSubview(pictureHandles) }
+        pictureHandles.cornersOnly = picture.format.rotation != 0
+        pictureHandles.pictureFrame = frame
+        pictureHandles.window?.invalidateCursorRects(for: pictureHandles)
+        let original = storage.attribute(.attachment, at: picture.range.location, effectiveRange: nil)
+        let shown = frame.size
+        // A drag sizes what's shown (the turned picture's bounding box); the picture's own size scales with it.
+        func format(for size: CGSize) -> PictureFormat {
+            var format = picture.format
+            if format.rotation == 0 {
+                format.size = size
+            } else {
+                let scale = size.width / max(1, shown.width)
+                format.size = CGSize(width: format.size.width * scale, height: format.size.height * scale)
+            }
+            return format
+        }
+        pictureHandles.onDrag = { [weak self] size in
+            guard let self else { return }
+            self.previewPicture(picture, format: format(for: size))
+            if let frame = self.pictureFrame(at: picture.range.location) { self.pictureHandles.pictureFrame = frame }
+        }
+        pictureHandles.onEnd = { [weak self] size in
+            guard let self else { return }
+            if let original { self.showAttachment(original, at: picture.range) }
+            if let size { self.applyPicture(picture, format: format(for: size)) }
+            self.updatePictureHandles()
+        }
+    }
+
+    /// Where the picture at `index` is drawn, in the text view's coordinates.
+    func pictureFrame(at index: Int) -> CGRect? {
+        guard let layout = textView.textLayoutManager, let content = layout.textContentManager,
+            let location = content.location(content.documentRange.location, offsetBy: index),
+            let range = NSTextRange(location: location, end: content.location(location, offsetBy: 1))
+        else { return nil }
+        layout.ensureLayout(for: range)
+        guard let fragment = layout.textLayoutFragment(for: location) else { return nil }
+        let frame = fragment.frameForTextAttachment(at: location)
+        guard frame.width > 0, frame.height > 0 else { return nil }
+        let origin = fragment.layoutFragmentFrame.origin
+        return frame.offsetBy(
+            dx: origin.x + textView.textContainerOrigin.x, dy: origin.y + textView.textContainerOrigin.y)
+    }
+
     /// Shows `picture` as `format` without changing what's saved or adding an undo step.
     private func previewPicture(_ picture: AttributedStringBridge.EditablePicture, format: PictureFormat) {
         guard let attachment = bridge.attributes(for: picture, format: format)?[.attachment] else { return }

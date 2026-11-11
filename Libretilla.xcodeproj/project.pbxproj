@@ -41,6 +41,7 @@
 		79B4E1E2359E3EF8A3382C16 /* PageSetupDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A664DC15DCA4D802E09737C /* PageSetupDocumentTests.swift */; };
 		7AACAB5CA70B42C68CE24855 /* EditorViewController+Margins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300FA2B7DDA478AA37F9A71D /* EditorViewController+Margins.swift */; };
 		7D17AE28BC3BE7691FA29A14 /* PolishTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B5D15043E73883EF1C49BA /* PolishTests.swift */; };
+		813BAA025051CB839AEFCCD9 /* PictureHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */; };
 		9152D6084F537D20DC9219AE /* MarginsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */; };
 		A078C841E0319E3AD54324D6 /* EditorViewController+Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7039964F40AF4DA8B69B350D /* EditorViewController+Formatting.swift */; };
 		A1921B8C74DFAB17AABB8E2F /* PolishUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A3ADE5C01027AF83420172 /* PolishUITests.swift */; };
@@ -131,6 +132,7 @@
 		C265588B8F5CD56D46001C1F /* Libretilla.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Libretilla.entitlements; sourceTree = "<group>"; };
 		C3995CF0646BC821F5D8E314 /* Blank.docx */ = {isa = PBXFileReference; path = Blank.docx; sourceTree = "<group>"; };
 		C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorSheet.swift; sourceTree = "<group>"; };
+		D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureHandles.swift; sourceTree = "<group>"; };
 		D68B841A8AADEC4B87EF5D0E /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		D732D08D256C51C1D5415580 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D74031D44FDB1DFF7E19682A /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
@@ -254,6 +256,7 @@
 				AE6AF1E100812946B2FA95EA /* MarginsSheet.swift */,
 				41264998A288BC6B190DE697 /* ParagraphSheet.swift */,
 				0BA71DE3FCA81496A95F9048 /* PictureFormatSheet.swift */,
+				D62BC0C3266F80E05A1DF154 /* PictureHandles.swift */,
 				528D38D33E99CC0F1550AD47 /* PrintTextView.swift */,
 				C932A78A870CCFADCA7CE3A0 /* TableEditorSheet.swift */,
 			);
@@ -472,6 +475,7 @@
 				FBF74DB259EFB5992D7882C8 /* OutlineSidebar.swift in Sources */,
 				07C688A950F72132142DB1FA /* ParagraphSheet.swift in Sources */,
 				36F0CA9D57CA5AD5ED8CEDC3 /* PictureFormatSheet.swift in Sources */,
+				813BAA025051CB839AEFCCD9 /* PictureHandles.swift in Sources */,
 				B57597D9D9547766175906C5 /* Preferences.swift in Sources */,
 				FEB6C88A497DE64F5DC47AD2 /* PrintTextView.swift in Sources */,
 				1211AC31E2B4D5F83D020C3A /* SaveStatus.swift in Sources */,

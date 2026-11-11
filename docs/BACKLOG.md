@@ -43,7 +43,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 ## Pictures
 
 - [ ] 11. Floating pictures (`wp:anchor`) show inline, with no text wrapping.
-- [ ] 12. Pictures are formatted from a sheet, with no drag handles.
+- [x] 12. Pictures are formatted from a sheet, with no drag handles. *Done: a selected picture shows eight
+      handles (corners scale it, edges stretch it; a rotated picture has corners only), previewed while dragging
+      and applied as one Format Picture step. Unit-tested; not yet tried with a real mouse.*
 - [ ] 13. Copying a picture within Libretilla saves the copy as a new image.
 - [ ] 14. Word 2010's newer brightness/contrast extension (`a14:imgEffect`) isn't read. *Needs a file from real
       Word first: the main picture may already have the effect applied (the layer holds the original), in which

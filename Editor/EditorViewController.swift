@@ -14,6 +14,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     /// The sheets while they're open.
     var tableEditor: TableEditorSheet?
     var pictureFormatter: PictureFormatSheet?
+    /// Resize handles on the selected picture (backlog 12).
+    let pictureHandles = PictureHandles()
     var headerFooterEditor: HeaderFooterSheet?
     var marginsEditor: MarginsSheet?
     var paragraphEditor: ParagraphSheet?
@@ -393,6 +395,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         DispatchQueue.main.async { [weak self] in
             guard let self, let storage = self.textView.textStorage else { return }
             self.selectionUpdateScheduled = false
+            self.updatePictureHandles()
             let bridge = self.bridge
             let format = bridge.selectionFormat(
                 storage, range: self.textView.selectedRange(), typingAttributes: self.textView.typingAttributes)

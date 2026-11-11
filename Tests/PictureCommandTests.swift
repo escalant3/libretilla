@@ -173,6 +173,50 @@ final class PictureCommandTests: XCTestCase {
         XCTAssertTrue(xml.contains(#"<a:alphaModFix amt="60000"/>"#))
     }
 
+    // MARK: Resize handles (backlog 12)
+
+    func testHandleDragsScaleCornersAndStretchEdges() {
+        let size = CGSize(width: 200, height: 100)
+        XCTAssertEqual(
+            PictureHandles.size(size, handle: .bottomRight, moved: CGSize(width: 100, height: 0)),
+            CGSize(width: 300, height: 150))
+        XCTAssertEqual(
+            PictureHandles.size(size, handle: .topLeft, moved: CGSize(width: 50, height: 50)),
+            CGSize(width: 150, height: 75))
+        XCTAssertEqual(
+            PictureHandles.size(size, handle: .right, moved: CGSize(width: -40, height: 30)),
+            CGSize(width: 160, height: 100))
+        XCTAssertEqual(
+            PictureHandles.size(size, handle: .bottom, moved: CGSize(width: 0, height: -500)),
+            CGSize(width: 200, height: 8))
+    }
+
+    func testHandlesResizeTheSelectedPicture() throws {
+        _ = try insertPicture(width: 200, height: 100)
+        let editor = try XCTUnwrap(doc.editor)
+        tv.setSelectedRange(NSRange(location: 0, length: 1))
+        editor.updatePictureHandles()
+        let handles = editor.pictureHandles
+        XCTAssertTrue(handles.superview === tv, "shown on the selected picture")
+        XCTAssertEqual(handles.pictureFrame.size, CGSize(width: 200, height: 100))
+        XCTAssertEqual(handles.handleRects().count, 8)
+
+        handles.onDrag?(CGSize(width: 100, height: 50))
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 100, height: 50), "shown while dragging")
+        handles.onEnd?(CGSize(width: 100, height: 50))
+        XCTAssertEqual(doc.undoManager?.undoActionName, "Format Picture")
+        let xml = String(decoding: try saved().0.body.serialized(), as: UTF8.self)
+        XCTAssertTrue(xml.contains(#"<wp:extent cx="1270000" cy="635000"/>"#))
+        XCTAssertEqual(handles.pictureFrame.size, CGSize(width: 100, height: 50), "the handles follow")
+
+        doc.undoManager?.undo()
+        XCTAssertEqual(attachment(at: 0)?.bounds.size, CGSize(width: 200, height: 100), "one undo step")
+
+        tv.setSelectedRange(NSRange(location: 1, length: 0))
+        editor.updatePictureHandles()
+        XCTAssertNil(handles.superview, "hidden without a selected picture")
+    }
+
     func testFormatPictureIsOnlyForPictures() throws {
         let editor = doc.editor!
         tv.setSelectedRange(NSRange(location: 0, length: 0))
