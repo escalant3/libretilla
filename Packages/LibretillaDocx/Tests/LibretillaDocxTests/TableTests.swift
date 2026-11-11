@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import PDFKit
 import Testing
 
 @testable import LibretillaDocx
@@ -240,6 +241,47 @@ import Testing
         let row = AttributedStringBridge.rowImage(layout.rows[1], width: layout.width)  // "Apples", no fill
         #expect(brightest(row, in: .aqua) < 0.3, "black text and borders on white paper")
         #expect(brightest(row, in: .darkAqua) > 0.7, "light text and borders on a dark page")
+    }
+
+    // MARK: Vertical merges (backlog 19)
+
+    @Test func mergedCellTextSpansItsRows() throws {
+        let doc = try codec.read(try Corpus.data("04-tables.docx"))
+        let words = (1...24).map { "word\($0)" }
+        func tc(_ text: String, merge: String?) -> String {
+            let vMerge = merge.map { $0.isEmpty ? "<w:vMerge/>" : "<w:vMerge w:val=\"\($0)\"/>" } ?? ""
+            return "<w:tc><w:tcPr><w:tcW w:w=\"1440\" w:type=\"dxa\"/>\(vMerge)</w:tcPr>"
+                + "<w:p><w:r><w:t>\(text)</w:t></w:r></w:p></w:tc>"
+        }
+        let xml =
+            #"<w:tbl xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:tblPr/>"#
+            + #"<w:tblGrid><w:gridCol w:w="1440"/><w:gridCol w:w="1440"/></w:tblGrid>"#
+            + "<w:tr>" + tc(words.joined(separator: " "), merge: "restart") + tc("b1", merge: nil) + "</w:tr>"
+            + "<w:tr>" + tc("", merge: "") + tc("b2", merge: nil) + "</w:tr></w:tbl>"
+        let layout = AttributedStringBridge(doc).tableLayout(try model(Data(xml.utf8)))
+        #expect(layout.rows[0].height < 20, "the first row keeps its own one line")
+        #expect(layout.rows[1].height > 3 * layout.rows[0].height, "the last merged row grows for the text")
+
+        // Each row draws its own lines of the merged text, so a PDF holds each word once.
+        let data = NSMutableData()
+        var box = CGRect(x: 0, y: 0, width: layout.width, height: 400)
+        let consumer = try #require(CGDataConsumer(data: data))
+        let context = try #require(CGContext(consumer: consumer, mediaBox: &box, nil))
+        context.beginPDFPage(nil)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+        var y: CGFloat = 400
+        for row in layout.rows {
+            y -= row.height
+            AttributedStringBridge.rowImage(row, width: layout.width).draw(
+                in: NSRect(x: 0, y: y, width: layout.width, height: row.height))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        context.endPDFPage()
+        context.closePDF()
+        let text = try #require(PDFDocument(data: data as Data)?.string)
+        let found = text.matches(of: try Regex("word[0-9]+")).map { String(text[$0.range]) }
+        #expect(found.sorted() == words.sorted(), "each word once: \(text)")
     }
 }
 

@@ -17,6 +17,12 @@ struct TableLayout {
         var fill: NSColor?
         var top, left, bottom, right: TableBorder?
         var textInsets: NSEdgeInsets
+        /// In a vertically merged cell (backlog 19), every row holds the merged text: this row shows the part from
+        /// `textOffset` down (the heights of the merged rows above it), and `isMerged` says to draw line by line.
+        var textOffset: CGFloat = 0
+        var isMerged = false
+        /// The first grid column the cell covers.
+        var gridStart = 0
     }
 
     struct Row {
@@ -86,6 +92,8 @@ extension AttributedStringBridge {
         let width = edges.last!
 
         var rows: [TableLayout.Row] = []
+        /// Vertically merged cells: where each starts (row, cell index), and the height its text needs.
+        var merges: [(row: Int, cell: Int, needed: CGFloat)] = []
         for (r, row) in model.rows.enumerated() {
             var cells: [TableLayout.Cell] = []
             var height: CGFloat = 0
@@ -128,14 +136,20 @@ extension AttributedStringBridge {
                     let bounds = text.boundingRect(
                         with: CGSize(width: max(1, w - marginLeft - marginRight), height: .greatestFiniteMagnitude),
                         options: [.usesLineFragmentOrigin, .usesFontLeading])
-                    height = max(height, ceil(bounds.height) + marginTop + marginBottom)
+                    let needed = ceil(bounds.height) + marginTop + marginBottom
+                    // A merged cell's text fills its rows together; they grow below if it needs more room.
+                    if mergesDown {
+                        merges.append((r, cells.count, needed))
+                    } else {
+                        height = max(height, needed)
+                    }
                 }
                 cells.append(
                     TableLayout.Cell(
                         frame: CGRect(x: x, y: 0, width: w, height: 0), text: text,
                         fill: (cell.fill ?? conditional.fill).flatMap(Self.color(hex:)), top: top, left: left,
                         bottom: bottom, right: right,
-                        textInsets: insets))
+                        textInsets: insets, gridStart: start))
             }
             // Empty rows still show one line; Word's row height rules apply on top.
             let (_, run) = styles.resolveParagraphStyle(nil)
@@ -148,6 +162,7 @@ extension AttributedStringBridge {
             for i in cells.indices { cells[i].frame.size.height = height }
             rows.append(TableLayout.Row(height: height, cells: cells))
         }
+        for merge in merges { spread(merge, model: model, rows: &rows) }
 
         let alignment: NSTextAlignment =
             switch props.alignment {
@@ -158,6 +173,37 @@ extension AttributedStringBridge {
         // Word places the cell text, not the border, at the indent: the border sits a cell margin to the left.
         let indent = max(0, CGFloat(props.indent ?? 0))
         return TableLayout(width: width, rows: rows, alignment: alignment, indent: alignment == .left ? indent : 0)
+    }
+
+    /// Lays a vertically merged cell's text over its rows: the last one grows if they're too short together (unless
+    /// its height is exact), and each continuing cell gets the text and where its part of it starts.
+    private func spread(
+        _ merge: (row: Int, cell: Int, needed: CGFloat), model: TableModel, rows: inout [TableLayout.Row]
+    ) {
+        let first = rows[merge.row].cells[merge.cell]
+        // The rows the cell spans, with the index of its continuation in each.
+        var span: [(row: Int, cell: Int)] = [(merge.row, merge.cell)]
+        var r = merge.row + 1
+        while r < rows.count,
+            let i = rows[r].cells.firstIndex(where: { $0.gridStart == first.gridStart }),
+            model.rows[r].cells.contains(where: { $0.gridStart == first.gridStart && $0.verticalMerge == .continue })
+        {
+            span.append((r, i))
+            r += 1
+        }
+        let total = span.reduce(0) { $0 + rows[$1.row].height }
+        if merge.needed > total, let last = span.last, !model.rows[last.row].heightIsExact {
+            rows[last.row].height += merge.needed - total
+            for i in rows[last.row].cells.indices { rows[last.row].cells[i].frame.size.height = rows[last.row].height }
+        }
+        guard span.count > 1 else { return }
+        var offset: CGFloat = 0
+        for (row, cell) in span {
+            rows[row].cells[cell].text = first.text
+            rows[row].cells[cell].textOffset = offset
+            rows[row].cells[cell].isMerged = true
+            offset += rows[row].height
+        }
     }
 
     /// A cell's paragraphs as the body would show them, with the table style's paragraph spacing where the
@@ -260,11 +306,16 @@ extension AttributedStringBridge {
                 }
                 if let original = cell.text {
                     let text = dark ? shownOnDarkPage(original, fill: cell.fill) : original
-                    let r = CGRect(
-                        x: cell.frame.minX + cell.textInsets.left, y: cell.frame.minY + cell.textInsets.top,
-                        width: max(1, cell.frame.width - cell.textInsets.left - cell.textInsets.right),
-                        height: max(1, cell.frame.height - cell.textInsets.top - cell.textInsets.bottom))
-                    text.draw(with: r, options: [.usesLineFragmentOrigin, .usesFontLeading])
+                    let width = max(1, cell.frame.width - cell.textInsets.left - cell.textInsets.right)
+                    if cell.isMerged {
+                        drawLines(of: text, cell: cell, width: width)
+                    } else {
+                        let r = CGRect(
+                            x: cell.frame.minX + cell.textInsets.left, y: cell.frame.minY + cell.textInsets.top,
+                            width: width,
+                            height: max(1, cell.frame.height - cell.textInsets.top - cell.textInsets.bottom))
+                        text.draw(with: r, options: [.usesLineFragmentOrigin, .usesFontLeading])
+                    }
                 }
                 func line(_ border: TableBorder?, _ from: CGPoint, _ to: CGPoint) {
                     guard let border, border.isVisible else { return }
@@ -296,6 +347,26 @@ extension AttributedStringBridge {
         // Drawn again for each appearance (Dark Mode), not cached.
         image.cacheMode = .never
         return image
+    }
+
+    /// Draws the lines of a merged cell's text that belong in this row: those whose middle is in it. Each line is
+    /// drawn once, in one row, so a PDF's text holds it once (clipping would leave it in every row's).
+    private static func drawLines(of text: NSAttributedString, cell: TableLayout.Cell, width: CGFloat) {
+        let storage = NSTextStorage(attributedString: text)
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(size: CGSize(width: width, height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layout.addTextContainer(container)
+        storage.addLayoutManager(layout)
+        // The text's top, in this row's coordinates.
+        let origin = CGPoint(
+            x: cell.frame.minX + cell.textInsets.left, y: cell.frame.minY + cell.textInsets.top - cell.textOffset)
+        layout.enumerateLineFragments(forGlyphRange: layout.glyphRange(for: container)) { rect, _, _, glyphs, _ in
+            let middle = origin.y + rect.midY
+            guard middle >= cell.frame.minY, middle < cell.frame.maxY else { return }
+            layout.drawBackground(forGlyphRange: glyphs, at: origin)
+            layout.drawGlyphs(forGlyphRange: glyphs, at: origin)
+        }
     }
 
     /// A cell's text as drawn on a dark page: colours made readable, automatic (black) text light, and text on a

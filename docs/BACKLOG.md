@@ -52,7 +52,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       conditional formats `w:tblLook` turns on (header and last rows, first and last columns, row and column bands,
       corner cells) give cells their shading, borders and bold, italic and colour, under the cell's own.*
 - [ ] 18. Nested tables show as one line of text per row.
-- [ ] 19. A vertically merged cell's text sits in its first row.
+- [x] 19. A vertically merged cell's text sits in its first row. *Done: it flows down its rows, which grow at
+      the bottom if needed, as in Word; each row draws only its own lines. Cell vertical alignment (`w:vAlign`)
+      isn't read.*
 - [x] 20. A table keeps its width after a page setup change until the document is reopened. *Done: tables
       are redrawn for the new text width (display only). Undoing an edit made before the change can bring back
       a table drawn at the old width until the next page setup change.*
