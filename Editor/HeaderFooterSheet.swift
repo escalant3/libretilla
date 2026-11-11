@@ -4,8 +4,9 @@ import SwiftUI
 
 /// Format ▸ Header and Footer… (ADR 0007): the header and footer of the document's pages in two small text
 /// views, laid out by the same bridge as the body, so their formatting shows and only what changes is rewritten.
-/// "Different first page" gives page 1 its own pair. Page number and page count fields show as chips. Even-page
-/// headers and footers are kept but not edited here. `onDone` gets the result, only if something changed.
+/// "Different first page" gives page 1 its own pair; a document with odd and even headers (`w:evenAndOddHeaders`)
+/// shows its even pages' pair too. Page number and page count fields show as chips. `onDone` gets the result, only
+/// if something changed.
 @MainActor @Observable
 final class HeaderFooterSheet {
     typealias Key = HeadersFooters.Key
@@ -14,7 +15,7 @@ final class HeaderFooterSheet {
     var differentFirstPage: Bool {
         didSet { if !differentFirstPage && slot == .first { choose(.default) } }
     }
-    /// The pages being edited: `.default` (all pages, or all but the first) or `.first`.
+    /// The pages being edited: `.default` (all pages, or all but the first, or the odd ones), `.first` or `.even`.
     private(set) var slot: HeadersFooters.Slot = .default
     /// Why some of the document's headers and footers can't be edited here, if they can't.
     private(set) var note = ""
@@ -88,6 +89,14 @@ final class HeaderFooterSheet {
 
     // MARK: Slots
 
+    /// Whether even pages have their own header and footer.
+    var evenAndOddPages: Bool { result.evenAndOddPages }
+
+    /// The page sets the sheet can switch between, in order, or none if all pages share one header and footer.
+    var slots: [HeadersFooters.Slot] {
+        (differentFirstPage ? [.first] : []) + [.default] + (evenAndOddPages ? [.even] : [])
+    }
+
     /// Shows the header and footer of `slot`'s pages, keeping what was typed in the ones shown before.
     func choose(_ new: HeadersFooters.Slot) {
         guard new != slot else { return }
@@ -112,11 +121,6 @@ final class HeaderFooterSheet {
         var notes: [String] = []
         if HeadersFooters.Kind.allCases.contains(where: { result.unreadable.contains(Key($0, slot)) }) {
             notes.append(String(localized: "A header or footer that Libretilla can't read is kept as it is."))
-        }
-        if result.evenAndOddPages {
-            notes.append(
-                String(
-                    localized: "Even pages have their own header and footer, which are kept but can't be edited here."))
         }
         note = notes.joined(separator: " ")
         window?.makeFirstResponder(textViews[.header])
@@ -211,10 +215,11 @@ private struct HeaderFooterView: View {
             HStack {
                 Toggle(String(localized: "Different first page"), isOn: $sheet.differentFirstPage)
                 Spacer()
-                if sheet.differentFirstPage {
+                if sheet.slots.count > 1 {
                     Picker("", selection: Binding(get: { sheet.slot }, set: { sheet.choose($0) })) {
-                        Text(String(localized: "First Page")).tag(HeadersFooters.Slot.first)
-                        Text(String(localized: "Other Pages")).tag(HeadersFooters.Slot.default)
+                        ForEach(sheet.slots, id: \.self) { slot in
+                            Text(title(slot)).tag(slot)
+                        }
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
@@ -236,6 +241,14 @@ private struct HeaderFooterView: View {
         }
         .padding(16)
         .frame(width: width + 32)
+    }
+
+    private func title(_ slot: HeadersFooters.Slot) -> String {
+        switch slot {
+        case .first: String(localized: "First Page")
+        case .even: String(localized: "Even Pages")
+        case .default: sheet.evenAndOddPages ? String(localized: "Odd Pages") : String(localized: "Other Pages")
+        }
     }
 
     private func story(_ title: String, _ kind: HeadersFooters.Kind) -> some View {

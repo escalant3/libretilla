@@ -230,4 +230,27 @@ extension PageSetupDocumentTests {
             XCTAssertEqual(saved.package[name], before.package[name], name)
         }
     }
+
+    /// Backlog 9: a document with odd and even headers edits its even pages' pair too.
+    func testSheetEditsEvenPageHeadersAndFooters() throws {
+        let doc = try open("14-headers-footers.docx")
+        let sheet = try openHeaderFooterSheet(doc)
+        XCTAssertEqual(sheet.slots, [.first, .default, .even])
+        sheet.choose(.even)
+        XCTAssertEqual(sheet.textViews[.header]?.string, "Even page header\n")
+        try type(" (edited)", in: .header, sheet)
+        sheet.choose(.default)
+        XCTAssertEqual(sheet.textViews[.header]?.string, "Odd page header\n")
+        sheet.differentFirstPage = false
+        XCTAssertEqual(sheet.slots, [.default, .even])
+        sheet.done()
+
+        let pdf = try pdfPages(doc)
+        XCTAssertTrue(pageText(pdf, 1).contains("Even page header (edited)"))
+        XCTAssertTrue(pageText(pdf, 2).contains("Odd page header"))
+        let saved = try saved(doc)
+        XCTAssertEqual(
+            saved.headersFooters.stories[.init(.header, .even)]?.body.plainText, "Even page header (edited)")
+        XCTAssertEqual(saved.headersFooters.stories[.init(.header, .even)]?.partName, "word/header3.xml")
+    }
 }

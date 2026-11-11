@@ -272,12 +272,12 @@
         }
       }
     },
-    "Even pages have their own header and footer, which are kept but can't be edited here.": {
+    "Even Pages": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las páginas pares tienen su propio encabezado y pie de página, que se conservan pero no se pueden editar aquí."
+            "value": "Páginas pares"
           }
         }
       }
@@ -1305,6 +1305,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opacidad:"
+          }
+        }
+      }
+    },
+    "Odd Pages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Páginas impares"
           }
         }
       }
