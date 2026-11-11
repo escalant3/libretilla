@@ -73,7 +73,7 @@ final class TableCellEditor: NSObject, NSTextViewDelegate, @preconcurrency NSTex
         self.position = position
         self.body = body
         loading = true
-        textView.textStorage?.setAttributedString(editor.bridge.attributedString(for: body))
+        textView.textStorage?.setAttributedString(cellBridge(editor).attributedString(for: body))
         loading = false
         undo.removeAllActions()
         place()
@@ -90,6 +90,12 @@ final class TableCellEditor: NSObject, NSTextViewDelegate, @preconcurrency NSTex
         textView.frame = frame
     }
 
+    /// The document's bridge, with the cell's width for the nested tables it draws (backlog 21).
+    private func cellBridge(_ editor: EditorViewController) -> AttributedStringBridge {
+        let width = model.flatMap(cellGeometry)?.textFrame.width ?? editor.bridge.textWidth
+        return editor.bridge.forCell(width: width)
+    }
+
     private func cellGeometry(_ model: TableModel) -> TableCellGeometry? {
         guard let editor else { return nil }
         return editor.bridge.cellGeometry(of: model).flatMap { $0 }.first { $0.position == position }
@@ -103,7 +109,8 @@ final class TableCellEditor: NSObject, NSTextViewDelegate, @preconcurrency NSTex
         guard let editor, let model, let storage = textContentStorage.textStorage, NSMaxRange(range) <= storage.length
         else { return nil }
         let text = NSMutableAttributedString(attributedString: storage.attributedSubstring(from: range))
-        guard text.length > 0,
+        // A nested table's rows (backlog 21) are drawn as they are.
+        guard text.length > 0, text.attribute(.libretillaBlock, at: 0, effectiveRange: nil) == nil,
             let shown = text.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
         else { return nil }
         let properties = AttributedStringBridge.paragraphFormatOf(storage, range)?.properties ?? ParagraphProperties()
@@ -131,13 +138,13 @@ final class TableCellEditor: NSObject, NSTextViewDelegate, @preconcurrency NSTex
         changeInLength delta: Int
     ) {
         guard !loading, editedRange.location != NSNotFound, let editor else { return }
-        editor.bridge.reconcile(textStorage, range: editedRange)
+        cellBridge(editor).reconcile(textStorage, range: editedRange)
         sync()
     }
 
     private func sync() {
         guard let editor, let storage = textView.textStorage, let model else { return }
-        let edited = editor.bridge.body(from: storage, base: body).body
+        let edited = cellBridge(editor).body(from: storage, base: body).body
         guard let newXML = model.replacingCell(position, with: edited) else { return }
         xml = newXML
         body = edited

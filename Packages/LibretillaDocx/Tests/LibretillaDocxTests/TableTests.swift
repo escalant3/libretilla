@@ -348,6 +348,56 @@ import Testing
         }
         #expect(!table.canEditInPlace(.init(row: 6, cell: 0)), "a merge's continuation")
     }
+
+    // MARK: Cells with links and nested tables (backlog 21)
+
+    @Test func cellsWithLinksAreTypedIntoKeepingTheLink() throws {
+        let doc = try codec.read(try Corpus.data("06-hyperlinks.docx"))
+        let rid = try #require(doc.hyperlinkTargets.first { $0.value == "https://example.com/" }?.key)
+        let xml =
+            #"<w:tbl xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" "#
+            + #"xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:tblPr/>"#
+            + #"<w:tblGrid><w:gridCol w:w="4000"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t xml:space="preserve">See </w:t>"#
+            + #"</w:r><w:hyperlink r:id="\#(rid)"><w:r><w:t>the site</w:t></w:r></w:hyperlink></w:p></w:tc></w:tr></w:tbl>"#
+        let table = try model(Data(xml.utf8))
+        let pos = TableModel.CellPosition(row: 0, cell: 0)
+        #expect(table.canEditInPlace(pos))
+        let bridge = AttributedStringBridge(doc)
+        let body = try #require(table.cellBody(pos))
+        let text = NSMutableAttributedString(attributedString: bridge.attributedString(for: body))
+        #expect(try #require(table.replacingCell(pos, with: bridge.body(from: text, base: body).body)) == table.xml)
+        text.insert(NSAttributedString(string: "Please "), at: 0)
+        let edited = String(
+            decoding: try #require(table.replacingCell(pos, with: bridge.body(from: text, base: body).body)),
+            as: UTF8.self)
+        #expect(edited.contains("Please See "))
+        #expect(edited.contains(#"<w:hyperlink r:id="\#(rid)"><w:r><w:t>the site</w:t></w:r></w:hyperlink>"#))
+    }
+
+    @Test func cellsWithNestedTablesKeepThemWhole() throws {
+        let doc = try codec.read(try Corpus.data("04-tables.docx"))
+        let outerBlock = try #require(
+            doc.body.blocks.compactMap { b -> OpaqueBlock? in
+                if case .opaque(let o) = b, o.kind == "w:tbl" { o } else { nil }
+            }.last)
+        let outer = try model(outerBlock.xml)
+        let pos = TableModel.CellPosition(row: 0, cell: 1)
+        #expect(outer.canEditInPlace(pos))
+        let bridge = AttributedStringBridge(doc).forCell(width: 200)
+        let body = try #require(outer.cellBody(pos))
+        let text = NSMutableAttributedString(attributedString: bridge.attributedString(for: body))
+        #expect(text.attribute(.libretillaBlock, at: 0, effectiveRange: nil) != nil, "the nested table, kept whole")
+        #expect(try #require(outer.replacingCell(pos, with: bridge.body(from: text, base: body).body)) == outer.xml)
+        // Typing in the paragraph after it.
+        text.replaceCharacters(in: NSRange(location: text.length - 1, length: 0), with: "Below the inner table")
+        let edited = try model(try #require(outer.replacingCell(pos, with: bridge.body(from: text, base: body).body)))
+        guard case .table(let inner) = edited.rows[0].cells[1].contents.first else {
+            Issue.record("still a nested table")
+            return
+        }
+        #expect(inner.rows[0].cells.map(\.text) == ["in-1", "in-2"])
+        #expect(edited.rows[0].cells[1].paragraphs.last?.text == "Below the inner table")
+    }
 }
 
 extension NSColor {

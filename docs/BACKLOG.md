@@ -71,7 +71,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 20. A table keeps its width after a page setup change until the document is reopened. *Done: tables
       are redrawn for the new text width (display only). Undoing an edit made before the change can bring back
       a table drawn at the old width until the next page setup change.*
-- [ ] 21. Cells containing links, images or nested tables can't be edited in the sheet.
+- [x] 21. Cells containing links, images or nested tables can't be edited in the sheet. *Done in place (ADR
+      0008): such cells are typed into on the page; links and pictures keep their markup and a nested table is
+      kept whole (its own cells still go through Edit Table…). The sheet still shows these cells read-only.*
 
 ## Text, links and paste
 
@@ -124,7 +126,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       2026-11-09's backlog work too. *Done: tests left documents open, which went with their test while their
       windows stayed; AppKit's window controller doesn't retain its document, so validating the toolbar (or drawing
       the window when a sheet put windows on screen) read freed objects. The window controller now holds its
-      document weakly and every test closes what it opens. Four suite runs in a row: no crashes.*
+      document weakly and every test closes what it opens. Four suite runs in a row: no crashes. Seen once more (2026-11-11, the attachment
+      drawing crash): attachments replaced without an undo step (picture previews, table refits, the cell editor's
+      live updates) are now kept alive for two seconds, since TextKit 2 may still draw lines laid out with them.*
 - [x] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
       last attempt's accessibility audit reported "Contrast failed". Run them locally and check. *Done
       (2026-11-11): all 18 UI tests pass, the accessibility audit included.*

@@ -220,4 +220,30 @@ final class TableCommandTests: XCTestCase {
         editor.endCellEditing()
         XCTAssertFalse(editor.textView(tv, clickedAt: NSPoint(x: 5, y: 5)), "not in a table")
     }
+
+    /// Backlog 21: a cell holding a nested table is typed into around it; the nested table is kept whole.
+    func testTypingNextToANestedTable() throws {
+        try open("04-tables.docx")
+        let ns = tv.string as NSString
+        let after = ns.range(of: "A nested table:")
+        let outer = ns.range(
+            of: "\u{FFFC}", range: NSRange(location: NSMaxRange(after), length: ns.length - NSMaxRange(after)))
+        XCTAssertTrue(editor.beginCellEditing(tableLocation: outer.location, position: .init(row: 0, cell: 1)))
+        let cell = try XCTUnwrap(editor.cellEditor?.textView)
+        XCTAssertNotNil(cell.textStorage?.attribute(.libretillaBlock, at: 0, effectiveRange: nil), "the inner table")
+        let snapshotRect = cell.frame.insetBy(dx: -150, dy: -10)
+        cell.setSelectedRange(NSRange(location: (cell.string as NSString).length - 1, length: 0))
+        cell.insertText("Below", replacementRange: cell.selectedRange())
+        let rep = try XCTUnwrap(tv.bitmapImageRepForCachingDisplay(in: snapshotRect.union(cell.frame)))
+        tv.cacheDisplay(in: snapshotRect.union(cell.frame), to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(
+            to: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("nested-cell.png"))
+        editor.endCellEditing()
+        let saved = try XCTUnwrap(tables(saved()).last)
+        guard case .table(let inner) = saved.rows[0].cells[1].contents.first else {
+            return XCTFail("the nested table stays")
+        }
+        XCTAssertEqual(inner.rows[0].cells.map(\.text), ["in-1", "in-2"])
+        XCTAssertEqual(saved.rows[0].cells[1].paragraphs.last?.text, "Below")
+    }
 }

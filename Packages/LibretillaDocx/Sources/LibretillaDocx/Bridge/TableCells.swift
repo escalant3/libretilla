@@ -17,13 +17,18 @@ extension TableModel {
         + #" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math""#
         + #" xmlns:v="urn:schemas-microsoft-com:vml""#
 
-    /// Whether a cell can be typed into: it holds only paragraphs (no nested table or other block), and isn't the
-    /// continuation of a vertical merge.
+    /// Whether a cell can be typed into: it holds paragraphs (with links, pictures, fields…) and nested tables, which
+    /// are kept whole (backlog 21), but no other block; and it isn't the continuation of a vertical merge.
     public func canEditInPlace(_ pos: CellPosition) -> Bool {
         guard rows.indices.contains(pos.row), rows[pos.row].cells.indices.contains(pos.cell) else { return false }
         let cell = rows[pos.row].cells[pos.cell]
         return cell.verticalMerge != .continue
-            && cell.contents.allSatisfy { if case .paragraph = $0 { true } else { false } }
+            && cell.contents.allSatisfy {
+                switch $0 {
+                case .paragraph, .table: true
+                case .text: false
+                }
+            }
     }
 
     /// The cell's paragraphs as a story body, for editing in place; nil if it can't be typed into.
@@ -46,6 +51,14 @@ extension TableModel {
         // A cell must end with a paragraph.
         if !doc.root.childElements.contains(where: { $0.name == "w:p" }) { content.append(Data("<w:p/>".utf8)) }
         return Self.splicing(xml, [(rows[pos.row].cells[pos.cell].contentRange, content)])
+    }
+}
+
+extension AttributedStringBridge {
+    /// The bridge for a cell's text: the document's, with the cell's width as the room nested tables fit in.
+    public func forCell(width: CGFloat) -> AttributedStringBridge {
+        AttributedStringBridge(
+            styles: styles, numbering: numbering, hyperlinkTargets: hyperlinkTargets, images: images, textWidth: width)
     }
 }
 
