@@ -333,6 +333,33 @@ public struct OpaqueInline: Sendable {
 
     public var isHyperlink: Bool { kind == "w:hyperlink" }
 
+    /// What printing shows in place of an object's chip (backlog 27): the text in a text box, ending its line, nothing
+    /// for a comment
+    /// (Word doesn't print them), or nil to keep the chip.
+    public var printedText: String? {
+        guard case .object(let label) = display, image == nil else { return nil }
+        switch label {
+        case "Comment": return ""
+        case "Text box":
+            // The content is in the first w:txbxContent (Word writes a VML copy as a fallback).
+            guard let root = (try? RawXML.Document(data: xml, part: kind))?.root,
+                let content = root.descendants(named: "w:txbxContent").first
+            else { return nil }
+            return content.descendants(named: "w:p").map { p in
+                p.childElements.map { Self.visibleText($0) }.joined()
+            }.joined(separator: " ") + "\u{2028}"  // on a line of its own, not run into the text after it
+        default: return nil
+        }
+    }
+
+    /// A footnote or endnote reference: printing shows its number.
+    public var noteReference: NoteKind? {
+        guard case .object(let label) = display else { return nil }
+        return label == "Footnote" ? .footnote : label == "Endnote" ? .endnote : nil
+    }
+
+    public enum NoteKind: Sendable { case footnote, endnote }
+
     static func objectLabel(_ e: RawXML.Element) -> String? {
         if !e.descendants(named: "w:txbxContent").isEmpty { return "Text box" }
         if !e.descendants(named: "w:drawing").isEmpty || !e.descendants(named: "w:pict").isEmpty { return "Image" }

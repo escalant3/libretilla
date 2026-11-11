@@ -73,7 +73,10 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       the whole paragraph). Printing now draws each page's own lines.*
 - [x] 26. The page-break-before mark is set when the document opens; changing a paragraph's style doesn't affect
       printing until the document is reopened. *Done: restyling a paragraph updates the mark.*
-- [ ] 27. Placeholder chips print into PDFs as they look in the editor.
+- [x] 27. Placeholder chips print into PDFs as they look in the editor. *Done where Libretilla knows what Word
+      prints: footnote and endnote references print their numbers (1, 2, … and i, ii, …), text boxes their text on a
+      line of its own, comments nothing, and block content controls their paragraphs. Equations, objects and symbols
+      still print as chips; footnote text isn't printed (see 24).*
 - [x] 39. Print and PDF swapped the top and bottom margins: AppKit placed each page `bottomMargin` below the
       paper's top edge (any text view, macOS 26). Invisible with equal margins. *Done:
       `PrintTextView.locationOfPrintRect`.*

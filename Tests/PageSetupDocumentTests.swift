@@ -269,6 +269,19 @@ final class PageSetupDocumentTests: XCTestCase {
         }
     }
 
+    /// Backlog 27: chips print as Word prints what they stand for, where Libretilla knows it.
+    func testChipsPrintWhatTheyStandFor() throws {
+        let pdf = try pdfPages(try open("10-word-features.docx"))
+        let text = (0..<pdf.pageCount).map { pdf.page(at: $0)?.string ?? "" }.joined(separator: "\n")
+            .replacingOccurrences(of: "\n", with: " ")
+        XCTAssertTrue(text.contains("A footnote reference follows1 ."), "the footnote's number: \(text)")
+        XCTAssertTrue(
+            text.contains("Floating text box with square wrapping. Consequat"), "the text box's text, on its own line")
+        XCTAssertFalse(text.contains("Comment"), "no comment chip")
+        XCTAssertTrue(text.contains("Block-level content control."), "the content control's paragraphs")
+        XCTAssertEqual(PrintTextView.lowerRoman(14), "xiv")
+    }
+
     func testPDFUsesTheDocumentsPaperSize() throws {
         let a4 = try pdfPages(try open("07-header-footer.docx"))
         let a4Box = try XCTUnwrap(a4.page(at: 0)).bounds(for: .mediaBox)

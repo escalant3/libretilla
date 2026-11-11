@@ -414,7 +414,7 @@ final class LibretillaDocument: NSDocument {
     /// The text to print, by section (`AttributedStringBridge.sections`). A section that starts on a new page
     /// (or an odd or even one) starts a part; a continuous one joins the part before it, on the same pages.
     func printParts() -> [PrintPart] {
-        let text = editor?.textSnapshot() ?? initialText
+        let text = PrintTextView.printingObjects(editor?.textSnapshot() ?? initialText)
         let sections = AttributedStringBridge.sections(in: text, last: pageSetup)
         let decorations = headersFooters.bySection(sections, differentFirstPage: differentFirstPage)
         var parts: [(range: NSRange, part: PrintPart)] = []

@@ -122,6 +122,53 @@ final class PrintTextView: NSTextView {
         return out
     }
 
+    /// `text` with placeholder chips replaced by what Word prints (backlog 27): a footnote or endnote reference by its
+    /// number, a text box by its text, a comment by nothing, a block content control by its paragraphs. Other chips
+    /// (equations, objects, symbols) print as they look in the editor.
+    static func printingObjects(_ text: NSAttributedString) -> NSAttributedString {
+        let out = NSMutableAttributedString(attributedString: text)
+        var replacements: [(NSRange, NSAttributedString)] = []
+        var notes: [OpaqueInline.NoteKind: Int] = [:]
+        out.enumerateAttributes(in: NSRange(location: 0, length: out.length)) { attrs, range, _ in
+            guard attrs[.attachment] != nil else { return }
+            var plain = attrs
+            plain[.attachment] = nil
+            if let inline = (attrs[.libretillaOpaque] as? OpaqueInlineBox)?.inline {
+                if let kind = inline.noteReference {
+                    notes[kind, default: 0] += 1
+                    let n = notes[kind]!
+                    let number = kind == .footnote ? String(n) : Self.lowerRoman(n)
+                    replacements.append((range, NSAttributedString(string: number, attributes: plain)))
+                } else if let printed = inline.printedText {
+                    replacements.append((range, NSAttributedString(string: printed, attributes: plain)))
+                }
+            } else if let box = attrs[.libretillaBlock] as? OpaqueBlockBox, attrs[.libretillaTableRow] == nil,
+                !box.block.visibleText.isEmpty
+            {
+                replacements.append((range, NSAttributedString(string: box.block.visibleText, attributes: plain)))
+            }
+        }
+        for (range, replacement) in replacements.reversed() { out.replaceCharacters(in: range, with: replacement) }
+        return out
+    }
+
+    /// i, ii, iii, … : Word's default endnote numbers.
+    static func lowerRoman(_ n: Int) -> String {
+        let values = [
+            (1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"), (50, "l"),
+            (40, "xl"), (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i"),
+        ]
+        var n = n
+        var out = ""
+        for (value, letters) in values {
+            while n >= value {
+                out += letters
+                n -= value
+            }
+        }
+        return out
+    }
+
     private func pageBreakOffsets() -> [Int] {
         guard let storage = textStorage else { return [] }
         var offsets: [Int] = []
