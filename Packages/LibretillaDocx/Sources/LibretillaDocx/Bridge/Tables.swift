@@ -97,6 +97,9 @@ extension AttributedStringBridge {
                 let w = edges[end] - x
                 let isFirstRow = r == 0
                 let isLastRow = r == model.rows.count - 1
+                // Backlog 17: the table style's header row, banding, … (`w:tblStylePr`).
+                let conditional = props.conditionalFormat(
+                    row: r, of: model.rows.count, columns: start..<end, of: columns.count)
                 let continues = cell.verticalMerge == .continue
                 // Is the cell below a continuation of this one?
                 let mergesDown =
@@ -110,12 +113,16 @@ extension AttributedStringBridge {
                 if mergesDown { bottom = nil }
                 var left = start == 0 ? props.borders.left : props.borders.insideV
                 var right = end == columns.count ? props.borders.right : nil  // the next cell draws its left
+                if let b = conditional.borders.top, !continues { top = b }
+                if let b = conditional.borders.left { left = b }
+                if let b = conditional.borders.right { right = b }
+                if let b = conditional.borders.bottom, !mergesDown { bottom = b }
                 if let b = cell.borders.top, !continues { top = b }
                 if let b = cell.borders.left { left = b }
                 if let b = cell.borders.right { right = b }
                 if let b = cell.borders.bottom, !mergesDown { bottom = b }
 
-                let text = continues ? nil : cellText(cell, tableParagraph: tableParagraph)
+                let text = continues ? nil : cellText(cell, tableParagraph: tableParagraph, conditional: conditional)
                 let insets = NSEdgeInsets(top: marginTop, left: marginLeft, bottom: marginBottom, right: marginRight)
                 if let text {
                     let bounds = text.boundingRect(
@@ -126,7 +133,8 @@ extension AttributedStringBridge {
                 cells.append(
                     TableLayout.Cell(
                         frame: CGRect(x: x, y: 0, width: w, height: 0), text: text,
-                        fill: cell.fill.flatMap(Self.color(hex:)), top: top, left: left, bottom: bottom, right: right,
+                        fill: (cell.fill ?? conditional.fill).flatMap(Self.color(hex:)), top: top, left: left,
+                        bottom: bottom, right: right,
                         textInsets: insets))
             }
             // Empty rows still show one line; Word's row height rules apply on top.
@@ -154,7 +162,11 @@ extension AttributedStringBridge {
 
     /// A cell's paragraphs as the body would show them, with the table style's paragraph spacing where the
     /// paragraph and its style don't set their own (Word's order: defaults, table style, paragraph style).
-    func cellText(_ cell: TableModel.Cell, tableParagraph: ParagraphProperties) -> NSAttributedString {
+    /// `conditional`'s bold, italic and colour apply to text that doesn't set its own.
+    func cellText(
+        _ cell: TableModel.Cell, tableParagraph: ParagraphProperties,
+        conditional: TableConditionalFormat = TableConditionalFormat()
+    ) -> NSAttributedString {
         let out = NSMutableAttributedString()
         var counter = Numbering.Counter(numbering)
         for content in cell.contents {
@@ -190,6 +202,7 @@ extension AttributedStringBridge {
             }
             out.append(text)
         }
+        applying(conditional, to: out)
         // No paragraph break (or its space after) below the last line.
         if out.length > 0, (out.string as NSString).character(at: out.length - 1) == 0x0A {
             out.deleteCharacters(in: NSRange(location: out.length - 1, length: 1))
@@ -203,6 +216,36 @@ extension AttributedStringBridge {
             out.addAttribute(.paragraphStyle, value: style, range: r)
         }
         return out
+    }
+
+    /// Gives text without its own bold, italic or colour (direct or from its character style) those of a table
+    /// style's conditional format.
+    private func applying(_ conditional: TableConditionalFormat, to text: NSMutableAttributedString) {
+        guard conditional.bold != nil || conditional.italic != nil || conditional.color != nil else { return }
+        let manager = NSFontManager.shared
+        text.enumerateAttributes(in: NSRange(location: 0, length: text.length)) { attrs, range, _ in
+            let own = (attrs[.libretillaRun] as? RunFormat).map {
+                $0.properties.over(styles.resolveCharacterStyle($0.properties.styleId))
+            }
+            if var font = attrs[.font] as? NSFont {
+                if let bold = conditional.bold, own?.bold == nil {
+                    font =
+                        bold
+                        ? manager.convert(font, toHaveTrait: .boldFontMask)
+                        : manager.convert(font, toNotHaveTrait: .boldFontMask)
+                }
+                if let italic = conditional.italic, own?.italic == nil {
+                    font =
+                        italic
+                        ? manager.convert(font, toHaveTrait: .italicFontMask)
+                        : manager.convert(font, toNotHaveTrait: .italicFontMask)
+                }
+                text.addAttribute(.font, value: font, range: range)
+            }
+            if let color = conditional.color.flatMap(Self.color(hex:)), own?.color == nil {
+                text.addAttribute(.foregroundColor, value: color, range: range)
+            }
+        }
     }
 
     /// A row drawn on demand (vector, so it prints sharply).

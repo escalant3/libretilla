@@ -145,4 +145,61 @@ import Testing
                 .utf8)
         #expect(TableModel(xml: xml) == nil)
     }
+
+    // MARK: Table styles (backlog 17)
+
+    /// The tables of a document, laid out by its bridge.
+    func layouts(_ name: String) throws -> [TableLayout] {
+        let doc = try codec.read(try Corpus.data(name))
+        let bridge = AttributedStringBridge(doc)
+        return try doc.body.blocks.compactMap { block in
+            guard case .opaque(let o) = block, o.kind == "w:tbl" else { return nil }
+            return bridge.tableLayout(try model(o.xml))
+        }
+    }
+
+    func fill(_ cell: TableLayout.Cell) -> String? {
+        guard let c = cell.fill?.usingColorSpace(.sRGB) else { return nil }
+        return String(
+            format: "%02X%02X%02X", Int((c.redComponent * 255).rounded()), Int((c.greenComponent * 255).rounded()),
+            Int((c.blueComponent * 255).rounded()))
+    }
+
+    func isBold(_ cell: TableLayout.Cell) -> Bool {
+        guard let font = cell.text?.attribute(.font, at: 0, effectiveRange: nil) as? NSFont else { return false }
+        return NSFontManager.shared.traits(of: font).contains(.boldFontMask)
+    }
+
+    @Test func tableStylesShadeHeaderRowsAndBands() throws {
+        let tables = try layouts("17-table-styles.docx")
+        #expect(tables.count == 2)
+        let on = tables[0]
+        // The header row: blue, with white bold text.
+        #expect(on.rows[0].cells.map(fill) == ["4472C4", "4472C4", "4472C4"])
+        #expect(on.rows[0].cells.allSatisfy(isBold))
+        let white = on.rows[0].cells[1].text?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        #expect(white?.usingColorSpace(.sRGB)?.whiteComponentApproximately == 1)
+        // Bands from the first row after the header: odd ones light blue, a cell's own shading wins.
+        #expect(on.rows[1].cells.map(fill) == ["D9E2F3", "D9E2F3", "D9E2F3"])
+        #expect(on.rows[2].cells.map(fill) == [nil, nil, nil])
+        #expect(on.rows[3].cells.map(fill) == ["D9E2F3", "D9E2F3", "FFF2CC"])
+        // The first column is bold; the others aren't.
+        #expect(isBold(on.rows[2].cells[0]) && !isBold(on.rows[2].cells[1]))
+
+        let off = tables[1]
+        #expect(off.rows.allSatisfy { $0.cells.allSatisfy { fill($0) == nil && !isBold($0) } })
+    }
+
+    @Test func tableLookReadsWord2007BitMasks() throws {
+        let xml = Data(#"<w:tblLook xmlns:w="w" w:val="04A0"/>"#.utf8)
+        let look = TableLook(try RawXML.Document(data: xml, part: "t").root)
+        #expect(look.firstRow && look.firstColumn && !look.lastRow && !look.lastColumn)
+        #expect(look.rowBands && !look.columnBands)
+    }
+}
+
+extension NSColor {
+    fileprivate var whiteComponentApproximately: CGFloat {
+        ((redComponent + greenComponent + blueComponent) / 3 * 100).rounded() / 100
+    }
 }

@@ -799,9 +799,57 @@ def f16_section_headers(out: Path):
     pkg.write(out / "16-section-headers.docx", document("".join(body), final))
 
 
+def f17_table_styles(out: Path):
+    """Table style conditional formatting (backlog 17): a "List Table 4"-like style whose header row is blue with
+    white bold text, whose first column is bold, and whose odd banded rows are light blue. The first table turns on
+    the header row, first column and row banding (w:tblLook); one banded cell has its own shading, which wins. The
+    second table, in the same style, turns them all off."""
+    pkg = Package("Table styles")
+    blue, light, line = "4472C4", "D9E2F3", "8EAADB"
+    edge = f'w:val="single" w:sz="4" w:space="0" w:color="{line}"'
+    pkg.styles = pkg.styles.replace("</w:styles>", (
+        '<w:style w:type="table" w:styleId="ListTable4Accent1"><w:name w:val="List Table 4 Accent 1"/>'
+        '<w:basedOn w:val="TableNormal"/><w:uiPriority w:val="49"/>'
+        '<w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
+        '<w:tblPr><w:tblStyleRowBandSize w:val="1"/><w:tblStyleColBandSize w:val="1"/><w:tblBorders>'
+        f'<w:top {edge}/><w:left {edge}/><w:bottom {edge}/><w:right {edge}/><w:insideH {edge}/>'
+        '</w:tblBorders></w:tblPr>'
+        '<w:tblStylePr w:type="firstRow"><w:rPr><w:b/><w:bCs/><w:color w:val="FFFFFF"/></w:rPr><w:tblPr/>'
+        f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{blue}"/></w:tcPr></w:tblStylePr>'
+        '<w:tblStylePr w:type="lastRow"><w:rPr><w:b/><w:bCs/></w:rPr></w:tblStylePr>'
+        '<w:tblStylePr w:type="firstCol"><w:rPr><w:b/><w:bCs/></w:rPr></w:tblStylePr>'
+        '<w:tblStylePr w:type="band1Horz"><w:tblPr/>'
+        f'<w:tcPr><w:shd w:val="clear" w:color="auto" w:fill="{light}"/></w:tcPr></w:tblStylePr>'
+        "</w:style></w:styles>"))
+    col = 3120
+    grid_col = f'<w:gridCol w:w="{col}"/>'
+    grid = f"<w:tblGrid>{grid_col * 3}</w:tblGrid>"
+
+    def table(look: str, own_shading: bool) -> str:
+        tblpr = f'<w:tblPr><w:tblStyle w:val="ListTable4Accent1"/><w:tblW w:w="0" w:type="auto"/>{look}</w:tblPr>'
+        data = [("Fruit", "Colour", "Price"), ("Apples", "Green", "3"), ("Pears", "Yellow", "4"),
+                ("Plums", "Purple", "5"), ("Cherries", "Red", "6")]
+        rows = ""
+        for i, cells in enumerate(data):
+            rows += "<w:tr>"
+            for j, text in enumerate(cells):
+                shd = "FFF2CC" if own_shading and (i, j) == (3, 2) else None
+                rows += tc(p(text), col, shd=shd)
+            rows += "</w:tr>"
+        return f"<w:tbl>{tblpr}{grid}{rows}</w:tbl>"
+
+    on = ('<w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0"'
+          ' w:noVBand="1"/>')
+    off = ('<w:tblLook w:val="0600" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1"'
+           ' w:noVBand="1"/>')
+    body = (p("Table styles", style="Heading1") + table(on, True) + p("The same style, all options off:")
+            + table(off, False) + p("After the tables."))
+    pkg.write(out / "17-table-styles.docx", document(body))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
             f08_spanish, f09_large, f10_word_features, f13_page_break_before,
-            f14_headers_footers, f15_sections, f16_section_headers]
+            f14_headers_footers, f15_sections, f16_section_headers, f17_table_styles]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a

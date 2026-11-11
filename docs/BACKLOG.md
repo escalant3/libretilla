@@ -46,7 +46,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 - [ ] 15. No typing straight into cells; the sheet edits them.
 - [ ] 16. Find, spell check and VoiceOver don't see cell text.
-- [ ] 17. Banded rows and first-row shading from table styles (`w:tblStylePr`) aren't drawn.
+- [x] 17. Banded rows and first-row shading from table styles (`w:tblStylePr`) aren't drawn. *Done: the
+      conditional formats `w:tblLook` turns on (header and last rows, first and last columns, row and column bands,
+      corner cells) give cells their shading, borders and bold, italic and colour, under the cell's own.*
 - [ ] 18. Nested tables show as one line of text per row.
 - [ ] 19. A vertically merged cell's text sits in its first row.
 - [x] 20. A table keeps its width after a page setup change until the document is reopened. *Done: tables

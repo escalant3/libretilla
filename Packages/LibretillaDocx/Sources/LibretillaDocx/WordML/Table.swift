@@ -51,6 +51,63 @@ public struct TableBorders: Sendable, Equatable {
     }
 }
 
+/// What a table style's conditional formatting (`w:tblStylePr`, or the style's own `w:tcPr` and `w:rPr` for the
+/// whole table) gives the cells it applies to: shading, borders, and bold, italic and colour for their text.
+public struct TableConditionalFormat: Sendable, Equatable {
+    /// Hex `RRGGBB`.
+    public var fill: String?
+    public var borders = TableBorders()
+    public var bold, italic: Bool?
+    /// Hex `RRGGBB`.
+    public var color: String?
+
+    public init() {}
+
+    /// From an element holding a `w:tcPr` and a `w:rPr` (a `w:tblStylePr` or a table `w:style`).
+    init(_ e: RawXML.Element) {
+        let tcPr = e.firstChild(named: "w:tcPr")
+        fill = tcPr?.firstChild(named: "w:shd")?.attribute("w:fill").flatMap { $0 == "auto" ? nil : $0 }
+        borders = TableBorders(tcPr?.firstChild(named: "w:tcBorders"))
+        let rPr = e.firstChild(named: "w:rPr")
+        bold = rPr?.firstChild(named: "w:b").map(RunProperties.toggle)
+        italic = rPr?.firstChild(named: "w:i").map(RunProperties.toggle)
+        color = rPr?.firstChild(named: "w:color")?.attribute("w:val").flatMap { $0 == "auto" ? nil : $0 }
+    }
+
+    /// These values where set, `base` elsewhere.
+    func over(_ base: TableConditionalFormat) -> TableConditionalFormat {
+        var out = base
+        out.fill = fill ?? base.fill
+        out.borders = borders.over(base.borders)
+        out.bold = bold ?? base.bold
+        out.italic = italic ?? base.italic
+        out.color = color ?? base.color
+        return out
+    }
+}
+
+/// `w:tblLook`: which of its style's conditional formats a table uses. Without one, a table uses only the banding.
+public struct TableLook: Sendable, Equatable {
+    public var firstRow = false, lastRow = false, firstColumn = false, lastColumn = false
+    public var rowBands = true, columnBands = true
+
+    public init() {}
+
+    init(_ e: RawXML.Element) {
+        // Word 2010 and later write attributes; Word 2007 only a bit mask in w:val.
+        let mask = e.attribute("w:val").flatMap { Int($0, radix: 16) } ?? 0
+        func flag(_ name: String, _ bit: Int) -> Bool {
+            e.attribute(name).map { $0 == "1" || $0 == "true" || $0 == "on" } ?? (mask & bit != 0)
+        }
+        firstRow = flag("w:firstRow", 0x0020)
+        lastRow = flag("w:lastRow", 0x0040)
+        firstColumn = flag("w:firstColumn", 0x0080)
+        lastColumn = flag("w:lastColumn", 0x0100)
+        rowBands = !flag("w:noHBand", 0x0200)
+        columnBands = !flag("w:noVBand", 0x0400)
+    }
+}
+
 /// What a `w:tblPr` (in a table or a table style) says about borders, cell margins and placement.
 public struct TableProperties: Sendable, Equatable {
     public var styleId: String?
@@ -61,6 +118,12 @@ public struct TableProperties: Sendable, Equatable {
     public var alignment: String?
     /// Indent from the margin in points (`w:tblInd`).
     public var indent: Double?
+    /// The table's `w:tblLook`.
+    public var look: TableLook?
+    /// How many rows and columns each band covers (`w:tblStyleRowBandSize`, `w:tblStyleColBandSize`).
+    public var rowBandSize, columnBandSize: Int?
+    /// A table style's conditional formats, by `w:type` (`firstRow`, `band1Horz`, …, and `wholeTable`).
+    public var conditional: [String: TableConditionalFormat] = [:]
 
     public init() {}
 
@@ -80,6 +143,9 @@ public struct TableProperties: Sendable, Equatable {
         }
         alignment = tblPr.firstChild(named: "w:jc")?.attribute("w:val")
         indent = pt(tblPr.firstChild(named: "w:tblInd"))
+        look = tblPr.firstChild(named: "w:tblLook").map(TableLook.init)
+        rowBandSize = tblPr.firstChild(named: "w:tblStyleRowBandSize")?.attribute("w:val").flatMap { Int($0) }
+        columnBandSize = tblPr.firstChild(named: "w:tblStyleColBandSize")?.attribute("w:val").flatMap { Int($0) }
     }
 
     /// These properties where set, `base` elsewhere.
@@ -93,7 +159,42 @@ public struct TableProperties: Sendable, Equatable {
         out.cellMarginBottom = cellMarginBottom ?? base.cellMarginBottom
         out.alignment = alignment ?? base.alignment
         out.indent = indent ?? base.indent
+        out.look = look ?? base.look
+        out.rowBandSize = rowBandSize ?? base.rowBandSize
+        out.columnBandSize = columnBandSize ?? base.columnBandSize
+        out.conditional = base.conditional.merging(conditional) { $1.over($0) }
         return out
+    }
+
+    /// The conditional formats `look` turns on for the cell in row `row` of `rows`, spanning grid columns
+    /// `columns` of `columnCount`, combined in Word's order: the whole table, column bands, row bands, the first
+    /// and last columns, the first and last rows, then the corner cells.
+    public func conditionalFormat(row: Int, of rows: Int, columns: Range<Int>, of columnCount: Int)
+        -> TableConditionalFormat
+    {
+        let look = look ?? TableLook()
+        let isFirstRow = look.firstRow && row == 0
+        let isLastRow = look.lastRow && row == rows - 1
+        let isFirstColumn = look.firstColumn && columns.lowerBound == 0
+        let isLastColumn = look.lastColumn && columns.upperBound == columnCount
+        var types = ["wholeTable"]
+        if look.columnBands, !isFirstColumn, !isLastColumn {
+            let band = (columns.lowerBound - (look.firstColumn ? 1 : 0)) / max(1, columnBandSize ?? 1)
+            types.append(band % 2 == 0 ? "band1Vert" : "band2Vert")
+        }
+        if look.rowBands, !isFirstRow, !isLastRow {
+            let band = (row - (look.firstRow ? 1 : 0)) / max(1, rowBandSize ?? 1)
+            types.append(band % 2 == 0 ? "band1Horz" : "band2Horz")
+        }
+        if isFirstColumn { types.append("firstCol") }
+        if isLastColumn { types.append("lastCol") }
+        if isFirstRow { types.append("firstRow") }
+        if isLastRow { types.append("lastRow") }
+        if isFirstRow && isFirstColumn { types.append("nwCell") }
+        if isFirstRow && isLastColumn { types.append("neCell") }
+        if isLastRow && isFirstColumn { types.append("swCell") }
+        if isLastRow && isLastColumn { types.append("seCell") }
+        return types.reduce(TableConditionalFormat()) { out, type in conditional[type]?.over(out) ?? out }
     }
 }
 
@@ -468,7 +569,14 @@ extension StyleSheet {
             guard let xml = styleElement(style.id), let doc = try? RawXML.Document(data: xml, part: "w:style") else {
                 continue
             }
-            out = TableProperties(doc.root.firstChild(named: "w:tblPr")).over(out)
+            var own = TableProperties(doc.root.firstChild(named: "w:tblPr"))
+            // A style's own cell shading and run formatting apply to the whole table.
+            own.conditional["wholeTable"] = TableConditionalFormat(doc.root)
+            for e in doc.root.childElements(named: "w:tblStylePr") {
+                guard let type = e.attribute("w:type") else { continue }
+                own.conditional[type] = TableConditionalFormat(e)
+            }
+            out = own.over(out)
         }
         return out
     }
