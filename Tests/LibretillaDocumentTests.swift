@@ -135,6 +135,15 @@ final class LibretillaDocumentTests: XCTestCase {
         XCTAssertTrue(allowed(NSRange(location: 6, length: 7), text), "deleting the whole link")
         XCTAssertTrue(allowed(NSRange(location: 0, length: 3), text), "editing plain text")
     }
+
+    /// The window is titled with the document's name as soon as it's made (AppKit's document setter reads the
+    /// window controller's `document`).
+    func testWindowIsTitledWithTheDocumentsName() throws {
+        let (doc, _, _) = try openDocument("01-plain.docx")
+        let window = try XCTUnwrap(doc.windowControllers.first?.window)
+        XCTAssertEqual(window.title, doc.displayName)
+        XCTAssertFalse(window.title.isEmpty)
+    }
 }
 
 final class OriginalsStoreTests: XCTestCase {
@@ -155,6 +164,7 @@ final class OriginalsStoreTests: XCTestCase {
         XCTAssertEqual(store.entries().count, 1)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: dir.path).count, 2)  // file + index
     }
+
 }
 
 extension XCTestCase {

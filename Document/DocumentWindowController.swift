@@ -162,8 +162,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     override var document: AnyObject? {
         get { currentDocument }
         set {
-            super.document = newValue
+            // First: AppKit's setter reads `document` (to title the window, for one).
             currentDocument = newValue
+            super.document = newValue
             if let doc = newValue as? LibretillaDocument {
                 status.show(doc.saveState, isDraft: doc.fileURL == nil)
             }
