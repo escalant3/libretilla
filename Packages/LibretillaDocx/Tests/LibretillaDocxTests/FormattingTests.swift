@@ -227,6 +227,29 @@ import Testing
 
     // MARK: - Lists
 
+    /// Backlog 35: a marker is drawn in the colour TextKit draws its text in, such as the editor's readable colour
+    /// on a dark page (a rendering attribute).
+    @Test func listMarkersTakeTheirTextsRenderingColour() throws {
+        let l = try load("03-nested-lists.docx")
+        let view = NSTextView(usingTextLayoutManager: true)
+        view.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
+        let layout = try #require(view.textLayoutManager)
+        layout.delegate = ListMarkerLayout.shared
+        view.textStorage?.setAttributedString(l.text)
+        let content = try #require(layout.textContentManager)
+        let offset = try range(of: "Fruit", in: l.text).location
+        let location = try #require(content.location(content.documentRange.location, offsetBy: offset))
+        func marker() throws -> NSAttributedString {
+            layout.ensureLayout(for: layout.documentRange)
+            let fragment = try #require(layout.textLayoutFragment(for: location) as? ListMarkerFragment)
+            return fragment.shownMarker
+        }
+        #expect(try marker().attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor != .systemRed)
+        layout.setRenderingAttributes([.foregroundColor: NSColor.systemRed], for: layout.documentRange)
+        #expect(try marker().attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .systemRed)
+        #expect(try marker().string == "•")
+    }
+
     @Test func nestedListMarkersFollowWordNumbering() throws {
         let l = try load("03-nested-lists.docx")
         var markers: [String: ListMarker] = [:]

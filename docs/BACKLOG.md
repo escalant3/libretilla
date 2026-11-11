@@ -40,7 +40,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [ ] 17. Banded rows and first-row shading from table styles (`w:tblStylePr`) aren't drawn.
 - [ ] 18. Nested tables show as one line of text per row.
 - [ ] 19. A vertically merged cell's text sits in its first row.
-- [ ] 20. A table keeps its width after a page setup change until the document is reopened.
+- [x] 20. A table keeps its width after a page setup change until the document is reopened. *Done: tables
+      are redrawn for the new text width (display only). Undoing an edit made before the change can bring back
+      a table drawn at the old width until the next page setup change.*
 - [ ] 21. Cells containing links, images or nested tables can't be edited in the sheet.
 
 ## Text, links and paste
@@ -67,7 +69,8 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [ ] 28. Text inside tables, chips and pictures isn't recoloured on a dark page.
 - [ ] 29. No real VoiceOver session yet; only the rotor unit test and the audit.
 - [ ] 30. Manual look at the colour well popover, the highlight menu and the font popup with uninstalled fonts.
-- [ ] 35. List markers aren't recoloured on a dark page (they're drawn outside TextKit's rendering attributes).
+- [x] 35. List markers aren't recoloured on a dark page (they're drawn outside TextKit's rendering attributes).
+      *Done: a marker takes the rendering colour of the text it gets its colour from.*
 
 ## Infrastructure
 
@@ -75,8 +78,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       `gh workflow enable CI`.
 - [ ] 36. `PictureCommandTests` crash now and then (EXC_BAD_ACCESS in `NSTextAttachment` drawing). Seen before
       2026-11-09's backlog work too.
-- [ ] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
-      last attempt's accessibility audit reported "Contrast failed". Run them locally and check.
+- [x] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
+      last attempt's accessibility audit reported "Contrast failed". Run them locally and check. *Done
+      (2026-11-11): all 18 UI tests pass, the accessibility audit included.*
 
 ## Suggested starting points
 

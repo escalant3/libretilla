@@ -252,6 +252,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
     /// (`LibretillaTextView.topMargin`); continuous scroll has no page bottoms in between.
     func apply(_ setup: PageSetup) {
         loadViewIfNeeded()
+        let oldColumn = pageSetup.textWidth
         pageSetup = setup
         let column = setup.textWidth
         let margins = setup.margins
@@ -267,6 +268,12 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         canvas.needsLayout = true
         canvas.needsDisplay = true
         applyFit()
+        if column != oldColumn {
+            let wasLoading = isLoading
+            isLoading = true
+            refitTables()
+            isLoading = wasLoading
+        }
     }
 
     // MARK: Content

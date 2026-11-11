@@ -66,6 +66,33 @@ final class TableCommandTests: XCTestCase {
         XCTAssertEqual(try tables(saved()).count, 2)
     }
 
+    /// The width the first table is drawn at (its first row's attachment).
+    var firstTableWidth: CGFloat? {
+        (tv.textStorage?.attribute(.attachment, at: firstRow, effectiveRange: nil) as? NSTextAttachment)?.bounds.width
+    }
+
+    /// Backlog 20: a page setup change refits tables at once, without editing the document.
+    func testTablesFollowAPageSetupChange() throws {
+        try open("04-tables.docx")
+        let wide = try XCTUnwrap(firstTableWidth)
+        func tableXML() throws -> [Data] {
+            try saved().body.blocks.compactMap { if case .opaque(let o) = $0, o.kind == "w:tbl" { o.xml } else { nil } }
+        }
+        let before = try tableXML()
+        var setup = doc.pageSetup
+        setup.left += 4 * 1440  // 4″ more margin: the column is narrower than the table
+        doc.setPageSetup(setup)
+        let narrow = try XCTUnwrap(firstTableWidth)
+        XCTAssertLessThan(narrow, wide)
+        XCTAssertEqual(narrow, setup.textWidth, accuracy: 0.5, "scaled to the new text column")
+        XCTAssertNotNil(editor.table(at: firstRow), "still a table")
+        XCTAssertEqual(try tableXML(), before, "display only")
+
+        doc.undoManager?.undo()
+        XCTAssertEqual(try XCTUnwrap(firstTableWidth), wide, accuracy: 0.5)
+        XCTAssertEqual(try tableXML(), before)
+    }
+
     func testTypingInsideATableIsRefused() throws {
         try open("04-tables.docx")
         let before = tv.string

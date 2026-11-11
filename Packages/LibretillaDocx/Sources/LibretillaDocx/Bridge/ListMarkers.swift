@@ -44,10 +44,7 @@ extension AttributedStringBridge {
     /// paragraph mark if it has none), as Word draws a marker in the paragraph mark's formatting.
     static func markerAttributes(_ paragraph: NSAttributedString) -> [NSAttributedString.Key: Any] {
         let ns = paragraph.string as NSString
-        var index = 0
-        while index < ns.length - 1, paragraph.attribute(.attachment, at: index, effectiveRange: nil) != nil {
-            index += 1
-        }
+        let index = markerSource(paragraph)
         var attrs: [NSAttributedString.Key: Any] = [:]
         if ns.length > 0 {
             let at = paragraph.attributes(at: index, effectiveRange: nil)
@@ -62,6 +59,15 @@ extension AttributedStringBridge {
         }
         if attrs[.font] == nil { attrs[.font] = NSFont.systemFont(ofSize: defaultFontSize) }
         return attrs
+    }
+
+    /// The offset in `paragraph` of the character whose font and colour its marker takes (`markerAttributes`).
+    static func markerSource(_ paragraph: NSAttributedString) -> Int {
+        var index = 0
+        while index < paragraph.length - 1, paragraph.attribute(.attachment, at: index, effectiveRange: nil) != nil {
+            index += 1
+        }
+        return index
     }
 
     /// Where Word puts a list paragraph's marker and its first line's text: the marker at the first-line (or
@@ -165,6 +171,25 @@ final class ListMarkerFragment: NSTextLayoutFragment, @unchecked Sendable {
             x: x - layoutFragmentFrame.minX, y: baseline - font.ascender, width: size.width, height: size.height)
     }
 
+    /// The marker as drawn: in the colour TextKit draws its source character in when that's a rendering attribute
+    /// (the editor's readable colours on a dark page), so the marker matches its text.
+    var shownMarker: NSAttributedString {
+        guard let layout = textLayoutManager, let content = layout.textContentManager,
+            let paragraph = (textElement as? NSTextParagraph)?.attributedString,
+            let location = content.location(
+                rangeInElement.location, offsetBy: AttributedStringBridge.markerSource(paragraph))
+        else { return marker }
+        var color: NSColor?
+        layout.enumerateRenderingAttributes(from: location, reverse: false) { _, attrs, range in
+            if range.contains(location) { color = attrs[.foregroundColor] as? NSColor }
+            return false
+        }
+        guard let color else { return marker }
+        let shown = NSMutableAttributedString(attributedString: marker)
+        shown.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: shown.length))
+        return shown
+    }
+
     override var renderingSurfaceBounds: CGRect {
         guard let markerRect else { return super.renderingSurfaceBounds }
         return super.renderingSurfaceBounds.union(markerRect)
@@ -179,7 +204,7 @@ final class ListMarkerFragment: NSTextLayoutFragment, @unchecked Sendable {
         guard let markerRect else { return }
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
-        marker.draw(at: NSPoint(x: point.x + markerRect.minX, y: point.y + markerRect.minY))
+        shownMarker.draw(at: NSPoint(x: point.x + markerRect.minX, y: point.y + markerRect.minY))
         NSGraphicsContext.restoreGraphicsState()
     }
 }

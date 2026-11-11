@@ -76,6 +76,42 @@ extension EditorViewController {
         textView.undoManager?.setActionName(String(localized: "Edit Table"))
     }
 
+    /// Redraws every table for the current text width, after a page setup change (backlog 20): a table wider
+    /// than the text column is scaled to fit it. Display only: each row keeps its character and block, so the
+    /// document, its saved XML and the undo stack are untouched.
+    func refitTables() {
+        guard let storage = textView.textStorage else { return }
+        var tables: [(range: NSRange, box: OpaqueBlockBox)] = []
+        storage.enumerateAttribute(.libretillaBlock, in: NSRange(location: 0, length: storage.length)) { v, r, _ in
+            guard let box = v as? OpaqueBlockBox, box.block.kind == "w:tbl" else { return }
+            if let last = tables.last, last.box === box {
+                tables[tables.count - 1].range = NSUnionRange(last.range, r)
+            } else {
+                tables.append((r, box))
+            }
+        }
+        guard !tables.isEmpty else { return }
+        let bridge = self.bridge
+        storage.beginEditing()
+        for (range, box) in tables {
+            // The table's rows and the line breaks between them; the text's last line break isn't the table's.
+            guard let text = bridge.tableText(box.block, leadingBlocks: box.leadingBlocks),
+                text.length == range.length + 1,
+                (text.string as NSString).substring(to: range.length)
+                    == (storage.string as NSString).substring(with: range)
+            else { continue }
+            for i in 0..<range.length {
+                let attrs = text.attributes(at: i, effectiveRange: nil)
+                let at = NSRange(location: range.location + i, length: 1)
+                if let attachment = attrs[.attachment] {
+                    storage.addAttribute(.attachment, value: attachment, range: at)
+                }
+                if let style = attrs[.paragraphStyle] { storage.addAttribute(.paragraphStyle, value: style, range: at) }
+            }
+        }
+        storage.endEditing()
+    }
+
     /// Insert ▸ Table…: asks for the size, then inserts an empty table in "Table Grid" style at the caret
     /// (after the current paragraph's text before the caret, which stays a paragraph of its own).
     @objc func insertTable(_ sender: Any?) {

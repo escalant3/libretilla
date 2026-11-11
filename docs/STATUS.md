@@ -204,8 +204,8 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   as a new image.
 - Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
   text; table-style conditional formatting (banded rows, first-row shading from `w:tblStylePr`) isn't drawn;
-  nested tables show as one line of text per row; a vertically merged cell's text sits in its first row; tables
-  drawn at open keep their width if the page setup changes until the document is reopened.
+  nested tables show as one line of text per row; a vertically merged cell's text sits in its first row. (Tables
+  are redrawn for a new text width when the page setup changes, backlog 20.)
 
 **Milestone 3 features are all in.** (`w:pageBreakBefore`, still open here at the time, landed in Milestone 5.)
 
