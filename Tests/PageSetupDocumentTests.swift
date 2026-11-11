@@ -239,6 +239,36 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertFalse(doc.isDocumentEdited)
     }
 
+    /// The lines on a PDF page, top to bottom, as rectangles in PDF points (origin at the bottom left).
+    func lineBounds(_ pdf: PDFDocument, _ page: Int) throws -> [CGRect] {
+        let page = try XCTUnwrap(pdf.page(at: page))
+        return try XCTUnwrap(page.selection(for: NSRange(location: 0, length: page.numberOfCharacters)))
+            .selectionsByLine().map { $0.bounds(for: page) }.sorted { $0.maxY > $1.maxY }
+    }
+
+    /// Backlog 39: the top margin is above the first line on each page and the bottom margin below the last (AppKit
+    /// swapped them).
+    func testPDFKeepsTheTopAndBottomMarginsApart() throws {
+        for landscape in [false, true] {
+            let doc = try open("09-large.docx")
+            var setup = doc.pageSetup
+            if landscape { (setup.width, setup.height, setup.isLandscape) = (setup.height, setup.width, true) }
+            (setup.top, setup.bottom) = (2880, 360)  // 2″ above, ¼″ below
+            doc.setPageSetup(setup)
+            let pdf = try pdfPages(doc)
+            let height = try XCTUnwrap(pdf.page(at: 1)).bounds(for: .mediaBox).height
+            let lines = try lineBounds(pdf, 1)
+            let top = height - (lines.first?.maxY ?? 0)
+            XCTAssertGreaterThanOrEqual(top, 144 - 1, "landscape: \(landscape)")
+            XCTAssertLessThan(top, 144 + 12, "landscape: \(landscape)")
+            let bottom = lines.last?.minY ?? 0
+            XCTAssertGreaterThanOrEqual(bottom, 18 - 1, "landscape: \(landscape)")
+            XCTAssertLessThan(bottom, 18 + 40, "a full page: the last line is near the ¼″ margin")
+            doc.close()
+            try FileManager.default.removeItem(at: scratch.appendingPathComponent("09-large.docx"))
+        }
+    }
+
     func testPDFUsesTheDocumentsPaperSize() throws {
         let a4 = try pdfPages(try open("07-header-footer.docx"))
         let a4Box = try XCTUnwrap(a4.page(at: 0)).bounds(for: .mediaBox)

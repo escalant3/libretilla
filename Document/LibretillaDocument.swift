@@ -448,9 +448,11 @@ final class LibretillaDocument: NSDocument {
         info.dictionary().addEntries(from: settings)
         let view = PrintTextView(text: part.text, width: part.setup.textWidth)
         if !part.headersFooters.stories.isEmpty {
-            view.decorations = PrintTextView.Decorations(
+            let decorations = PrintTextView.Decorations(
                 headersFooters: part.headersFooters, differentFirstPage: part.differentFirstPage, bridge: bridge,
                 setup: part.setup, pageOffset: pageOffset, totalPages: totalPages)
+            view.decorations = decorations
+            (info.topMargin, info.bottomMargin) = PrintTextView.margins(clearing: decorations)
         }
         return NSPrintOperation(view: view, printInfo: info)
     }

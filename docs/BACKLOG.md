@@ -26,7 +26,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       section's (see 32).*
 - [ ] 38. Page numbers in headers and footers ignore `w:pgNumType` (a section restarting its numbering, or
       numbering in roman numerals), and `SECTIONPAGES` shows the document's page count.
-- [ ] 8. A header taller than the top margin overlaps the body instead of pushing it down.
+- [x] 8. A header taller than the top margin overlaps the body instead of pushing it down. *Done: the tallest
+      header (footer) of a section moves its top (bottom) margin, unless the margin is negative ("exactly").
+      Word does it page by page; Libretilla per section.*
 - [ ] 9. Even-page headers and footers can't be edited in the sheet.
 - [ ] 10. The editor doesn't show headers and footers inline; they're edited only in the sheet (deliberate, ADR 0007).
 
@@ -67,6 +69,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 26. The page-break-before mark is set when the document opens; changing a paragraph's style doesn't affect
       printing until the document is reopened. *Done: restyling a paragraph updates the mark.*
 - [ ] 27. Placeholder chips print into PDFs as they look in the editor.
+- [x] 39. Print and PDF swapped the top and bottom margins: AppKit placed each page `bottomMargin` below the
+      paper's top edge (any text view, macOS 26). Invisible with equal margins. *Done:
+      `PrintTextView.locationOfPrintRect`.*
 
 ## Dark Mode and accessibility
 

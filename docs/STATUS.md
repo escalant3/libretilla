@@ -300,7 +300,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   Fixed (backlog 25): printing draws each page's own lines, in place of TextKit's views, which drew whole
   paragraphs clipped.
 - Headers and footers: each section prints its own, or those it inherits (backlog 7); the sheet edits the last
-  section's. Page numbers run across the document (`w:pgNumType` restarts aren't read). Header text taller than the top margin overlaps the body instead of pushing it down. The editor doesn't show
+  section's. Page numbers run across the document (`w:pgNumType` restarts aren't read). The editor doesn't show
   them (edit them in the sheet). Even-page headers and footers can't be edited in the sheet yet. New ones use the
   document's Header and Footer styles if it has them, plain paragraphs if not.
 - ~~The page-break-before mark was set only when the document opened.~~ Fixed (backlog 26): restyling a

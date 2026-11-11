@@ -74,6 +74,38 @@ extension PageSetupDocumentTests {
         }
     }
 
+    /// Backlog 8: a header reaching below the top margin pushes the body down, and a footer above the bottom margin
+    /// pushes it up, unless the margin is negative (Word's "exactly").
+    func testTallHeadersAndFootersPushTheBodyAway() throws {
+        let header = "Libretilla fixture — running header"
+        let doc = try open("07-header-footer.docx")
+        var setup = doc.pageSetup
+        (setup.top, setup.bottom, setup.header, setup.footer) = (360, 360, 720, 720)  // ¼″ margins, ½″ distances
+        doc.setPageSetup(setup)
+        var pdf = try pdfPages(doc)
+        let height = try XCTUnwrap(pdf.page(at: 0)).bounds(for: .mediaBox).height
+        let headerBox = try bounds(of: header, on: 0, in: pdf)
+        let body = try bounds(of: "Header and footer", on: 0, in: pdf)
+        XCTAssertLessThanOrEqual(body.maxY, headerBox.minY, "the body starts below the header")
+        XCTAssertGreaterThan(height - body.maxY, 36 + 6, "well below the ¼″ margin")
+        // The footer: the body's last line on the page ends above it.
+        let page = try XCTUnwrap(pdf.page(at: 0))
+        let footerBox = try bounds(of: "Page 1", on: 0, in: pdf)
+        let lines = try XCTUnwrap(page.selection(for: NSRange(location: 0, length: page.numberOfCharacters)))
+            .selectionsByLine().map { $0.bounds(for: page) }
+        let lowest = try XCTUnwrap(
+            lines.filter { $0.minY > footerBox.maxY + 0.5 || $0.maxY < footerBox.minY }.map(\.minY).min())
+        XCTAssertGreaterThanOrEqual(lowest, footerBox.maxY, "the body ends above the footer")
+        XCTAssertGreaterThan(lowest, 18 + 6, "well above the ¼″ margin")
+
+        // Negative: exactly ¼″, header or not.
+        setup.top = -360
+        doc.setPageSetup(setup)
+        pdf = try pdfPages(doc)
+        let exact = try bounds(of: "Header and footer", on: 0, in: pdf)
+        XCTAssertGreaterThan(exact.maxY, body.maxY + 10, "the body starts at the ¼″ margin, over the header")
+    }
+
     func testHeaderAndFooterSitAtTheirDistancesFromTheEdges() throws {
         let pdf = try pdfPages(try open("14-headers-footers.docx"))
         let page = try XCTUnwrap(pdf.page(at: 2)).bounds(for: .mediaBox)

@@ -68,6 +68,15 @@ final class PrintTextView: NSTextView {
         override func draw(_ dirtyRect: NSRect) { textView?.drawLines(in: dirtyRect) }
     }
 
+    /// AppKit (macOS 26) places each page's rectangle `bottomMargin` below the paper's top edge, for any text view, so
+    /// a document's top and bottom margins came out swapped in print and PDF (backlog 39). Each page starts
+    /// `topMargin` below the top, as Word's does.
+    override func locationOfPrintRect(_ rect: NSRect) -> NSPoint {
+        let location = super.locationOfPrintRect(rect)
+        guard let info = NSPrintOperation.current?.printInfo else { return location }
+        return NSPoint(x: location.x, y: info.paperSize.height - info.topMargin - rect.height)
+    }
+
     override func beginDocument() {
         super.beginDocument()
         pageText.frame = bounds
@@ -194,9 +203,8 @@ final class PrintTextView: NSTextView {
                         kind, page: page, of: pages, isFirstPage: op.currentPage == 1, decorations: decorations)
                 else { continue }
                 let setup = decorations.setup
-                let size = NSSize(width: setup.textWidth, height: .greatestFiniteMagnitude)
-                let options: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
-                let height = ceil(text.boundingRect(with: size, options: options).height)
+                let options = Self.decorationOptions
+                let height = Self.height(of: text, width: setup.textWidth)
                 let distances = setup.headerFooterDistances
                 // From the top of the page.
                 let top = kind == .header ? distances.header : borderSize.height - distances.footer - height
@@ -206,6 +214,34 @@ final class PrintTextView: NSTextView {
                 text.draw(with: rect, options: options)
             }
         }
+    }
+
+    static let decorationOptions: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
+
+    static func height(of text: NSAttributedString, width: CGFloat) -> CGFloat {
+        ceil(
+            text.boundingRect(
+                with: NSSize(width: width, height: .greatestFiniteMagnitude), options: decorationOptions
+            ).height)
+    }
+
+    /// The page margins that keep the body clear of the headers and footers (backlog 8): as in Word, a header
+    /// that reaches below the top margin pushes the body down, and a footer above the bottom margin pushes it up,
+    /// unless the margin is negative ("exactly"). The tallest header and footer of the part count.
+    static func margins(clearing decorations: Decorations) -> (top: CGFloat, bottom: CGFloat) {
+        let setup = decorations.setup
+        let distances = setup.headerFooterDistances
+        func tallest(_ kind: HeadersFooters.Kind) -> CGFloat {
+            HeadersFooters.Slot.allCases.compactMap { slot in
+                decorations.headersFooters.stories[.init(kind, slot)].map {
+                    height(of: text(of: $0, page: 1, of: 1, bridge: decorations.bridge), width: setup.textWidth)
+                }
+            }.max() ?? 0
+        }
+        var (top, bottom) = (setup.margins.top, setup.margins.bottom)
+        if setup.top >= 0 { top = max(top, distances.header + tallest(.header)) }
+        if setup.bottom >= 0 { bottom = max(bottom, distances.footer + tallest(.footer)) }
+        return (top, bottom)
     }
 
     /// The header or footer text for page `page` of `pages`, or nil if the page has none. `isFirstPage`: whether
@@ -218,10 +254,16 @@ final class PrintTextView: NSTextView {
                 kind, page: page, differentFirstPage: decorations.differentFirstPage, isFirstPage: isFirstPage),
             !story.isEmpty
         else { return nil }
+        return text(of: story, page: page, of: pages, bridge: decorations.bridge)
+    }
+
+    /// A header or footer as printed on page `page` of `pages`.
+    static func text(of story: HeadersFooters.Story, page: Int, of pages: Int, bridge: AttributedStringBridge)
+        -> NSAttributedString
+    {
         let text = NSMutableAttributedString(
             attributedString: printable(
-                decorations.bridge.forStory(story).attributedString(
-                    for: story.printableBody(page: page, pages: pages))))
+                bridge.forStory(story).attributedString(for: story.printableBody(page: page, pages: pages))))
         // The last paragraph's terminator would add an empty line.
         if text.string.hasSuffix("\n") { text.deleteCharacters(in: NSRange(location: text.length - 1, length: 1)) }
         return text
