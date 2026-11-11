@@ -272,6 +272,16 @@
         }
       }
     },
+    "Different odd and even pages": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Páginas pares e impares diferentes"
+          }
+        }
+      }
+    },
     "Even Pages": {
       "localizations": {
         "es": {

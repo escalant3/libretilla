@@ -263,4 +263,35 @@ extension PageSetupDocumentTests {
         }
         XCTAssertEqual(numbers, ["Page i", "Page ii", "Page 1", "Page 2", "Page 3"])
     }
+
+    /// Backlog 40: the sheet turns odd and even pages on and off (w:evenAndOddHeaders in the settings part).
+    func testSheetTurnsOddAndEvenPagesOnAndOff() throws {
+        let doc = try open("07-header-footer.docx")
+        var sheet = try openHeaderFooterSheet(doc)
+        XCTAssertFalse(sheet.evenAndOddPages)
+        sheet.evenAndOddPages = true
+        XCTAssertEqual(sheet.slots, [.default, .even])
+        sheet.choose(.even)
+        try type("Even header", in: .header, sheet)
+        sheet.done()
+
+        var pdf = try pdfPages(doc)
+        XCTAssertTrue(pageText(pdf, 1).contains("Even header"))
+        XCTAssertTrue(pageText(pdf, 2).contains("running header"))
+        var saved = try saved(doc)
+        XCTAssertTrue(saved.headersFooters.evenAndOddPages)
+        let settings = String(decoding: saved.package["word/settings.xml"] ?? Data(), as: UTF8.self)
+        XCTAssertEqual(settings.components(separatedBy: "<w:evenAndOddHeaders/>").count, 2)
+        XCTAssertNotNil(saved.headersFooters.stories[.init(.header, .even)])
+
+        sheet = try openHeaderFooterSheet(doc)
+        sheet.evenAndOddPages = false
+        sheet.done()
+        pdf = try pdfPages(doc)
+        XCTAssertTrue(pageText(pdf, 1).contains("running header"))
+        saved = try self.saved(doc)
+        XCTAssertFalse(saved.headersFooters.evenAndOddPages)
+        XCTAssertFalse(
+            String(decoding: saved.package["word/settings.xml"] ?? Data(), as: UTF8.self).contains("evenAndOdd"))
+    }
 }

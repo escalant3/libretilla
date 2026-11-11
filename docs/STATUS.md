@@ -301,7 +301,7 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
   paragraphs clipped.
 - Headers and footers: each section prints its own, or those it inherits (backlog 7); the sheet edits the last
   section's. Sections number their pages as `w:pgNumType` says (backlog 38). The editor doesn't show
-  them (edit them in the sheet). The sheet edits even-page ones in documents that have them, but can't turn them on. New ones use the
+  them (edit them in the sheet). The sheet edits first-page and even-page ones and turns them on and off. New ones use the
   document's Header and Footer styles if it has them, plain paragraphs if not.
 - ~~The page-break-before mark was set only when the document opened.~~ Fixed (backlog 26): restyling a
   paragraph updates it.

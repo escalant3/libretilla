@@ -33,8 +33,8 @@ tracked there, not here. Numbers are stable references; don't renumber when item
       Word does it page by page; Libretilla per section.*
 - [x] 9. Even-page headers and footers can't be edited in the sheet. *Done for documents that have them: the
       sheet switches between First, Odd and Even Pages.*
-- [ ] 40. The Header and Footer sheet can't turn odd and even pages on or off (`w:evenAndOddHeaders` in the
-      settings part).
+- [x] 40. The Header and Footer sheet can't turn odd and even pages on or off (`w:evenAndOddHeaders` in the
+      settings part). *Done: "Different odd and even pages"; the settings part changes only by that element.*
 - [ ] 10. The editor doesn't show headers and footers inline; they're edited only in the sheet (deliberate, ADR 0007).
 
 ## Pictures

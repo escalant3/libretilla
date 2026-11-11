@@ -248,4 +248,18 @@ import Testing
         #expect(text(again[0].headersFooters.stories[key]) == "New Final section footer")
         #expect(text(again[3].headersFooters.stories[key]) == "New Final section footer")
     }
+
+    /// Backlog 40: w:evenAndOddHeaders goes in schema order, and everything else keeps its bytes.
+    @Test func evenAndOddHeadersIsWrittenInSchemaOrder() throws {
+        let settings = Data(
+            (#"<?xml version="1.0"?><w:settings xmlns:w="w"><w:zoom w:percent="100"/><w:defaultTabStop w:val="720"/>"#
+                + #"<w:characterSpacingControl w:val="doNotCompress"/><w:compat/></w:settings>"#).utf8)
+        let on = try #require(OOXMLCodec.settingEvenAndOddHeaders(true, in: settings))
+        #expect(
+            String(decoding: on, as: UTF8.self)
+                == String(decoding: settings, as: UTF8.self).replacingOccurrences(
+                    of: "<w:characterSpacingControl", with: "<w:evenAndOddHeaders/><w:characterSpacingControl"))
+        let off = try #require(OOXMLCodec.settingEvenAndOddHeaders(false, in: on))
+        #expect(off == settings)
+    }
 }

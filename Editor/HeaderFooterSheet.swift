@@ -89,8 +89,15 @@ final class HeaderFooterSheet {
 
     // MARK: Slots
 
-    /// Whether even pages have their own header and footer.
-    var evenAndOddPages: Bool { result.evenAndOddPages }
+    /// Whether even pages have their own header and footer (a document-wide setting). Turning it off goes back to
+    /// the odd pages'.
+    var evenAndOddPages: Bool {
+        get { access(keyPath: \.evenAndOddPages); return result.evenAndOddPages }
+        set {
+            withMutation(keyPath: \.evenAndOddPages) { result.evenAndOddPages = newValue }
+            if !newValue && slot == .even { choose(.default) }
+        }
+    }
 
     /// The page sets the sheet can switch between, in order, or none if all pages share one header and footer.
     var slots: [HeadersFooters.Slot] {
@@ -162,7 +169,9 @@ final class HeaderFooterSheet {
 
     func done() {
         commit()
-        let changed = differentFirstPage != originalDifferentFirstPage || Self.differ(result, original)
+        let changed =
+            differentFirstPage != originalDifferentFirstPage || result.evenAndOddPages != original.evenAndOddPages
+            || Self.differ(result, original)
         let out = result
         Sheet.end(window)
         if changed { onDone?(out, differentFirstPage) }
@@ -213,7 +222,10 @@ private struct HeaderFooterView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Toggle(String(localized: "Different first page"), isOn: $sheet.differentFirstPage)
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle(String(localized: "Different first page"), isOn: $sheet.differentFirstPage)
+                    Toggle(String(localized: "Different odd and even pages"), isOn: $sheet.evenAndOddPages)
+                }
                 Spacer()
                 if sheet.slots.count > 1 {
                     Picker("", selection: Binding(get: { sheet.slot }, set: { sheet.choose($0) })) {

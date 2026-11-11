@@ -344,6 +344,48 @@ extension OOXMLCodec {
             }
         }
         if !newReferences.isEmpty { body.addHeaderFooterReferences(newReferences) }
+        // Odd and even pages turned on or off (backlog 40).
+        if let settings = (try? package.relationships(of: main))?.first(where: { $0.type == settingsType }),
+            let name = settings.resolvedPartName, let data = package[name],
+            let root = try? RawXML.Document(data: data, part: name).root,
+            (root.firstChild(named: "w:evenAndOddHeaders").map(RunProperties.toggle) ?? false) != hf.evenAndOddPages,
+            let patched = settingEvenAndOddHeaders(hf.evenAndOddPages, in: data)
+        {
+            package.setPart(name, data: patched)
+        }
+    }
+
+    /// The settings part with `w:evenAndOddHeaders` on or off, everything else byte for byte. A new element goes
+    /// where the schema puts it: before the first setting that follows it (ECMA-376 Part 1, §17.15.1.78).
+    static func settingEvenAndOddHeaders(_ on: Bool, in settings: Data) -> Data? {
+        let bytes = Data([UInt8](settings))
+        guard let root = try? RawXML.Document(data: bytes, part: "settings").root else { return nil }
+        var edits: [(Range<Int>, String)] = root.childElements(named: "w:evenAndOddHeaders").map { ($0.range, "") }
+        if on {
+            let following: Set<String> = [
+                "w:bookFoldRevPrinting", "w:bookFoldPrinting", "w:bookFoldPrintingSheets",
+                "w:drawingGridHorizontalSpacing", "w:drawingGridVerticalSpacing", "w:displayHorizontalDrawingGridEvery",
+                "w:displayVerticalDrawingGridEvery", "w:doNotUseMarginsForDrawingGridOrigin",
+                "w:drawingGridHorizontalOrigin", "w:drawingGridVerticalOrigin", "w:doNotShadeFormData",
+                "w:noPunctuationKerning", "w:characterSpacingControl", "w:printTwoOnOne", "w:strictFirstAndLastChars",
+                "w:noLineBreaksAfter", "w:noLineBreaksBefore", "w:savePreviewPicture", "w:doNotValidateAgainstSchema",
+                "w:saveInvalidXml", "w:ignoreMixedContent", "w:alwaysShowPlaceholderText",
+                "w:doNotDemarcateInvalidXml", "w:saveXmlDataOnly", "w:useXSLTWhenSaving", "w:saveThroughXslt",
+                "w:showXMLTags", "w:alwaysMergeEmptyNamespace", "w:updateFields", "w:hdrShapeDefaults",
+                "w:footnotePr", "w:endnotePr", "w:compat", "w:docVars", "w:rsids", "w:attachedSchema",
+                "w:themeFontLang", "w:clrSchemeMapping", "w:doNotIncludeSubdocsInStats",
+                "w:doNotAutoCompressPictures", "w:forceUpgrade", "w:captions", "w:readModeInkLockDown",
+                "w:smartTagType", "w:shapeDefaults", "w:doNotEmbedSmartTags", "w:decimalSymbol", "w:listSeparator",
+            ]
+            let next = root.childElements.first { following.contains($0.name) || !$0.name.hasPrefix("w:") }
+            let at = next?.range.lowerBound ?? root.endTagRange.lowerBound
+            edits.append((at..<at, "<w:evenAndOddHeaders/>"))
+        }
+        var out = bytes
+        for (range, text) in edits.sorted(by: { $0.0.lowerBound > $1.0.lowerBound }) {
+            out.replaceSubrange(range, with: Data(text.utf8))
+        }
+        return out
     }
 }
 
