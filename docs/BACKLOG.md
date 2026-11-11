@@ -42,7 +42,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [ ] 11. Floating pictures (`wp:anchor`) show inline, with no text wrapping.
 - [ ] 12. Pictures are formatted from a sheet, with no drag handles.
 - [ ] 13. Copying a picture within Libretilla saves the copy as a new image.
-- [ ] 14. Word 2010's newer brightness/contrast extension (`a14:imgEffect`) isn't read.
+- [ ] 14. Word 2010's newer brightness/contrast extension (`a14:imgEffect`) isn't read. *Needs a file from real
+      Word first: the main picture may already have the effect applied (the layer holds the original), in which
+      case drawing it again would apply it twice.*
 
 ## Tables
 
@@ -64,10 +66,13 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 - [ ] 22. Text inside fields and content controls can't be reformatted. Links containing fields, bookmarks or
       tracked changes stay opaque.
-- [ ] 23. Copy and paste inside Libretilla goes through RTF, so pasted formats are derived from their look, and
-      links and objects paste as plain text.
-- [ ] 34. Copied list items lose their markers until the list is renumbered (the marker attribute doesn't survive
-      RTF).
+- [x] 23. Copy and paste inside Libretilla goes through RTF, so pasted formats are derived from their look, and
+      links and objects paste as plain text. *Done within one document, for text without objects: the paste keeps
+      the Word paragraph and run formats, styles, links and list numbering (new paragraphs and links; bookmarks
+      and comment ranges stay put). Copies with pictures, fields, tables or chips, and pastes into another
+      document, still go through RTF.*
+- [x] 34. Copied list items lose their markers until the list is renumbered (the marker attribute doesn't survive
+      RTF). *Done within one document (see 23).*
 - [ ] 24. Footnotes, comments, text boxes and equations are placeholder chips that can't be edited.
 
 ## Print and PDF

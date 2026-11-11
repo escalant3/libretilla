@@ -706,3 +706,38 @@ extension ParagraphProperties {
         self.styleId = styleId
     }
 }
+
+// MARK: - Copy and paste within a document (backlog 23, 34)
+
+extension AttributedStringBridge {
+    /// `text` (a selection of the editor's) as a copy to paste back into the same document, with its Word formatting:
+    /// paragraph and run formats, links and list numbering. Nothing that must stay unique comes along: the copy's
+    /// paragraphs are new ones (no `ParagraphOrigin`), bookmarks and comment ranges stay where they are, and each
+    /// link is a new one. Nil if the text holds objects (pictures, fields, tables, chips), which paste as RTF.
+    public static func internalCopy(of text: NSAttributedString) -> NSAttributedString? {
+        let all = NSRange(location: 0, length: text.length)
+        guard all.length > 0 else { return nil }
+        var hasObjects = false
+        text.enumerateAttributes(in: all) { attrs, _, stop in
+            let isPageBreak = attrs[.libretillaPageBreak] != nil
+            if attrs[.libretillaOpaque] != nil || attrs[.libretillaBlock] != nil
+                || (attrs[.attachment] != nil && !isPageBreak)
+            {
+                hasObjects = true
+                stop.pointee = true
+            }
+        }
+        guard !hasObjects else { return nil }
+        let out = NSMutableAttributedString(attributedString: text)
+        out.removeAttribute(.libretillaParagraph, range: all)
+        out.removeAttribute(.libretillaMarkers, range: all)
+        var links: [ObjectIdentifier: HyperlinkBox] = [:]
+        text.enumerateAttribute(.libretillaHyperlink, in: all) { value, range, _ in
+            guard let box = value as? HyperlinkBox else { return }
+            let copy = links[ObjectIdentifier(box)] ?? HyperlinkBox(box.link, url: box.url)
+            links[ObjectIdentifier(box)] = copy
+            out.addAttribute(.libretillaHyperlink, value: copy, range: range)
+        }
+        return out
+    }
+}

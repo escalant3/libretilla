@@ -362,4 +362,55 @@ final class FormattingCommandTests: XCTestCase {
         XCTAssertFalse(doc.isDocumentEdited)
         XCTAssertEqual(doc.undoManager?.canUndo, false)
     }
+
+    // MARK: Copy and paste within the document (backlog 23, 34)
+
+    /// Copies the selection to a private pasteboard and pastes it at the start of the paragraph holding `target`.
+    func copyAndPaste(before target: String) throws {
+        let pboard = NSPasteboard(name: .init("libretilla-test-\(UUID())"))
+        defer { pboard.releaseGlobally() }
+        pboard.clearContents()
+        XCTAssertTrue(textView.writeSelection(to: pboard, types: textView.writablePasteboardTypes))
+        let ns = textView.string as NSString
+        textView.setSelectedRange(NSRange(location: ns.paragraphRange(for: ns.range(of: target)).location, length: 0))
+        XCTAssertTrue(textView.readSelection(from: pboard))
+    }
+
+    func testCopiedListItemsKeepTheirListAndMarkers() throws {
+        try open("03-nested-lists.docx")
+        let ns = textView.string as NSString
+        textView.setSelectedRange(ns.paragraphRange(for: ns.range(of: "Apples")))
+        try copyAndPaste(before: "Restarted numbering, item two")
+        let storage = try XCTUnwrap(textView.textStorage)
+        let pasted = (storage.string as NSString).paragraphRange(
+            for: NSRange(location: textView.selectedRange().location - 1, length: 0))
+        XCTAssertEqual((storage.string as NSString).substring(with: pasted), "Apples\n")
+        XCTAssertNotNil(AttributedStringBridge.listMarker(in: storage, paragraph: pasted), "a marker at once")
+
+        let docx = try saved()
+        let copies = docx.body.blocks.compactMap { b -> Paragraph? in
+            if case .paragraph(let p) = b, p.text == "Apples" { p } else { nil }
+        }
+        XCTAssertEqual(copies.count, 2)
+        XCTAssertNotNil(copies.last?.properties.numId, "the copy is in a list")
+        XCTAssertEqual(copies.last?.properties.numId, copies.first?.properties.numId)
+        XCTAssertEqual(copies.last?.properties.ilvl, copies.first?.properties.ilvl)
+    }
+
+    func testCopiedLinksStayLinks() throws {
+        try open("06-hyperlinks.docx")
+        let ns = textView.string as NSString
+        textView.setSelectedRange(ns.paragraphRange(for: ns.range(of: "Visit ")))
+        try copyAndPaste(before: "Email: ")
+        let xml = String(decoding: try saved().body.serialized(), as: UTF8.self)
+        XCTAssertEqual(xml.components(separatedBy: "<w:hyperlink ").count - 1, 5, "the four links and the copy")
+    }
+
+    func testCopiesWithPicturesPasteTheRTFWay() throws {
+        try open("05-images.docx")
+        let ns = textView.string as NSString
+        let selection = ns.paragraphRange(for: ns.range(of: "An inline PNG"))
+        let storage = try XCTUnwrap(textView.textStorage)
+        XCTAssertNil(AttributedStringBridge.internalCopy(of: storage.attributedSubstring(from: selection)))
+    }
 }

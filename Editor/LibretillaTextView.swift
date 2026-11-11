@@ -1,4 +1,5 @@
 import AppKit
+import LibretillaDocx
 
 /// Keyboard behaviour that depends on the document's structure, as in Word and Google Docs:
 /// Return on an empty list item ends the list, Return after a heading continues in its "next"
@@ -34,6 +35,48 @@ final class LibretillaTextView: NSTextView {
         var origin = super.textContainerOrigin
         if let topMargin { origin.y = topMargin }
         return origin
+    }
+
+    // MARK: Copy and paste within the document (backlog 23, 34)
+
+    /// A private pasteboard type: a token naming the copy kept in `clipboard`.
+    static let fragmentType = NSPasteboard.PasteboardType("app.libretilla.fragment")
+    /// The last copy with its Word formatting, the token that names it, and the text it was copied from.
+    private static var clipboard: (token: String, source: WeakStorage, text: NSAttributedString)?
+
+    final class WeakStorage {
+        weak var storage: NSTextStorage?
+        init(_ storage: NSTextStorage?) { self.storage = storage }
+    }
+
+    /// Copies as AppKit does (RTF, plain text) and, for text without objects, keeps a copy with its Word formatting
+    /// that a paste into the same document uses instead of the RTF, which only says how the text looks.
+    override func writeSelection(to pboard: NSPasteboard, types: [NSPasteboard.PasteboardType]) -> Bool {
+        guard super.writeSelection(to: pboard, types: types) else { return false }
+        Self.clipboard = nil
+        let range = selectedRange()
+        guard let storage = textStorage, range.length > 0, NSMaxRange(range) <= storage.length,
+            let copy = AttributedStringBridge.internalCopy(of: storage.attributedSubstring(from: range))
+        else { return true }
+        let token = UUID().uuidString
+        pboard.addTypes([Self.fragmentType], owner: nil)
+        pboard.setString(token, forType: Self.fragmentType)
+        Self.clipboard = (token, WeakStorage(storage), copy)
+        return true
+    }
+
+    override func readSelection(from pboard: NSPasteboard) -> Bool {
+        guard let clip = Self.clipboard, pboard.string(forType: Self.fragmentType) == clip.token,
+            clip.source.storage === textStorage,
+            // A fresh copy for each paste: its links are new ones again.
+            let text = AttributedStringBridge.internalCopy(of: clip.text)
+        else { return super.readSelection(from: pboard) }
+        let range = selectedRange()
+        guard shouldChangeText(in: range, replacementString: text.string) else { return false }
+        textStorage?.replaceCharacters(in: range, with: text)
+        didChangeText()
+        setSelectedRange(NSRange(location: range.location + text.length, length: 0))
+        return true
     }
 
     override func viewDidChangeEffectiveAppearance() {

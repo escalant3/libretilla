@@ -176,4 +176,22 @@ import Testing
         #expect(l.text.attribute(.libretillaOpaque, at: at, effectiveRange: nil) != nil)
         #expect(l.text.attribute(.libretillaHyperlink, at: at, effectiveRange: nil) == nil)
     }
+
+    /// Backlog 23: a copy for pasting within the document keeps formats and links, as new paragraphs and links.
+    @Test func internalCopiesKeepFormatsButNotIdentities() throws {
+        let doc = try OOXMLCodec().read(try Corpus.data("06-hyperlinks.docx"))
+        let text = AttributedStringBridge(doc).attributedString(for: doc.body)
+        let ns = text.string as NSString
+        let range = ns.paragraphRange(for: ns.range(of: "Visit "))
+        let copy = try #require(AttributedStringBridge.internalCopy(of: text.attributedSubstring(from: range)))
+        let link = ns.range(of: "example.com")
+        let original = text.attribute(.libretillaHyperlink, at: link.location, effectiveRange: nil) as? HyperlinkBox
+        let copied =
+            copy.attribute(.libretillaHyperlink, at: link.location - range.location, effectiveRange: nil)
+            as? HyperlinkBox
+        #expect(copied != nil && copied !== original, "a new link")
+        #expect(copied?.url == original?.url)
+        #expect(copy.attribute(.libretillaParagraph, at: 0, effectiveRange: nil) == nil, "a new paragraph")
+        #expect(copy.attribute(.libretillaParagraphFormat, at: 0, effectiveRange: nil) != nil, "its format kept")
+    }
 }
