@@ -262,4 +262,20 @@ import Testing
         let off = try #require(OOXMLCodec.settingEvenAndOddHeaders(false, in: on))
         #expect(off == settings)
     }
+
+    /// Backlog 24: footnotes are read for printing, and their parts are written back as they were.
+    @Test func footnotesAreReadAndKept() throws {
+        let data = try Corpus.data("10-word-features.docx")
+        let doc = try codec.read(data)
+        #expect(doc.notes.footnotes.keys.sorted() == ["1"], "separators left out")
+        #expect(doc.notes.footnotes["1"]?.body.plainText.contains("This is a footnote.") == true)
+        let reference = doc.body.blocks.lazy.compactMap { block -> OpaqueInline? in
+            guard case .paragraph(let p) = block else { return nil }
+            return p.inlines.lazy.compactMap { if case .opaque(let o) = $0, o.noteReference != nil { o } else { nil } }
+                .first
+        }.first
+        #expect(reference?.noteId == "1")
+        let back = try codec.read(try codec.write(doc))
+        #expect(back.package["word/footnotes.xml"] == doc.package["word/footnotes.xml"])
+    }
 }

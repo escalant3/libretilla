@@ -282,6 +282,48 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertEqual(PrintTextView.lowerRoman(14), "xiv")
     }
 
+    /// Backlog 24: a footnote prints at the foot of the page its reference is on.
+    func testFootnotesPrintAtTheFootOfTheirPage() throws {
+        let pdf = try pdfPages(try open("10-word-features.docx"))
+        let pages = (0..<pdf.pageCount).filter { pdf.page(at: $0)?.string?.contains("This is a footnote.") == true }
+        XCTAssertEqual(pages, [0], "once, on the reference's page")
+        let page = try XCTUnwrap(pdf.page(at: 0))
+        let note = try XCTUnwrap(pdf.findString("This is a footnote.", withOptions: []).first).bounds(for: page)
+        let reference = try XCTUnwrap(pdf.findString("A footnote reference", withOptions: []).first).bounds(for: page)
+        XCTAssertLessThan(note.maxY, reference.minY, "below the text")
+        XCTAssertLessThan(note.minY, 72 + 40, "just above the bottom margin")
+        let lines = try lineBounds(pdf, 0).filter { $0.minY > note.maxY + 1 }
+        XCTAssertFalse(lines.isEmpty)
+    }
+
+    func testPagesEndEarlyToFitTheirFootnotes() throws {
+        let pdf = try pdfPages(try open("19-notes.docx"))
+        func pages(of text: String) -> [Int] {
+            (0..<pdf.pageCount).filter { pdf.page(at: $0)?.string?.contains(text) == true }
+        }
+        XCTAssertGreaterThan(pdf.pageCount, 3)
+        for n in 1...24 {
+            let note = pages(of: "Footnote \(n). ")
+            XCTAssertEqual(note.count, 1, "footnote \(n) printed once")
+            let paragraph = try XCTUnwrap(pages(of: "Paragraph \(n). ").first)
+            XCTAssertTrue([paragraph, paragraph + 1].contains(note.first ?? -1), "footnote \(n) by its reference")
+        }
+        // On every page the body ends above the notes.
+        for i in 0..<pdf.pageCount {
+            let page = try XCTUnwrap(pdf.page(at: i))
+            let notes = pdf.findString("Footnote ", withOptions: []).filter { $0.pages.first == page }
+                .map { $0.bounds(for: page) }
+            guard let firstNote = notes.map(\.maxY).max() else { continue }
+            let body = pdf.findString("Paragraph ", withOptions: []).filter { $0.pages.first == page }
+                .map { $0.bounds(for: page) }
+            for line in body { XCTAssertGreaterThan(line.minY, firstNote, "page \(i + 1)") }
+        }
+        let last = pdf.pageCount - 1
+        XCTAssertEqual(pages(of: "Endnote 1."), [last])
+        XCTAssertEqual(pages(of: "Endnote 2."), [last])
+        XCTAssertTrue(pdf.page(at: last)?.string?.contains("The end.i Really.ii") == true)
+    }
+
     func testPDFUsesTheDocumentsPaperSize() throws {
         let a4 = try pdfPages(try open("07-header-footer.docx"))
         let a4Box = try XCTUnwrap(a4.page(at: 0)).bounds(for: .mediaBox)

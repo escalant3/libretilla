@@ -16,6 +16,8 @@ public struct DocxDocument: Sendable {
     /// The headers and footers the last section uses. Edited stories are written back to their parts; new ones
     /// get a part and a reference in the final `w:sectPr` when saving.
     public var headersFooters = HeadersFooters()
+    /// Footnotes and endnotes, for printing; never written (their parts keep their bytes).
+    public var notes = Notes()
 
     /// Why the document must open read-only, if it must.
     public var readOnlyReason: String? { body.readOnlyReason }
@@ -54,6 +56,7 @@ public struct OOXMLCodec: DocxCodec {
             if let name = rel.resolvedPartName, let data = package[name] { doc.images[rel.id] = data }
         }
         doc.headersFooters = Self.readHeadersFooters(package: package, main: main, rels: rels, body: body)
+        doc.notes = Self.readNotes(package: package, rels: rels)
         return doc
     }
 

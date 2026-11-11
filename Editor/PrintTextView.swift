@@ -4,6 +4,11 @@ import LibretillaDocx
 /// The view printing and PDF export lay the document out in (TextKit 2, like the editor). It starts a
 /// new page after every page break and before every paragraph marked `w:pageBreakBefore`, doesn't draw
 /// the editor's page break chips, and draws each page's header and footer. Each page draws only its own lines.
+extension NSAttributedString.Key {
+    /// On a footnote's number in printed text: the note's text, printed at the foot of the number's page.
+    static let libretillaPrintedNote = NSAttributedString.Key("libretilla.printedNote")
+}
+
 final class PrintTextView: NSTextView {
     /// The headers and footers to draw in the page margins, and how.
     struct Decorations {
@@ -34,6 +39,12 @@ final class PrintTextView: NSTextView {
     /// For each paragraph that starts a new page, top to bottom: the top edge of its layout fragment (above its
     /// first line and its space before) and the bottom edge of the line before it (view coordinates).
     private var breakBeforeLines: [(top: CGFloat, previousBottom: CGFloat)] = []
+    /// Footnotes (backlog 24): the bottom of each reference's line with its note, every line's bottom (where a page
+    /// may end), and the notes printed at the foot of each page (by its top).
+    private var footnoteLines: [(bottom: CGFloat, note: NSAttributedString)] = []
+    private var lineBottoms: [CGFloat] = []
+    private var pageNotes: [Int: [NSAttributedString]] = [:]
+    private var textWidth: CGFloat = 0
 
     convenience init(text: NSAttributedString, width: CGFloat) {
         self.init(usingTextLayoutManager: true)
@@ -58,6 +69,17 @@ final class PrintTextView: NSTextView {
             }
             return (top, previous)
         }
+        textWidth = width
+        if let storage = textStorage {
+            storage.enumerateAttribute(
+                .libretillaPrintedNote, in: NSRange(location: 0, length: storage.length)
+            ) { value, range, _ in
+                guard let note = value as? NSAttributedString, let bottom = lineBottom(containing: range.location)
+                else { return }
+                footnoteLines.append((bottom, note))
+            }
+        }
+        if !footnoteLines.isEmpty { lineBottoms = allLineBottoms() }
         pageText.textView = self
         pageText.frame = bounds
         pageText.autoresizingMask = [.width, .height]
@@ -132,10 +154,18 @@ final class PrintTextView: NSTextView {
     /// `text` with placeholder chips replaced by what Word prints (backlog 27): a footnote or endnote reference by its
     /// number, a text box by its text, a comment by nothing, a block content control by its paragraphs. Other chips
     /// (equations, objects, symbols) print as they look in the editor.
-    static func printingObjects(_ text: NSAttributedString) -> NSAttributedString {
+    ///
+    /// With `noteText` (a note's printed text, given its kind, `w:id` and number), each footnote's number carries its
+    /// text (`.libretillaPrintedNote`), which the page it prints on shows at its foot, and endnotes are printed after
+    /// the last paragraph, as in Word (backlog 24).
+    static func printingObjects(
+        _ text: NSAttributedString,
+        noteText: ((OpaqueInline.NoteKind, String, String) -> NSAttributedString?)? = nil
+    ) -> NSAttributedString {
         let out = NSMutableAttributedString(attributedString: text)
         var replacements: [(NSRange, NSAttributedString)] = []
         var notes: [OpaqueInline.NoteKind: Int] = [:]
+        var endnotes: [NSAttributedString] = []
         out.enumerateAttributes(in: NSRange(location: 0, length: out.length)) { attrs, range, _ in
             guard attrs[.attachment] != nil else { return }
             var plain = attrs
@@ -145,6 +175,9 @@ final class PrintTextView: NSTextView {
                     notes[kind, default: 0] += 1
                     let n = notes[kind]!
                     let number = kind == .footnote ? String(n) : Self.lowerRoman(n)
+                    let note = inline.noteId.flatMap { noteText?(kind, $0, number) }
+                    if kind == .footnote, let note { plain[.libretillaPrintedNote] = note }
+                    if kind == .endnote, let note { endnotes.append(note) }
                     replacements.append((range, NSAttributedString(string: number, attributes: plain)))
                 } else if let printed = inline.printedText {
                     replacements.append((range, NSAttributedString(string: printed, attributes: plain)))
@@ -156,7 +189,49 @@ final class PrintTextView: NSTextView {
             }
         }
         for (range, replacement) in replacements.reversed() { out.replaceCharacters(in: range, with: replacement) }
+        if !endnotes.isEmpty {
+            // A short rule, then the notes, after the last paragraph.
+            let attrs = out.length > 0 ? out.attributes(at: out.length - 1, effectiveRange: nil) : [:]
+            var rule = attrs
+            rule[.attachment] = Self.noteSeparator()
+            rule[.libretillaPrintedNote] = nil
+            if !out.string.hasSuffix("\n") { out.append(NSAttributedString(string: "\n", attributes: attrs)) }
+            out.append(NSAttributedString(string: "\u{FFFC}\n", attributes: rule))
+            for (i, note) in endnotes.enumerated() {
+                if i > 0 { out.append(NSAttributedString(string: "\n", attributes: attrs)) }
+                out.append(note)
+            }
+        }
         return out
+    }
+
+    /// Word's note separator: a line 2 inches long.
+    static func noteSeparator() -> NSTextAttachment {
+        let image = NSImage(size: NSSize(width: 144, height: 7), flipped: true) { rect in
+            NSColor.black.setFill()
+            NSRect(x: 0, y: 3, width: rect.width, height: 0.5).fill()
+            return true
+        }
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = NSRect(x: 0, y: 0, width: 144, height: 7)
+        return attachment
+    }
+
+    /// A note as printed: its number (superscript), then its paragraphs as the bridge shows them.
+    static func noteText(_ story: HeadersFooters.Story, number: String, bridge: AttributedStringBridge)
+        -> NSAttributedString
+    {
+        let text = NSMutableAttributedString(
+            attributedString: printable(bridge.forStory(story).attributedString(for: story.body)))
+        if text.string.hasSuffix("\n") { text.deleteCharacters(in: NSRange(location: text.length - 1, length: 1)) }
+        var attrs = text.length > 0 ? text.attributes(at: 0, effectiveRange: nil) : [:]
+        attrs[.attachment] = nil
+        let font = (attrs[.font] as? NSFont) ?? NSFont.systemFont(ofSize: 10)
+        attrs[.font] = NSFont(descriptor: font.fontDescriptor, size: font.pointSize * 2 / 3) ?? font
+        attrs[.baselineOffset] = font.pointSize / 3
+        text.insert(NSAttributedString(string: number, attributes: attrs), at: 0)
+        return text
     }
 
     /// i, ii, iii, … : Word's default endnote numbers.
@@ -234,6 +309,68 @@ final class PrintTextView: NSTextView {
         let afterBreak = breakLineBottoms.first { $0 > oldTop + 0.5 && $0 < limit }
         let beforeParagraph = breakBeforeLines.first { $0.previousBottom > oldTop + 0.5 && $0.top < limit }?.top
         if let bottom = [afterBreak, beforeParagraph].compactMap({ $0 }).min() { newBottom.pointee = bottom }
+        guard !footnoteLines.isEmpty else { return }
+        // Room for the footnotes of the lines on the page: end the page a line earlier until they fit.
+        func notes(_ bottom: CGFloat) -> [NSAttributedString] {
+            footnoteLines.filter { $0.bottom > oldTop + 0.5 && $0.bottom <= bottom + 0.5 }.map(\.note)
+        }
+        // The bottom of the page's last line (the page may run past it, to the end of the text).
+        func lastLine(_ bottom: CGFloat) -> CGFloat { lineBottoms.last { $0 <= bottom + 0.5 } ?? bottom }
+        var bottom = newBottom.pointee
+        while lastLine(bottom) + notesHeight(notes(bottom)) > oldBottom + 0.5,
+            let earlier = lineBottoms.last(where: { $0 < lastLine(bottom) - 0.5 && $0 > oldTop + 0.5 })
+        {
+            bottom = earlier
+        }
+        newBottom.pointee = bottom
+        pageNotes[Int(oldTop.rounded())] = notes(bottom)
+    }
+
+    /// The height of a page's footnotes: the separator, then each note.
+    private func notesHeight(_ notes: [NSAttributedString]) -> CGFloat {
+        notes.isEmpty ? 0 : Self.separatorRoom + notes.reduce(0) { $0 + Self.height(of: $1, width: textWidth) }
+    }
+
+    static let separatorRoom: CGFloat = 12
+
+    /// The bottom of every laid-out line, top to bottom (view coordinates).
+    private func allLineBottoms() -> [CGFloat] {
+        guard let layout = textLayoutManager else { return [] }
+        var out: [CGFloat] = []
+        layout.enumerateTextLayoutFragments(from: layout.documentRange.location, options: [.ensuresLayout]) {
+            fragment in
+            let top = fragment.layoutFragmentFrame.minY + textContainerOrigin.y
+            for line in fragment.textLineFragments { out.append(top + line.typographicBounds.maxY) }
+            return true
+        }
+        return out
+    }
+
+    /// Draws the footnotes of the page being printed above its bottom margin, under a short rule.
+    private func drawNotes(paper: NSSize, flipped: Bool) {
+        // Pages are laid out in order: the page being printed is the one with the nth top.
+        guard let op = NSPrintOperation.current, case let tops = pageNotes.keys.sorted(),
+            op.currentPage >= 1, op.currentPage <= tops.count,
+            let notes = pageNotes[tops[op.currentPage - 1]], !notes.isEmpty
+        else { return }
+        let info = op.printInfo
+        let left = info.leftMargin
+        // From the top of the page.
+        var y = paper.height - info.bottomMargin - notesHeight(notes)
+        let rule = NSRect(x: left, y: y + 4, width: 144, height: 0.5)
+        NSColor.black.setFill()
+        NSRect(x: rule.minX, y: flipped ? rule.minY : paper.height - rule.maxY, width: rule.width, height: rule.height)
+            .fill()
+        y += Self.separatorRoom
+        for note in notes {
+            let height = Self.height(of: note, width: textWidth)
+            // Drawn in a taller box: drawing clips a line that doesn't fit its box whole.
+            let box = height + 20
+            note.draw(
+                with: NSRect(x: left, y: flipped ? y : paper.height - y - box, width: textWidth, height: box),
+                options: Self.decorationOptions)
+            y += height
+        }
     }
 
     // MARK: Headers and footers
@@ -242,16 +379,18 @@ final class PrintTextView: NSTextView {
     /// bottom `w:footer` above its bottom edge, both across the text column. Page fields show this page's
     /// number and the page count.
     override func drawPageBorder(with borderSize: NSSize) {
-        guard let decorations, let op = NSPrintOperation.current else { return }
-        // As in Word, the page's number (which can restart in a section) picks odd or even headers and footers.
-        let page = decorations.pageNumber(op.currentPage)
-        let pages = decorations.totalPages ?? NSMaxRange(op.pageRange) - 1
+        guard let op = NSPrintOperation.current, decorations != nil || !footnoteLines.isEmpty else { return }
         let saved = frame
         // As AppKit's documentation says: the page border is drawn in a frame the size of the paper.
         frame = NSRect(origin: .zero, size: borderSize)
         defer { frame = saved }
         let flipped = NSGraphicsContext.current?.isFlipped ?? isFlipped
         NSAppearance(named: .aqua)?.performAsCurrentDrawingAppearance {
+            drawNotes(paper: borderSize, flipped: flipped)
+            guard let decorations else { return }
+            // As in Word, the page's number (which can restart in a section) picks odd or even headers and footers.
+            let page = decorations.pageNumber(op.currentPage)
+            let pages = decorations.totalPages ?? NSMaxRange(op.pageRange) - 1
             for kind in HeadersFooters.Kind.allCases {
                 guard
                     let text = Self.decorationText(

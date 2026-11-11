@@ -871,10 +871,41 @@ def f18_page_numbers(out: Path):
     pkg.write(out / "18-page-numbers.docx", document("".join(body), sect("")))
 
 
+def f19_notes(out: Path):
+    """Footnotes and endnotes in print (backlog 24): 24 paragraphs, each with a three-line footnote, so pages end
+    early to make room for their notes; and two endnotes, printed after the last paragraph."""
+    pkg = Package("Notes")
+    wml = "application/vnd.openxmlformats-officedocument.wordprocessingml"
+    pkg.rel("footnotes", "footnotes.xml")
+    pkg.rel("endnotes", "endnotes.xml")
+    sep = ('<w:footnote w:type="separator" w:id="-1"><w:p><w:r><w:separator/></w:r></w:p></w:footnote>'
+           '<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:r><w:continuationSeparator/></w:r></w:p>'
+           '</w:footnote>')
+
+    def note(tag: str, ref: str, i: int, text: str) -> str:
+        return (f'<w:{tag} w:id="{i}"><w:p><w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:{ref}/></w:r>'
+                f'<w:r><w:t xml:space="preserve"> {text}</w:t></w:r></w:p></w:{tag}>')
+
+    footnotes = "".join(note("footnote", "footnoteRef", i, f"Footnote {i}. " + sentence(i, 30)) for i in range(1, 25))
+    pkg.add("word/footnotes.xml", f"{XML_DECL}<w:footnotes {ROOT_NS}>{sep}{footnotes}</w:footnotes>",
+            f"{wml}.footnotes+xml")
+    endnotes = "".join(note("endnote", "endnoteRef", i, f"Endnote {i}.") for i in (1, 2))
+    pkg.add("word/endnotes.xml",
+            f"{XML_DECL}<w:endnotes {ROOT_NS}>{sep.replace('footnote', 'endnote')}{endnotes}</w:endnotes>",
+            f"{wml}.endnotes+xml")
+
+    def ref(kind: str, i: int) -> str:
+        return f'<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:{kind}Reference w:id="{i}"/></w:r>'
+
+    body = [p(f"Paragraph {i}. " + sentence(i, 25), ref("footnote", i)) for i in range(1, 25)]
+    body.append(p("The end.", ref("endnote", 1), " Really.", ref("endnote", 2)))
+    pkg.write(out / "19-notes.docx", document("".join(body)))
+
+
 FIXTURES = [f01_plain, f02_headings, f03_lists, f04_tables, f05_images, f06_hyperlinks, f07_header_footer,
             f08_spanish, f09_large, f10_word_features, f13_page_break_before,
             f14_headers_footers, f15_sections, f16_section_headers, f17_table_styles,
-            f18_page_numbers]
+            f18_page_numbers, f19_notes]
 
 
 # New documents: A4 with Spanish-locale Word's margins (2.5 cm top/bottom, 3 cm sides), and Charter, a

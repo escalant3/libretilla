@@ -25,6 +25,7 @@ Test inputs for the DOCX codec and the round-trip suite (bootstrap §7).
 | `16-section-headers.docx` | `make_corpus.py` | Each section's own headers and footers: a different first page in section one, a section that inherits all of them, one that inherits only the footer, and the final section's own; prints on 5 pages |
 | `17-table-styles.docx` | `make_corpus.py` | A table style's conditional formatting (`w:tblStylePr`): header row, first column and banded rows turned on by `w:tblLook`, a cell's own shading over a band, and the same style with them all off |
 | `18-page-numbers.docx` | `make_corpus.py` | Section page numbering (`w:pgNumType`): lower roman front matter, a section restarting at 1, and one continuing; prints i, ii, 1, 2, 3 |
+| `19-notes.docx` | `make_corpus.py` | 24 paragraphs with three-line footnotes (pages end early to fit them) and two endnotes after the last paragraph |
 
 Regenerate: `python3 scripts/fixtures/make_corpus.py && scripts/fixtures/make_pandoc.sh`.
 The output is deterministic, so a rerun must leave `git status` clean.
