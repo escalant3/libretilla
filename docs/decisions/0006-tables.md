@@ -1,6 +1,6 @@
 # 0006. Tables: drawn row attachments with a cell editor sheet (TextKit 2 can't lay out tables)
 
-- **Status:** Accepted (owner chose option 1, 2026-11-04)
+- **Status:** Accepted (owner chose option 1, 2026-11-04); typing into cells added by [0008](0008-typing-in-table-cells.md)
 - **Date:** 2026-11-04
 - **Deciders:** owner, Claude
 

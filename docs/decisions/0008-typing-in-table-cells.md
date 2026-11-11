@@ -1,6 +1,6 @@
 # 0008. Typing into table cells: an in-place cell editor over the drawn table
 
-- **Status:** Proposed (built 2026-11-11 at the owner's request to fix backlog 15; owner to confirm)
+- **Status:** Accepted (owner, 2026-11-11)
 - **Date:** 2026-11-11
 - **Deciders:** owner, Claude
 

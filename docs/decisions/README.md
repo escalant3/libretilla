@@ -9,7 +9,7 @@
 | [0005](0005-formatting-model.md) | Formatting: Word properties are the truth, the display follows (commands, reconcile, lists) | Accepted |
 | [0006](0006-tables.md) | Tables: drawn row attachments with a cell editor sheet (TextKit 2 can't lay out tables) | Accepted |
 | [0007](0007-headers-footers.md) | Headers and footers: kept, printed, and edited in a sheet | Accepted |
-| [0008](0008-typing-in-table-cells.md) | Typing into table cells: an in-place cell editor over the drawn table | Proposed |
+| [0008](0008-typing-in-table-cells.md) | Typing into table cells: an in-place cell editor over the drawn table | Accepted |
 
 Copy [`0000-template.md`](0000-template.md) for new records. Record a decision whenever a native control can't do
 something, or before adding a dependency.
