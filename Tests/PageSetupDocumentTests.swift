@@ -26,7 +26,7 @@ final class PageSetupDocumentTests: XCTestCase {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
         let doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         return doc
     }
 
@@ -99,7 +99,7 @@ final class PageSetupDocumentTests: XCTestCase {
 
     func testNewDocumentsAreA4InCharter() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         XCTAssertEqual(doc.pageSetup, .a4)
         let tv = try XCTUnwrap(doc.editor?.textView)
         XCTAssertEqual(tv.frame.width, PageSetup.a4.textWidth, accuracy: 0.5)

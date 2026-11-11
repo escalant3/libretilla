@@ -17,7 +17,7 @@ final class ZoomTests: XCTestCase {
 
     func testZoomStepsThroughLevelsAndStopsAtTheEnds() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
         XCTAssertEqual(editor.zoom, 1, accuracy: 0.001)
@@ -41,7 +41,7 @@ final class ZoomTests: XCTestCase {
 
     func testZoomDoesNotChangeTheText() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
         editor.textView.insertText("Hello", replacementRange: NSRange(location: 0, length: 0))
@@ -54,7 +54,7 @@ final class ZoomTests: XCTestCase {
 
     func testPageStaysCentredWhenZoomedOut() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
         let textView = try XCTUnwrap(editor.textView)
@@ -68,7 +68,7 @@ final class ZoomTests: XCTestCase {
 
     func testZoomedInTheViewShowsTheMiddleOfThePage() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
         let canvas = try XCTUnwrap(editor.textView.superview as? PageCanvasView)
@@ -107,7 +107,7 @@ final class ZoomTests: XCTestCase {
     private func fitWindow(width: CGFloat? = nil) throws -> (LibretillaDocument, EditorViewController, NSWindow) {
         UserDefaults.standard.removeObject(forKey: DocumentWindowController.zoomKey)
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         let editor = try XCTUnwrap(doc.editor)
         let window = try XCTUnwrap(editor.view.window)
         if let width { window.setContentSize(NSSize(width: width, height: window.contentLayoutRect.height)) }
@@ -150,7 +150,7 @@ final class ZoomTests: XCTestCase {
         let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Fixtures/generated/07-header-footer.docx")
         let doc = try LibretillaDocument(contentsOf: fixture, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let editor = try XCTUnwrap(doc.editor)
         let window = try XCTUnwrap(editor.view.window)

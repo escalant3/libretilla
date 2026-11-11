@@ -35,7 +35,7 @@ final class PolishTests: XCTestCase {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
         doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
     }
 
     // MARK: Outline

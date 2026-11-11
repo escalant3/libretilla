@@ -21,7 +21,7 @@ final class FormattingCommandTests: XCTestCase {
         url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID())-\(fixture)")
         try data.write(to: url)
         doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         doc.windowControllers.first?.window?.makeFirstResponder(textView)
     }
 
@@ -232,7 +232,7 @@ final class FormattingCommandTests: XCTestCase {
     /// restyled the title and left the new line in Title.)
     func testReturnAfterTitleAtTheEndContinuesInNormal() throws {
         doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         doc.windowControllers.first?.window?.makeFirstResponder(textView)
         let end = (textView.string as NSString).length
         textView.setSelectedRange(NSRange(location: end, length: 0))

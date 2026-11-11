@@ -97,7 +97,7 @@ final class NarrowWindowTests: XCTestCase {
 
     func testDocumentWindowsCanBeAsNarrowAsANote() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         let window = try XCTUnwrap(doc.windowControllers.first?.window)
         XCTAssertEqual(window.contentMinSize.width, 320)
         XCTAssertLessThanOrEqual(window.frame.width, (NSScreen.main?.visibleFrame.width ?? .infinity) + 0.5)

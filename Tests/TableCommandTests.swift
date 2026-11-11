@@ -28,7 +28,7 @@ final class TableCommandTests: XCTestCase {
         let url = scratch.appendingPathComponent(fixture)
         try FileManager.default.copyItem(at: Self.fixtures.appendingPathComponent(fixture), to: url)
         doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
     }
 
     func saved() throws -> DocxDocument {
@@ -103,7 +103,7 @@ final class TableCommandTests: XCTestCase {
 
     func testInsertTableMakesATableGridTable() throws {
         doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         tv.insertText("Before", replacementRange: NSRange(location: 0, length: 0))
         editor.insertTable(rows: 2, columns: 3)
         let saved = try saved()

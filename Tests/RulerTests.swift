@@ -8,7 +8,7 @@ import XCTest
 final class RulerTests: XCTestCase {
     func testRulerHasNoAccessoryAndStartsAtTheMargin() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         defer { doc.close() }
         let window = try XCTUnwrap(doc.windowControllers.first?.window)
         let textView = try XCTUnwrap(doc.editor?.textView)

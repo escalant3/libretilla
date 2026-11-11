@@ -14,7 +14,7 @@ final class LibretillaDocumentTests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID())-\(fixture)")
         try data.write(to: url)
         let doc = try LibretillaDocument(contentsOf: url, ofType: LibretillaDocument.docxType)
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         return (doc, url, data)
     }
 
@@ -95,7 +95,7 @@ final class LibretillaDocumentTests: XCTestCase {
 
     func testNewDocumentStartsFromTheBlankTemplateAndSaves() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         let tv = try XCTUnwrap(doc.editor?.textView)
         tv.insertText("Hola, Libretilla", replacementRange: NSRange(location: 0, length: 0))
         let out = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID()).docx")
@@ -106,7 +106,7 @@ final class LibretillaDocumentTests: XCTestCase {
 
     func testDocumentWindowHasAUsableSize() throws {
         let doc = LibretillaDocument()
-        doc.makeWindowControllers()
+        makeWindow(for: doc)
         let window = try XCTUnwrap(doc.windowControllers.first?.window)
         XCTAssertGreaterThanOrEqual(window.contentLayoutRect.width, 480)
         XCTAssertGreaterThanOrEqual(window.contentLayoutRect.height, 320)
@@ -154,5 +154,14 @@ final class OriginalsStoreTests: XCTestCase {
         store.prune()
         XCTAssertEqual(store.entries().count, 1)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: dir.path).count, 2)  // file + index
+    }
+}
+
+extension XCTestCase {
+    /// Makes `doc`'s window, and closes the document when the test ends: a document left open goes when the test
+    /// does, but its window stays, and redrawing or validating it touched freed objects (backlog 36).
+    @MainActor func makeWindow(for doc: LibretillaDocument) {
+        doc.makeWindowControllers()
+        addTeardownBlock { @MainActor in doc.close() }
     }
 }

@@ -154,9 +154,17 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         editor.textView.applyRulerUnits()
     }
 
+    /// AppKit's own reference to the document is neither retained nor zeroed when it goes, so a window that outlived
+    /// its document (one that was never closed) crashed reading it, for example validating its toolbar (backlog 36).
+    /// This one is weak.
+    private weak var currentDocument: AnyObject?
+
     override var document: AnyObject? {
-        didSet {
-            if let doc = document as? LibretillaDocument {
+        get { currentDocument }
+        set {
+            super.document = newValue
+            currentDocument = newValue
+            if let doc = newValue as? LibretillaDocument {
                 status.show(doc.saveState, isDraft: doc.fileURL == nil)
             }
         }

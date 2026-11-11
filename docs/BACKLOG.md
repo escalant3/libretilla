@@ -88,8 +88,11 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 
 - [ ] 31. CI is disabled, and `testFindAndReplaceAll` fails only on the runner. Re-enable with
       `gh workflow enable CI`.
-- [ ] 36. `PictureCommandTests` crash now and then (EXC_BAD_ACCESS in `NSTextAttachment` drawing). Seen before
-      2026-11-09's backlog work too.
+- [x] 36. `PictureCommandTests` crash now and then (EXC_BAD_ACCESS in `NSTextAttachment` drawing). Seen before
+      2026-11-09's backlog work too. *Done: tests left documents open, which went with their test while their
+      windows stayed; AppKit's window controller doesn't retain its document, so validating the toolbar (or drawing
+      the window when a sheet put windows on screen) read freed objects. The window controller now holds its
+      document weakly and every test closes what it opens. Four suite runs in a row: no crashes.*
 - [x] 37. UI tests weren't run after backlog 1–6 (the app couldn't be activated in the agent's session), and the
       last attempt's accessibility audit reported "Contrast failed". Run them locally and check. *Done
       (2026-11-11): all 18 UI tests pass, the accessibility audit included.*
