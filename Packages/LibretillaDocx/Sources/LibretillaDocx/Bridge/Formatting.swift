@@ -709,18 +709,48 @@ extension ParagraphProperties {
 
 // MARK: - Copy and paste within a document (backlog 23, 34)
 
+extension OpaqueInline {
+    /// This picture as another drawing of the same image: its `wp:docPr` id, which must be unique, is given when
+    /// it's saved.
+    func asNewDrawing() -> OpaqueInline {
+        var out = self
+        let xml = String(decoding: self.xml, as: UTF8.self)
+        guard let docPr = xml.range(of: "<wp:docPr "),
+            let id = xml.range(
+                of: #"\bid="[0-9]+""#, options: .regularExpression, range: docPr.upperBound..<xml.endIndex)
+        else { return out }
+        out.xml = Data(xml.replacingCharacters(in: id, with: "id=\"\(Self.drawingIdPlaceholder)\"").utf8)
+        return out
+    }
+}
+
 extension AttributedStringBridge {
+    /// Another attachment showing the same image (TextKit shouldn't draw one attachment in two places).
+    static func copy(of attachment: NSTextAttachment) -> NSTextAttachment {
+        let out = NSTextAttachment(data: attachment.contents, ofType: attachment.fileType)
+        if attachment.contents == nil { out.image = attachment.image }
+        out.bounds = attachment.bounds
+        return out
+    }
+
     /// `text` (a selection of the editor's) as a copy to paste back into the same document, with its Word formatting:
     /// paragraph and run formats, links and list numbering. Nothing that must stay unique comes along: the copy's
     /// paragraphs are new ones (no `ParagraphOrigin`), bookmarks and comment ranges stay where they are, and each
-    /// link is a new one. Nil if the text holds objects (pictures, fields, tables, chips), which paste as RTF.
+    /// link is a new one. Pictures come along as new drawings of the same image (backlog 13). Nil if the text holds
+    /// other objects (fields, tables, chips), which paste as RTF.
     public static func internalCopy(of text: NSAttributedString) -> NSAttributedString? {
         let all = NSRange(location: 0, length: text.length)
         guard all.length > 0 else { return nil }
         var hasObjects = false
-        text.enumerateAttributes(in: all) { attrs, _, stop in
+        var pictures: [(NSRange, OpaqueInline, NSTextAttachment)] = []
+        text.enumerateAttributes(in: all) { attrs, range, stop in
             let isPageBreak = attrs[.libretillaPageBreak] != nil
-            if attrs[.libretillaOpaque] != nil || attrs[.libretillaBlock] != nil
+            if let inline = (attrs[.libretillaOpaque] as? OpaqueInlineBox)?.inline,
+                inline.image != nil || inline.newMedia != nil,
+                let attachment = attrs[.attachment] as? NSTextAttachment
+            {
+                pictures.append((range, inline, attachment))
+            } else if attrs[.libretillaOpaque] != nil || attrs[.libretillaBlock] != nil
                 || (attrs[.attachment] != nil && !isPageBreak)
             {
                 hasObjects = true
@@ -729,6 +759,13 @@ extension AttributedStringBridge {
         }
         guard !hasObjects else { return nil }
         let out = NSMutableAttributedString(attributedString: text)
+        for (range, inline, attachment) in pictures {
+            out.addAttributes(
+                [
+                    .libretillaOpaque: OpaqueInlineBox(inline.asNewDrawing()),
+                    .attachment: Self.copy(of: attachment),
+                ], range: range)
+        }
         out.removeAttribute(.libretillaParagraph, range: all)
         out.removeAttribute(.libretillaMarkers, range: all)
         var links: [ObjectIdentifier: HyperlinkBox] = [:]

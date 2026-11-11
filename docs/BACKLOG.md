@@ -46,7 +46,8 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 12. Pictures are formatted from a sheet, with no drag handles. *Done: a selected picture shows eight
       handles (corners scale it, edges stretch it; a rotated picture has corners only), previewed while dragging
       and applied as one Format Picture step. Unit-tested; not yet tried with a real mouse.*
-- [ ] 13. Copying a picture within Libretilla saves the copy as a new image.
+- [x] 13. Copying a picture within Libretilla saves the copy as a new image. *Done within one document: the
+      copy is another drawing of the same image part, with a new unique drawing id.*
 - [ ] 14. Word 2010's newer brightness/contrast extension (`a14:imgEffect`) isn't read. *Needs a file from real
       Word first: the main picture may already have the effect applied (the layer holds the original), in which
       case drawing it again would apply it twice.*
@@ -73,10 +74,10 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [ ] 22. Text inside fields and content controls can't be reformatted. Links containing fields, bookmarks or
       tracked changes stay opaque.
 - [x] 23. Copy and paste inside Libretilla goes through RTF, so pasted formats are derived from their look, and
-      links and objects paste as plain text. *Done within one document, for text without objects: the paste keeps
+      links and objects paste as plain text. *Done within one document, for text without objects other than pictures: the paste keeps
       the Word paragraph and run formats, styles, links and list numbering (new paragraphs and links; bookmarks
-      and comment ranges stay put). Copies with pictures, fields, tables or chips, and pastes into another
-      document, still go through RTF.*
+      and comment ranges stay put). Copies with fields, tables or chips, and pastes into another document, still
+      go through RTF.*
 - [x] 34. Copied list items lose their markers until the list is renumbered (the marker attribute doesn't survive
       RTF). *Done within one document (see 23).*
 - [ ] 24. Footnotes, comments, text boxes and equations are placeholder chips that can't be edited.

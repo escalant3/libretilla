@@ -406,11 +406,22 @@ final class FormattingCommandTests: XCTestCase {
         XCTAssertEqual(xml.components(separatedBy: "<w:hyperlink ").count - 1, 5, "the four links and the copy")
     }
 
-    func testCopiesWithPicturesPasteTheRTFWay() throws {
+    /// Backlog 13: a copied picture is another drawing of the same image, not a new image.
+    func testCopiedPicturesShareTheirImage() throws {
         try open("05-images.docx")
+        let before = try saved()
         let ns = textView.string as NSString
-        let selection = ns.paragraphRange(for: ns.range(of: "An inline PNG"))
-        let storage = try XCTUnwrap(textView.textStorage)
-        XCTAssertNil(AttributedStringBridge.internalCopy(of: storage.attributedSubstring(from: selection)))
+        textView.setSelectedRange(ns.paragraphRange(for: ns.range(of: "An inline PNG")))
+        try copyAndPaste(before: "Caption")
+        let after = try saved()
+        let media = { (d: DocxDocument) in d.package.partNames.filter { $0.hasPrefix("word/media/") }.count }
+        XCTAssertEqual(media(after), media(before), "no new image part")
+        let xml = String(decoding: after.body.serialized(), as: UTF8.self)
+        let embeds = xml.matches(of: try Regex(#"r:embed="([^"]+)""#)).map { String(xml[$0.range]) }
+        XCTAssertEqual(embeds.count, 3)
+        XCTAssertEqual(Set(embeds).count, 2, "the copy uses the original's image")
+        let ids = xml.matches(of: try Regex(#"<wp:docPr id="[0-9]+""#)).map { String(xml[$0.range]) }
+        XCTAssertEqual(ids.count, 3)
+        XCTAssertEqual(Set(ids).count, 3, "drawing ids stay unique")
     }
 }

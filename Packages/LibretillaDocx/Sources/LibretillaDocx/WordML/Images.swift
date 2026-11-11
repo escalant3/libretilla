@@ -99,9 +99,22 @@ extension OOXMLCodec {
             guard case .paragraph(var p) = block else { continue }
             var changed = false
             for (i, inline) in p.inlines.enumerated() {
-                guard case .opaque(var o) = inline, let media = o.newMedia else { continue }
+                guard case .opaque(var o) = inline,
+                    o.newMedia != nil || o.xml.range(of: Data(Self.newDrawingId.utf8)) != nil
+                else { continue }
                 if nextDrawingId == nil {
                     nextDrawingId = (maxDrawingId(in: body.serialized()) ?? 0) + 1
+                }
+                // A copy of a picture already in the document (backlog 13): the same image, a new drawing id.
+                guard let media = o.newMedia else {
+                    o.xml = Data(
+                        String(decoding: o.xml, as: UTF8.self).replacingOccurrences(
+                            of: Self.newDrawingId, with: "id=\"\(nextDrawingId!)\""
+                        ).utf8)
+                    nextDrawingId! += 1
+                    p.inlines[i] = .opaque(o)
+                    changed = true
+                    continue
                 }
                 let rid: String
                 if let existing = byContent[media.data] {
@@ -133,6 +146,8 @@ extension OOXMLCodec {
             body.declareNamespace("wp", wordprocessingDrawingNamespace)
         }
     }
+
+    static let newDrawingId = "id=\"\(OpaqueInline.drawingIdPlaceholder)\""
 
     /// The largest `wp:docPr` id in use (they must be unique in a document).
     static func maxDrawingId(in xml: Data) -> Int? {
