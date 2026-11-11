@@ -55,7 +55,9 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 ## Tables
 
 - [ ] 15. No typing straight into cells; the sheet edits them.
-- [ ] 16. Find, spell check and VoiceOver don't see cell text.
+- [ ] 16. Find, spell check and VoiceOver don't see cell text. *Partly done: each table row's picture is described
+      by its cells' text ("Apples, 3, Green"), as chips are by their labels; not yet tried with VoiceOver. Find
+      and spell check still don't see it.*
 - [x] 17. Banded rows and first-row shading from table styles (`w:tblStylePr`) aren't drawn. *Done: the
       conditional formats `w:tblLook` turns on (header and last rows, first and last columns, row and column bands,
       corner cells) give cells their shading, borders and bold, italic and colour, under the cell's own.*

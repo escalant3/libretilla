@@ -54,6 +54,8 @@ extension AttributedStringBridge {
         for (i, row) in layout.rows.enumerated() {
             let attachment = NSTextAttachment()
             attachment.image = Self.rowImage(row, width: layout.width)
+            // What VoiceOver reads for the row (backlog 16): its cells' text.
+            attachment.image?.accessibilityDescription = Self.accessibilityText(of: row)
             attachment.bounds = NSRect(x: 0, y: font.descender, width: layout.width, height: row.height)
             let attrs: [NSAttributedString.Key: Any] = [
                 .attachment: attachment, .libretillaBlock: box, .libretillaTableRow: i, .font: font,
@@ -327,6 +329,16 @@ extension AttributedStringBridge {
                 text.addAttribute(.foregroundColor, value: color, range: range)
             }
         }
+    }
+
+    /// A row's cells' text, for VoiceOver: "Apples, 3, Green" (a merged cell's continuation counts as empty).
+    static func accessibilityText(of row: TableLayout.Row) -> String {
+        row.cells.map { cell in
+            cell.isMerged && cell.textOffset > 0
+                ? ""
+                : (cell.text?.string ?? "").replacingOccurrences(of: "\u{FFFC}", with: "")
+                    .replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
+        }.joined(separator: ", ")
     }
 
     /// A row drawn on demand (vector, so it prints sharply).

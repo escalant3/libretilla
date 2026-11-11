@@ -305,6 +305,19 @@ import Testing
         #expect(attachment?.bounds.width ?? 0 > 100, "the inner table, as wide as its columns")
         #expect(attachment?.bounds.height ?? 0 > 10)
     }
+
+    /// Backlog 16: VoiceOver reads a table row as its cells' text.
+    @Test func tableRowsDescribeTheirCells() throws {
+        let doc = try codec.read(try Corpus.data("04-tables.docx"))
+        let (_, _, o) = try firstTable()
+        let text = try #require(AttributedStringBridge(doc).tableText(o, leadingBlocks: []))
+        let rows = (0..<text.length).compactMap {
+            (text.attribute(.attachment, at: $0, effectiveRange: nil) as? NSTextAttachment)?.image?
+                .accessibilityDescription
+        }
+        #expect(rows.first == "Name, Quantity, Notes")
+        #expect(rows[1] == "Apples, 3, Green")
+    }
 }
 
 extension NSColor {
