@@ -74,7 +74,9 @@ extension AttributedStringBridge {
         return out
     }
 
-    func tableLayout(_ model: TableModel) -> TableLayout {
+    /// The table's layout; `availableWidth` (the text column by default) is the room it scales down to fit.
+    func tableLayout(_ model: TableModel, availableWidth: CGFloat? = nil) -> TableLayout {
+        let textWidth = availableWidth ?? self.textWidth
         let props = model.properties.over(styles.tableProperties(model.properties.styleId))
         let tableParagraph = styles.tableParagraphProperties(props.styleId)
         // Word's default cell margins (Normal Table): 0.08″ left and right, none above and below.
@@ -130,7 +132,12 @@ extension AttributedStringBridge {
                 if let b = cell.borders.right { right = b }
                 if let b = cell.borders.bottom, !mergesDown { bottom = b }
 
-                let text = continues ? nil : cellText(cell, tableParagraph: tableParagraph, conditional: conditional)
+                let text =
+                    continues
+                    ? nil
+                    : cellText(
+                        cell, tableParagraph: tableParagraph, conditional: conditional,
+                        width: max(1, w - marginLeft - marginRight))
                 let insets = NSEdgeInsets(top: marginTop, left: marginLeft, bottom: marginBottom, right: marginRight)
                 if let text {
                     let bounds = text.boundingRect(
@@ -211,15 +218,17 @@ extension AttributedStringBridge {
     /// `conditional`'s bold, italic and colour apply to text that doesn't set its own.
     func cellText(
         _ cell: TableModel.Cell, tableParagraph: ParagraphProperties,
-        conditional: TableConditionalFormat = TableConditionalFormat()
+        conditional: TableConditionalFormat = TableConditionalFormat(), width: CGFloat = 0
     ) -> NSAttributedString {
         let out = NSMutableAttributedString()
         var counter = Numbering.Counter(numbering)
         for content in cell.contents {
             guard case .paragraph(let p) = content else {
+                let (_, run) = styles.resolveParagraphStyle(nil)
                 if case .text(let line) = content {
-                    let (_, run) = styles.resolveParagraphStyle(nil)
                     out.append(NSAttributedString(string: line + "\n", attributes: characterAttributes(run)))
+                } else if case .table(let nested) = content {
+                    out.append(nestedTable(nested, width: width, attributes: characterAttributes(run)))
                 }
                 continue
             }
@@ -261,6 +270,32 @@ extension AttributedStringBridge {
             _ = out.attribute(.paragraphStyle, at: out.length - 1, effectiveRange: &r)
             out.addAttribute(.paragraphStyle, value: style, range: r)
         }
+        return out
+    }
+
+    /// A table inside a cell, drawn whole as one picture on its own line (backlog 18).
+    private func nestedTable(_ model: TableModel, width: CGFloat, attributes: [NSAttributedString.Key: Any])
+        -> NSAttributedString
+    {
+        let layout = tableLayout(model, availableWidth: width > 0 ? width : nil)
+        let height = layout.rows.reduce(0) { $0 + $1.height }
+        let rows = layout.rows.map { Self.rowImage($0, width: layout.width) }
+        let image = NSImage(size: NSSize(width: max(1, layout.width), height: max(1, height)), flipped: true) { _ in
+            var y: CGFloat = 0
+            for (row, image) in zip(layout.rows, rows) {
+                image.draw(in: NSRect(x: 0, y: y, width: layout.width, height: row.height))
+                y += row.height
+            }
+            return true
+        }
+        image.cacheMode = .never
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = NSRect(x: 0, y: 0, width: layout.width, height: height)
+        var attrs = attributes
+        attrs[.attachment] = attachment
+        let out = NSMutableAttributedString(string: "\u{FFFC}", attributes: attrs)
+        out.append(NSAttributedString(string: "\n", attributes: attributes))
         return out
     }
 

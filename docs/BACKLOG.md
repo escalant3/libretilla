@@ -53,7 +53,8 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 17. Banded rows and first-row shading from table styles (`w:tblStylePr`) aren't drawn. *Done: the
       conditional formats `w:tblLook` turns on (header and last rows, first and last columns, row and column bands,
       corner cells) give cells their shading, borders and bold, italic and colour, under the cell's own.*
-- [ ] 18. Nested tables show as one line of text per row.
+- [x] 18. Nested tables show as one line of text per row. *Done: drawn as tables in their cells (the cell
+      editor still shows a line per row, and such cells can't be edited, see 21).*
 - [x] 19. A vertically merged cell's text sits in its first row. *Done: it flows down its rows, which grow at
       the bottom if needed, as in Word; each row draws only its own lines. Cell vertical alignment (`w:vAlign`)
       isn't read.*

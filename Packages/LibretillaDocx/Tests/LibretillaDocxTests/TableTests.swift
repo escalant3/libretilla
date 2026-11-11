@@ -283,6 +283,28 @@ import Testing
         let found = text.matches(of: try Regex("word[0-9]+")).map { String(text[$0.range]) }
         #expect(found.sorted() == words.sorted(), "each word once: \(text)")
     }
+
+    // MARK: Nested tables (backlog 18)
+
+    @Test func nestedTablesAreDrawnAsTables() throws {
+        let doc = try codec.read(try Corpus.data("04-tables.docx"))
+        let nestedBlock = try #require(
+            doc.body.blocks.compactMap { b -> OpaqueBlock? in
+                if case .opaque(let o) = b, o.kind == "w:tbl" { o } else { nil }
+            }.last)
+        let outer = try model(nestedBlock.xml)
+        guard case .table(let inner) = outer.rows[0].cells[1].contents.first else {
+            Issue.record("the cell's content is a table")
+            return
+        }
+        #expect(inner.rows[0].cells.map(\.text) == ["in-1", "in-2"])
+        #expect(outer.rows[0].cells[1].text.contains("in-1 · in-2"), "the cell editor still shows a line")
+        let layout = AttributedStringBridge(doc).tableLayout(outer)
+        let text = try #require(layout.rows[0].cells[1].text)
+        let attachment = text.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment
+        #expect(attachment?.bounds.width ?? 0 > 100, "the inner table, as wide as its columns")
+        #expect(attachment?.bounds.height ?? 0 > 10)
+    }
 }
 
 extension NSColor {

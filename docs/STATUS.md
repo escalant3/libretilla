@@ -203,9 +203,10 @@ time). Draft PR #1 has tracing to find out why, but it never got a macOS runner.
 - Pictures are formatted from a sheet, not by dragging handles. Copying a picture within Libretilla saves the copy
   as a new image.
 - Tables: no typing straight into cells (the sheet edits them); find, spell check and VoiceOver don't see cell
-  text; nested tables show as one line of text per row.
+  text.
   (Tables are redrawn for a new text width when the page setup changes, backlog 20, table styles' header rows
-  and bands are drawn, backlog 17, and merged cells' text spans their rows, backlog 19.)
+  and bands are drawn, backlog 17, merged cells' text spans their rows, backlog 19,
+  and nested tables are drawn as tables, backlog 18.)
 
 **Milestone 3 features are all in.** (`w:pageBreakBefore`, still open here at the time, landed in Milestone 5.)
 

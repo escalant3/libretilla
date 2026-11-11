@@ -204,6 +204,8 @@ public struct TableModel: Sendable {
     public enum Content: Sendable {
         case paragraph(Paragraph)
         case text(String)
+        /// A table in the cell (backlog 18).
+        indirect case table(TableModel)
     }
 
     public struct Cell: Sendable {
@@ -326,15 +328,19 @@ public struct TableModel: Sendable {
                 contents.append(.paragraph(p))
             case "w:tbl":
                 editable = false
-                for tr in child.childElements(named: "w:tr") {
-                    contents.append(
-                        .text(
-                            tr.childElements(named: "w:tc").map { tc in
-                                tc.descendants(named: "w:p").map { p in
-                                    p.childElements.map { OpaqueInline.visibleText($0) }.joined()
-                                }.joined(separator: " ")
-                            }.joined(separator: " · ")))
-                    if case .text(let t) = contents.last { other.append(t) }
+                // One line per row for the cell editor; drawn as a table when Libretilla can read it.
+                let lines = child.childElements(named: "w:tr").map { tr in
+                    tr.childElements(named: "w:tc").map { tc in
+                        tc.descendants(named: "w:p").map { p in
+                            p.childElements.map { OpaqueInline.visibleText($0) }.joined()
+                        }.joined(separator: " ")
+                    }.joined(separator: " · ")
+                }
+                other += lines
+                if let nested = TableModel(xml: doc.slice(child.range)) {
+                    contents.append(.table(nested))
+                } else {
+                    contents += lines.map(Content.text)
                 }
             default:
                 editable = false
