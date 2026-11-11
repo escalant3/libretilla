@@ -71,3 +71,46 @@ extension HeadersFooters {
         }
     }
 }
+
+extension AttributedStringBridge {
+    /// Gives the paper and margins `new` to every section in `text` laid out as `old`, the final section's setup
+    /// before Page Setup or Margins changed it (backlog 32), so a document whose sections share one setup keeps
+    /// sharing it. Sections with a setup of their own keep it. Returns the paragraphs changed (their formats are new,
+    /// with only `w:pgSz` and `w:pgMar` rewritten).
+    @discardableResult
+    public static func applyPageSetup(
+        _ new: PageSetup, toSectionsLike old: PageSetup, in text: NSMutableAttributedString
+    ) -> [NSRange] {
+        var changed: [NSRange] = []
+        let all = NSRange(location: 0, length: text.length)
+        var seen: Set<ObjectIdentifier> = []
+        var updates: [(NSRange, ParagraphFormat, ParagraphFormat)] = []
+        text.enumerateAttribute(.libretillaParagraphFormat, in: all) { value, range, _ in
+            guard let format = value as? ParagraphFormat, format.properties.hasSectionBreak,
+                seen.insert(ObjectIdentifier(format)).inserted, let pPr = format.xml,
+                let doc = try? RawXML.Document(data: Data([UInt8](pPr)), part: "w:pPr"),
+                let sectPr = doc.root.firstChild(named: "w:sectPr")
+            else { return }
+            let own = PageSetup(sectPr: sectPr)
+            guard own.hasSameLayout(as: old), !own.hasSameLayout(as: new) else { return }
+            var target = own
+            (target.width, target.height, target.isLandscape) = (new.width, new.height, new.isLandscape)
+            (target.top, target.right, target.bottom, target.left) = (new.top, new.right, new.bottom, new.left)
+            guard let patched = PageSetup.sectionProperties(doc.slice(sectPr.range), from: own, to: target) else {
+                return
+            }
+            var bytes = Data([UInt8](pPr))
+            bytes.replaceSubrange(sectPr.range, with: patched)
+            updates.append((range, format, ParagraphFormat(properties: format.properties, xml: bytes)))
+        }
+        // Every run of each format (a paragraph's format may be split into several attribute runs).
+        for (_, old, new) in updates {
+            text.enumerateAttribute(.libretillaParagraphFormat, in: all) { value, range, _ in
+                guard (value as AnyObject?) === old else { return }
+                text.addAttribute(.libretillaParagraphFormat, value: new, range: range)
+                changed.append(range)
+            }
+        }
+        return changed
+    }
+}

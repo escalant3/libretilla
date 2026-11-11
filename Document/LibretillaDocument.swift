@@ -293,6 +293,11 @@ final class LibretillaDocument: NSDocument {
             }
         }
         undoManager?.setActionName(actionName)
+        // Earlier sections laid out like the final one follow it (backlog 32); undo and redo restore their
+        // formats with the text.
+        if undoManager?.isUndoing != true, undoManager?.isRedoing != true {
+            editor?.applyPageSetup(setup, toSectionsLike: old)
+        }
         editor?.apply(setup)
     }
 

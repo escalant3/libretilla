@@ -154,41 +154,7 @@ extension DocumentBody {
             guard newValue != pageSetup else { return }
             var existing: OpaqueBlock?
             if let i = sectionPropertiesIndex, case .opaque(let o) = blocks[i] { existing = o }
-            // Only the changed attributes are rewritten; header/footer distances, gutter, paper codes
-            // and everything else in the section keep their bytes.
-            let old = pageSetup
-            // A size or margins element the section lacks is written whole: Word would otherwise use its
-            // own locale's defaults, not the fallback Libretilla showed.
-            let writeSize = existing.map { Self.sectionLacks("w:pgSz", $0) } ?? true
-            let writeMargins = existing.map { Self.sectionLacks("w:pgMar", $0) } ?? true
-            var size: [(String, String?)] = []
-            if newValue.width != old.width || writeSize { size.append(("w:w", String(newValue.width))) }
-            if newValue.height != old.height || writeSize { size.append(("w:h", String(newValue.height))) }
-            if newValue.isLandscape != old.isLandscape {
-                size.append(("w:orient", newValue.isLandscape ? "landscape" : nil))
-            }
-            var margins: [(String, String?)] = []
-            // Keep Word's sign convention for top/bottom when only the size changes.
-            func signed(_ value: Int, like current: Int) -> Int { current < 0 ? -abs(value) : value }
-            if newValue.top != old.top || writeMargins {
-                margins.append(("w:top", String(signed(newValue.top, like: old.top))))
-            }
-            if newValue.right != old.right || writeMargins { margins.append(("w:right", String(newValue.right))) }
-            if newValue.bottom != old.bottom || writeMargins {
-                margins.append(("w:bottom", String(signed(newValue.bottom, like: old.bottom))))
-            }
-            if newValue.left != old.left || writeMargins { margins.append(("w:left", String(newValue.left))) }
-            if writeMargins {
-                // `w:pgMar` requires header, footer and gutter; use Word's defaults for a new one.
-                margins += [("w:header", "720"), ("w:footer", "720"), ("w:gutter", "0")]
-            }
-
-            var edits: [ElementPatch.Edit] = []
-            if !size.isEmpty { edits.append(.attributes("w:pgSz", size)) }
-            if !margins.isEmpty { edits.append(.attributes("w:pgMar", margins)) }
-            guard
-                let xml = ElementPatch.apply(
-                    edits, to: existing?.xml, wrapper: "w:sectPr", order: ElementPatch.sectionPropertiesOrder),
+            guard let xml = PageSetup.sectionProperties(existing?.xml, from: pageSetup, to: newValue),
                 let doc = try? RawXML.Document(data: xml, part: "w:sectPr")
             else { return }
             let block = OpaqueBlock(parsing: doc.root, in: doc, leadingTrivia: existing?.leadingTrivia ?? Data())
@@ -200,9 +166,49 @@ extension DocumentBody {
         }
     }
 
-    private static func sectionLacks(_ child: String, _ block: OpaqueBlock) -> Bool {
-        guard let doc = try? RawXML.Document(data: block.xml, part: "w:sectPr") else { return true }
-        return doc.root.firstChild(named: child) == nil
+}
+
+extension PageSetup {
+    /// A `w:sectPr` (nil: none yet) changed from `old` to `new`. Only the changed attributes are rewritten; header
+    /// and footer distances, gutter, paper codes and everything else in the section keep their bytes.
+    static func sectionProperties(_ existing: Data?, from old: PageSetup, to newValue: PageSetup) -> Data? {
+        // A size or margins element the section lacks is written whole: Word would otherwise use its own locale's
+        // defaults, not the fallback Libretilla showed.
+        let root = existing.flatMap { try? RawXML.Document(data: $0, part: "w:sectPr").root }
+        let writeSize = root?.firstChild(named: "w:pgSz") == nil
+        let writeMargins = root?.firstChild(named: "w:pgMar") == nil
+        var size: [(String, String?)] = []
+        if newValue.width != old.width || writeSize { size.append(("w:w", String(newValue.width))) }
+        if newValue.height != old.height || writeSize { size.append(("w:h", String(newValue.height))) }
+        if newValue.isLandscape != old.isLandscape {
+            size.append(("w:orient", newValue.isLandscape ? "landscape" : nil))
+        }
+        var margins: [(String, String?)] = []
+        // Keep Word's sign convention for top/bottom when only the size changes.
+        func signed(_ value: Int, like current: Int) -> Int { current < 0 ? -abs(value) : value }
+        if newValue.top != old.top || writeMargins {
+            margins.append(("w:top", String(signed(newValue.top, like: old.top))))
+        }
+        if newValue.right != old.right || writeMargins { margins.append(("w:right", String(newValue.right))) }
+        if newValue.bottom != old.bottom || writeMargins {
+            margins.append(("w:bottom", String(signed(newValue.bottom, like: old.bottom))))
+        }
+        if newValue.left != old.left || writeMargins { margins.append(("w:left", String(newValue.left))) }
+        if writeMargins {
+            // `w:pgMar` requires header, footer and gutter; use Word's defaults for a new one.
+            margins += [("w:header", "720"), ("w:footer", "720"), ("w:gutter", "0")]
+        }
+        var edits: [ElementPatch.Edit] = []
+        if !size.isEmpty { edits.append(.attributes("w:pgSz", size)) }
+        if !margins.isEmpty { edits.append(.attributes("w:pgMar", margins)) }
+        return ElementPatch.apply(
+            edits, to: existing, wrapper: "w:sectPr", order: ElementPatch.sectionPropertiesOrder)
+    }
+
+    /// The same paper, orientation and margins (what Page Setup and Margins edit).
+    public func hasSameLayout(as other: PageSetup) -> Bool {
+        width == other.width && height == other.height && isLandscape == other.isLandscape && top == other.top
+            && right == other.right && bottom == other.bottom && left == other.left
     }
 }
 

@@ -16,7 +16,10 @@ tracked there, not here. Numbers are stable references; don't renumber when item
 - [x] 6. Lists with unusual indents look approximate (TextKit 2 gap G4). They save exactly. *Done: no
       `NSTextList`; list paragraphs keep their Word indents and the marker is drawn in front.*
 - [ ] 32. The editor shows the final section's page setup for the whole document, and Page Setup and Margins
-      edit only the final section (print and PDF follow each section since 3).
+      edit only the final section (print and PDF follow each section since 3). *Partly done: sections laid out
+      like the final one now follow its changes, so documents whose sections share a setup stay consistent.
+      Editing a section with its own setup (e.g. a landscape one) still needs a design decision: show and edit
+      the section at the caret, or offer "Apply to: whole document / this section" as Word does.*
 - [ ] 33. Manual look at the Margins and Paragraph sheets in the running app (only unit-tested so far).
 
 ## Headers and footers

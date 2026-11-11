@@ -342,6 +342,27 @@ final class PageSetupDocumentTests: XCTestCase {
         XCTAssertEqual(body.bounds(for: pdf.page(at: 3)!).minX, 144, accuracy: 2)
     }
 
+    /// Backlog 32: sections laid out like the final one follow its Page Setup and Margins; others keep theirs.
+    func testSectionsSharingTheSetupFollowItsChanges() throws {
+        let doc = try open("16-section-headers.docx")
+        var setup = doc.pageSetup
+        setup.left = 2880
+        doc.setPageSetup(setup, actionName: "Margins")
+        XCTAssertEqual(doc.printParts().map(\.setup.left), [2880, 2880, 2880, 2880])
+        let saved = try saved(doc)
+        let xml = String(decoding: saved.body.serialized(), as: UTF8.self)
+        XCTAssertEqual(xml.components(separatedBy: #"w:left="2880""#).count - 1, 4, "every section's w:pgMar")
+        doc.undoManager?.undo()
+        XCTAssertEqual(doc.printParts().map(\.setup.left), [1440, 1440, 1440, 1440], "one undo step")
+
+        let mixed = try open("15-sections.docx")
+        let before = mixed.printParts().map(\.setup)
+        var a4 = mixed.pageSetup
+        a4.left = 1440
+        mixed.setPageSetup(a4)
+        XCTAssertEqual(Array(mixed.printParts().map(\.setup).dropLast()), Array(before.dropLast()))
+    }
+
     func testPrintingASectionedDocumentPrintsItsPDF() throws {
         let doc = try open("15-sections.docx")
         let op = try doc.printOperation(withSettings: [:])

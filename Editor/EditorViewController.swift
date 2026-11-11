@@ -276,6 +276,21 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, @preconc
         }
     }
 
+    /// Gives `setup` to the sections laid out like `old` (`AttributedStringBridge.applyPageSetup`), as one text change
+    /// in the same undo step as the page setup.
+    func applyPageSetup(_ setup: PageSetup, toSectionsLike old: PageSetup) {
+        guard let storage = textView.textStorage else { return }
+        let probe = NSMutableAttributedString(attributedString: storage)
+        let changed = AttributedStringBridge.applyPageSetup(setup, toSectionsLike: old, in: probe)
+        guard let first = changed.first else { return }
+        let range = changed.dropFirst().reduce(first) { NSUnionRange($0, $1) }
+        guard textView.shouldChangeText(in: range, replacementString: nil) else { return }
+        storage.beginEditing()
+        AttributedStringBridge.applyPageSetup(setup, toSectionsLike: old, in: storage)
+        storage.endEditing()
+        textView.didChangeText()
+    }
+
     // MARK: Content
 
     /// Replaces the content without registering an undo action or marking the document edited
